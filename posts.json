@@ -1,0 +1,31 @@
+{
+  "site": {
+    "title": "블루오라 개발노트",
+    "tagline": "앱 개발·AI 도구·알고리즘을 코드로 남기는 기록",
+    "url": "https://bluaura.github.io/devblog",
+    "base": "/devblog",
+    "author": "bluaura",
+    "categories": [
+      "개발뉴스",
+      "AI",
+      "튜토리얼",
+      "Android",
+      "iOS",
+      "Windows",
+      "코딩테스트",
+      "회고"
+    ]
+  },
+  "posts": [
+    {
+      "slug": "2026-08-11-github-pages-second-blog",
+      "title": "GitHub Pages로 두 번째 블로그 만들기 — Project Pages 서브패스 배포",
+      "date": "2026-08-11",
+      "tags": [
+        "회고",
+        "개발뉴스"
+      ],
+      "summary": "User Pages는 계정당 1개. Project Pages로 /devblog 서브패스에 두 번째 블로그를 세우고 BASE 경로 주입·highlight.js 자체 호스팅까지 정리."
+    }
+  ]
+}
