@@ -18,6 +18,18 @@
   },
   "posts": [
     {
+      "slug": "2026-08-13-loop-engineering-stack",
+      "title": "루프 엔지니어링: 4단계 루프 스택 완전 해부",
+      "date": "2026-08-13",
+      "tags": [
+        "AI",
+        "개발뉴스",
+        "LLM",
+        "에이전트"
+      ],
+      "summary": "LangChain의 4단계 루프 스택(Agent·Verification·Event-Driven·Hill Climbing)을 컴포넌트·실패 모드·도입 시점까지 분해하고 하네스 엔지니어링과의 관계를 정리"
+    },
+    {
       "slug": "2026-08-11-github-pages-second-blog",
       "title": "GitHub Pages로 두 번째 블로그 만들기 — Project Pages 서브패스 배포",
       "date": "2026-08-11",

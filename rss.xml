@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>루프 엔지니어링: 4단계 루프 스택 완전 해부</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-08-13-loop-engineering-stack.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-08-13-loop-engineering-stack.html</guid>
+      <description>LangChain의 4단계 루프 스택(Agent·Verification·Event-Driven·Hill Climbing)을 컴포넌트·실패 모드·도입 시점까지 분해하고 하네스 엔지니어링과의 관계를 정리</description>
+      <pubDate>Thu, 13 Aug 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>GitHub Pages로 두 번째 블로그 만들기 — Project Pages 서브패스 배포</title>
       <link>https://bluaura.github.io/devblog/posts/2026-08-11-github-pages-second-blog.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-08-11-github-pages-second-blog.html</guid>
