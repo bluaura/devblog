@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>Windows에서 AirDrop 구현하기: AWDL부터 WiFiCx까지 용어 정리</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-08-26-windows-airdrop-awdl-glossary.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-08-26-windows-airdrop-awdl-glossary.html</guid>
+      <description>AirDrop 스택(BLE→AWDL→mDNS→TLS 8770→/Discover,/Ask,/Upload)과 Windows 드라이버(NDIS·NetAdapterCx·WiFiCx) 용어 50여 개를 계층별로 정리. 병목이 AWDL 하나인 이유와 전용 동글+가상 NIC 우회 구조.</description>
+      <pubDate>Wed, 26 Aug 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>루프 엔지니어링: 4단계 루프 스택 완전 해부</title>
       <link>https://bluaura.github.io/devblog/posts/2026-08-13-loop-engineering-stack.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-08-13-loop-engineering-stack.html</guid>

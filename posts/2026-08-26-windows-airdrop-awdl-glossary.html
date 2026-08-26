@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Windows에서 AirDrop 구현하기: AWDL부터 WiFiCx까지 용어 정리 · 블루오라 개발노트</title>
+<meta name="description" content="AirDrop 스택(BLE→AWDL→mDNS→TLS 8770→/Discover,/Ask,/Upload)과 Windows 드라이버(NDIS·NetAdapterCx·WiFiCx) 용어 50여 개를 계층별로 정리. 병목이 AWDL 하나인 이유와 전용 동글+가상 NIC 우회 구조.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Windows에서 AirDrop 구현하기: AWDL부터 WiFiCx까지 용어 정리">
+<meta property="og:description" content="AirDrop 스택(BLE→AWDL→mDNS→TLS 8770→/Discover,/Ask,/Upload)과 Windows 드라이버(NDIS·NetAdapterCx·WiFiCx) 용어 50여 개를 계층별로 정리. 병목이 AWDL 하나인 이유와 전용 동글+가상 NIC 우회 구조.">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-08-26-windows-airdrop-awdl-glossary.html">
+<meta property="article:published_time" content="2026-08-26">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-08-26-windows-airdrop-awdl-glossary.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>Windows에서 AirDrop 구현하기: AWDL부터 WiFiCx까지 용어 정리</h1>
+    <p class="sub"><span class="tag">Windows</span><span class="tag">튜토리얼</span><span class="tag">AirDrop</span><span class="tag">AWDL</span><span class="tag">드라이버</span> &nbsp;2026-08-26</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">AWDL 슬롯 길이</div><div class="value">16 TU</div><div class="delta">약 16.4ms, 64개가 1초 주기</div></div>
+  <div class="stat"><div class="label">동기 허용 오차</div><div class="value">3 ms</div><div class="delta">호스트 SW로 맞출 수 있는 수준</div></div>
+  <div class="stat"><div class="label">AirDrop 포트</div><div class="value">8770</div><div class="delta">TLS, self-signed 인증서</div></div>
+  <div class="stat"><div class="label">HTTP 엔드포인트</div><div class="value">3개</div><div class="delta">/Discover, /Ask, /Upload</div></div>
+</div>
+
+<blockquote>2025년 말 Pixel 10, 2026년 Galaxy S26가 애플 협력 없이 AirDrop 호환을 구현했다. 같은 일을 Windows에서 하려면 어떤 계층을 건드려야 하는지 검토하면서 마주친 용어들을 계층별로 정리했다. 무선 링크(AWDL) → Windows 드라이버 → AirDrop 애플리케이션 프로토콜 → 프로젝트·검증 순서다.</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">배경: 왜 Windows에서 AirDrop이 어려운가</a></li>
+    <li><a href="#s2">무선 링크 계층 (AWDL)</a></li>
+    <li><a href="#s3">Windows 드라이버 계층</a></li>
+    <li><a href="#s4">AirDrop 애플리케이션 프로토콜</a></li>
+    <li><a href="#s5">프로젝트·검증 용어</a></li>
+    <li><a href="#s6">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">배경: 왜 Windows에서 AirDrop이 어려운가</h2>
+<p>AirDrop은 위로 갈수록 평범하다. HTTP, TLS, mDNS는 오픈소스(OpenDrop)로 이미 재현돼 있다. 막힌 곳은 맨 아래 링크 계층인 <strong>AWDL</strong>이다. AWDL은 공유기에 붙어 있는 상태에서 수십 ms 단위로 채널을 오가며 애플 전용 액션 프레임을 주고받는 MAC 레벨 동작이라, 일반 Wi-Fi 드라이버가 앱에 노출하지 않는 기능을 요구한다.</p>
+<p>안드로이드 진영은 이 문제를 Wi-Fi 칩 펌웨어와 벤더 HAL에서 풀었다. 그래서 플래그십(칩 벤더가 협력한 기기)만 지원되고, 삼성조차 자사 Windows 노트북인 갤럭시북에는 넣지 못했다. Windows에서 같은 위치에 있는 것이 커널 드라이버이고, 아래 용어들은 그 검토 과정에서 나온 것들이다.</p>
+
+<div class="callout">Windows 관련 판단 요약: 내장 Intel Wi-Fi로는 벤더 협업 없이 불가. 전용 USB 동글을 raw 802.11 파이프로만 쓰고, Windows Wi-Fi 스택을 거치지 않는 가상 이더넷 NIC(awdl0)를 하나 만드는 구조가 현실적이다. Linux의 owl 프로젝트가 같은 구조로 100Mbps 이상을 실측한 선례가 있다.</div>
+
+<h2 id="s2">무선 링크 계층 (AWDL)</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>용어</th><th>설명</th></tr></thead>
+<tbody>
+<tr><td><strong>AWDL</strong> (Apple Wireless Direct Link)</td><td>애플이 AirDrop, Sidecar, Handoff용으로 만든 독자 P2P Wi-Fi 프로토콜. 공유기 없이 기기끼리 직접 연결하면서 기존 Wi-Fi 접속도 유지한다. 이 주제의 핵심 난관.</td></tr>
+<tr><td><strong>awdl0</strong></td><td>macOS/iOS에서 AWDL 링크가 노출되는 가상 네트워크 인터페이스 이름. <code>tcpdump -i awdl0</code>로 AirDrop 트래픽을 볼 수 있다. Windows에서는 같은 역할의 가상 NIC를 만든다는 뜻으로 쓴다.</td></tr>
+<tr><td><strong>Availability Window (AW)</strong></td><td>AWDL 기기들이 "이 시간에는 다 같이 특정 채널에 있자"고 약속한 시간 슬롯. 16 TU 길이, 64개가 모여 약 1초 주기. AW 스케줄러는 이 시간표를 지키는 모듈이다.</td></tr>
+<tr><td><strong>TU</strong> (Time Unit)</td><td>802.11 표준 시간 단위. 1 TU = 1,024µs.</td></tr>
+<tr><td><strong>채널 호핑</strong> (6 / 44 / 149ch)</td><td>AW 시간표에 따라 채널 6(2.4GHz), 44·149(5GHz)를 오가는 동작. iPhone 기본 채널이 44라 5GHz 지원 카드가 필수다.</td></tr>
+<tr><td><strong>Master 선출</strong></td><td>AWDL 그룹에서 시간 기준을 잡는 기기를 뽑는 절차. 각 기기가 metric 값을 광고하고 가장 높은 쪽이 Master가 되어 나머지가 그 시계에 동기화한다.</td></tr>
+<tr><td><strong>PSF</strong> (Periodic Synchronization Frame)</td><td>Master가 110 또는 440 TU마다 뿌리는 동기화 프레임. 시계 맞추기용.</td></tr>
+<tr><td><strong>MIF</strong> (Master Indication Frame)</td><td>모든 기기가 보내는 "나는 누구고 내 Master는 누구다" 프레임. 발견과 선출에 쓰인다.</td></tr>
+<tr><td><strong>액션 프레임</strong> (Action Frame)</td><td>802.11 관리 프레임의 한 종류. AWDL은 여기에 Apple OUI를 넣은 벤더 전용 액션 프레임으로 PSF/MIF를 실어 보낸다.</td></tr>
+<tr><td><strong>OUI</strong> (Organizationally Unique Identifier)</td><td>MAC 주소 앞 3바이트 제조사 코드. Apple OUI가 붙은 프레임을 보고 AWDL 프레임임을 식별한다.</td></tr>
+<tr><td><strong>STA</strong> (Station)</td><td>일반 Wi-Fi 클라이언트 모드. "STA + AWDL 동시 운용"은 인터넷을 끊지 않고 AirDrop도 되게 한다는 뜻.</td></tr>
+<tr><td><strong>가상 인터페이스</strong> (VIF)</td><td>물리 Wi-Fi 카드 하나를 논리적으로 여러 개(STA용, AWDL용)로 보이게 하는 기법.</td></tr>
+<tr><td><strong>IPv6 link-local</strong></td><td>fe80::으로 시작하는, 같은 링크 안에서만 통하는 IPv6 주소. AWDL은 공유기·DHCP 없이 이 주소로 통신한다.</td></tr>
+<tr><td><strong>모니터 모드 / 액티브 모니터 / 프레임 인젝션</strong></td><td>모니터 모드는 카드가 지나가는 모든 802.11 프레임을 그대로 받는 것, 인젝션은 임의의 raw 프레임을 송신하는 것, 액티브 모니터는 모니터 모드이면서 자기 앞 프레임에 ACK도 보내는 것. AWDL을 호스트 SW로 흉내 내려면 셋 다 필요하다.</td></tr>
+<tr><td><strong>ACK / 재전송</strong></td><td>802.11에서 프레임을 받으면 즉시 ACK를 보내야 하고, 없으면 송신 측이 최대 7회 재전송한다. ACK를 못 하면 처리량이 급락하는 이유.</td></tr>
+<tr><td><strong>캡슐화 / 역캡슐화</strong></td><td>IPv6 패킷을 AWDL 데이터 프레임 형식(802.11 헤더 + LLC + AWDL 헤더)으로 감싸서 보내고, 받을 때 벗기는 작업.</td></tr>
+<tr><td><strong>펌웨어 / HAL</strong></td><td>펌웨어는 Wi-Fi 칩 안에서 도는 소프트웨어, HAL(Hardware Abstraction Layer)은 OS가 칩을 다루는 벤더 제공 인터페이스. 안드로이드는 이 두 층에서 AWDL을 구현했다.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s3">Windows 드라이버 계층</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>용어</th><th>설명</th></tr></thead>
+<tbody>
+<tr><td><strong>커널 드라이버</strong></td><td>OS 커널 권한으로 도는 코드. 하드웨어를 직접 제어할 수 있는 대신 버그가 나면 BSOD.</td></tr>
+<tr><td><strong>NDIS</strong> (Network Driver Interface Specification)</td><td>Windows 네트워크 드라이버의 전통적 프레임워크. 미니포트 드라이버는 NDIS에서 실제 NIC를 담당하는 드라이버.</td></tr>
+<tr><td><strong>WDF / KMDF</strong></td><td>Windows Driver Framework. KMDF는 커널 모드용. 현재 드라이버 작성의 표준 틀.</td></tr>
+<tr><td><strong>NetAdapterCx</strong></td><td>WDF 위에 얹힌 네트워크 어댑터 전용 클래스 확장. 새 NIC 드라이버는 이걸로 쓴다. 가상 NIC awdl0를 만드는 데 사용.</td></tr>
+<tr><td><strong>WiFiCx / WDI</strong></td><td>Windows가 Wi-Fi 드라이버에 요구하는 모델. WDI는 Windows 10 세대, WiFiCx는 Windows 11 세대. OS가 STA/AP/P2P 동작을 정의하므로 임의 채널 호핑을 허용하지 않는다. 우회가 필요한 이유.</td></tr>
+<tr><td><strong>raw 802.11 TX/RX</strong></td><td>이더넷 프레임이 아닌 802.11 원본 프레임을 그대로 보내고 받는 것.</td></tr>
+<tr><td><strong>WinUSB</strong></td><td>MS가 제공하는 범용 USB 드라이버. 유저모드에서 USB 장치와 직접 통신할 수 있어, 전용 동글을 raw 프레임 파이프로 쓸 때 커널 코드 없이 시작할 수 있다.</td></tr>
+<tr><td><strong>Winsock</strong></td><td>Windows 소켓 API. 유저모드 서비스가 awdl0 위에서 TCP/TLS를 쓰는 통로.</td></tr>
+<tr><td><strong>IPC</strong> (Named Pipe / gRPC)</td><td>프로세스 간 통신. AirDrop 서비스와 앱을 잇는 방법.</td></tr>
+<tr><td><strong>Driver Verifier</strong></td><td>MS 제공 커널 드라이버 스트레스 검증 도구. BSOD 검증에 쓴다.</td></tr>
+<tr><td><strong>테스트 서명 / EV 코드사인 / Attestation 서명 / WHQL·HLK</strong></td><td>Windows는 서명 없는 커널 드라이버를 올리지 않는다. 테스트 서명은 개발 PC 전용, EV 인증서는 하드웨어 개발자 센터 등록용, Attestation 서명은 MS가 검사 없이 서명해 주는 방식(Windows 10 이상 배포 가능), WHQL은 MS 호환성 로고, HLK는 그걸 받기 위한 테스트 킷.</td></tr>
+<tr><td><strong>BSOD</strong></td><td>Blue Screen of Death. 커널 크래시.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s4">AirDrop 애플리케이션 프로토콜</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>용어</th><th>설명</th></tr></thead>
+<tbody>
+<tr><td><strong>BLE 광고</strong></td><td>송신 기기가 Bluetooth Low Energy 브로드캐스트를 뿌려 근처 iPhone의 AWDL을 깨우는 첫 단계. Windows에서는 WinRT의 <code>BluetoothLEAdvertisementPublisher</code>로 내보낼 수 있다.</td></tr>
+<tr><td><strong>mDNS / DNS-SD / Bonjour</strong></td><td>공유기 DNS 없이 같은 네트워크에서 서비스를 찾는 방식. AirDrop은 <code>_airdrop._tcp.local</code>이라는 이름으로 자신을 광고한다. 애플 브랜드명이 Bonjour.</td></tr>
+<tr><td><strong>TXT 레코드</strong></td><td>mDNS 광고에 딸린 키-값 정보(기기 플래그, 이름 등). AirDrop은 약 25개.</td></tr>
+<tr><td><strong>TLS 1.2/1.3, 포트 8770, self-signed 인증서</strong></td><td>AirDrop 세션은 TLS로 암호화되며 8770 포트를 쓴다. 인증서는 자체 서명이라 암호화만 하고 상대 신원은 검증하지 않는다. Everyone 모드에서 누구나 붙을 수 있는 이유.</td></tr>
+<tr><td><strong>/Discover, /Ask, /Upload</strong></td><td>AirDrop이 HTTP POST로 호출하는 세 엔드포인트. Discover는 상대 정보·아이콘 요청, Ask는 파일 수락 동의 요청, Upload는 실제 파일 전송.</td></tr>
+<tr><td><strong>binary plist</strong></td><td>애플 property list의 바이너리 직렬화 포맷. 파일 메타데이터가 이 형식.</td></tr>
+<tr><td><strong>DVZip</strong></td><td>AirDrop이 쓰는 애플 자체 압축 포맷.</td></tr>
+<tr><td><strong>CPIO</strong></td><td>유닉스 아카이브 포맷(tar과 비슷). AirDrop은 파일을 CPIO로 묶어 보낸다.</td></tr>
+<tr><td><strong>sharingd</strong></td><td>iOS/macOS에서 AirDrop을 담당하는 시스템 데몬.</td></tr>
+<tr><td><strong>Everyone for 10 minutes / Contacts Only</strong></td><td>AirDrop 수신 범위 설정. Contacts Only는 Apple ID 기반 신원 검증이 필요해 애플 협력 없이는 구현 불가. 안드로이드 진영도 Everyone 모드만 지원한다.</td></tr>
+<tr><td><strong>UKEY2 / D2D SecureMessage</strong></td><td>구글 Quick Share의 키 교환·암호화 방식. AirDrop과는 무관한 비교 대상.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s5">프로젝트·검증 용어</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>용어</th><th>설명</th></tr></thead>
+<tbody>
+<tr><td><strong>PoC / Alpha / RC</strong></td><td>개념 검증(된다는 것만 증명) → 알파(기능 완성, 불안정) → 릴리스 후보(출시 가능 품질).</td></tr>
+<tr><td><strong>Go/No-Go 게이트</strong></td><td>초기 검증 단계 끝에 계속할지 중단할지 결정하는 체크포인트.</td></tr>
+<tr><td><strong>호환 매트릭스 CI</strong></td><td>iOS/macOS 버전별 조합을 자동 테스트하는 지속 통합 파이프라인. 애플이 AWDL을 바꾸면 깨지므로 필수.</td></tr>
+<tr><td><strong>펜테스트</strong></td><td>외부 보안업체가 공격자 입장에서 취약점을 찾는 침투 테스트.</td></tr>
+<tr><td><strong>iperf3</strong></td><td>네트워크 처리량 측정 도구. AWDL을 켰을 때 인프라 Wi-Fi 속도 저하 측정용.</td></tr>
+<tr><td><strong>클린룸 구현</strong></td><td>원본 코드·바이너리를 보지 않고 공개된 규격·논문만으로 다시 만드는 방식. 지식재산 분쟁을 피하기 위한 절차.</td></tr>
+<tr><td><strong>owl / OpenDrop</strong></td><td>독일 TU Darmstadt seemoo-lab의 오픈소스. owl은 AWDL 구현(C), OpenDrop은 AirDrop 상위 프로토콜 구현(Python).</td></tr>
+<tr><td><strong>Protocol Prying</strong> (arXiv 2606.26967)</td><td>2026년 6월 공개된 AirDrop·Quick Share 프로토콜 구조와 취약점을 정리한 논문.</td></tr>
+<tr><td><strong>ath9k / mt76 / open-ath9k-htc-firmware</strong></td><td>Linux의 Atheros·MediaTek 오픈소스 Wi-Fi 드라이버 이름과, Atheros AR7010/AR9271용 공개 펌웨어. 후보 칩 선정 기준이 "이런 오픈 드라이버·펌웨어가 있느냐"다.</td></tr>
+<tr><td><strong>Quick Share / Nearby</strong></td><td>구글·삼성의 안드로이드 파일 공유 기능과 그 기반 라이브러리. AirDrop 호환이 이 안에 들어갔다.</td></tr>
+<tr><td><strong>Wi-Fi Aware</strong> (NAN)</td><td>Wi-Fi Alliance의 표준 P2P 발견 규격. AWDL의 표준판 격이지만 iOS 26에서만 지원되고 macOS·Windows에는 없어서 대안이 되지 못한다.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="s6">정리</h2>
+<ul>
+  <li>AirDrop 스택은 BLE 광고 → AWDL → mDNS → TLS(8770) → HTTP(/Discover, /Ask, /Upload) → plist/DVZip/CPIO 순서다. 위 세 층은 오픈소스로 재현돼 있고, 병목은 AWDL 하나다.</li>
+  <li>AWDL은 16 TU 슬롯, 3ms 동기 오차, 채널 6/44/149 호핑, Apple OUI 액션 프레임, 액티브 모니터가 핵심 키워드다.</li>
+  <li>Windows에서는 WiFiCx/WDI 모델이 임의 채널 제어를 막으므로, 전용 동글 + 가상 NIC로 우회하는 것이 현실적이다.</li>
+  <li>안드로이드는 펌웨어·HAL 계층에서 풀었고, 그래서 플래그십 폰만 지원되며 갤럭시북 같은 Windows 기기는 빠져 있다.</li>
+</ul>
+
+<h2>참고 자료</h2>
+<ul>
+  <li><a href="https://arxiv.org/abs/1808.03156">One Billion Apples' Secret Sauce — AWDL 역공학 논문 (Stute et al., 2018)</a></li>
+  <li><a href="https://github.com/seemoo-lab/owl">seemoo-lab/owl — 오픈소스 AWDL 구현</a></li>
+  <li><a href="https://github.com/seemoo-lab/opendrop">seemoo-lab/opendrop — 오픈소스 AirDrop 구현</a></li>
+  <li><a href="https://arxiv.org/abs/2606.26967">Protocol Prying — AirDrop / Quick Share 프로토콜 분석 (2026)</a></li>
+  <li><a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/netcx/wifi-wdf-class-extension-wificx">Microsoft Learn — WiFiCx 소개</a></li>
+  <li><a href="https://9to5google.com/2025/11/20/android-quick-share-airdrop-pixel-10/">9to5Google — Pixel 10 Quick Share, AirDrop 호환 출시</a></li>
+  <li><a href="https://news.samsung.com/us/samsung-airdrop-quick-share-galaxy-s26-series">Samsung Newsroom — Galaxy S26 Quick Share AirDrop 지원</a></li>
+</ul>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

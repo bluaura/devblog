@@ -18,6 +18,19 @@
   },
   "posts": [
     {
+      "slug": "2026-08-26-windows-airdrop-awdl-glossary",
+      "title": "Windows에서 AirDrop 구현하기: AWDL부터 WiFiCx까지 용어 정리",
+      "date": "2026-08-26",
+      "tags": [
+        "Windows",
+        "튜토리얼",
+        "AirDrop",
+        "AWDL",
+        "드라이버"
+      ],
+      "summary": "AirDrop 스택(BLE→AWDL→mDNS→TLS 8770→/Discover,/Ask,/Upload)과 Windows 드라이버(NDIS·NetAdapterCx·WiFiCx) 용어 50여 개를 계층별로 정리. 병목이 AWDL 하나인 이유와 전용 동글+가상 NIC 우회 구조."
+    },
+    {
       "slug": "2026-08-13-loop-engineering-stack",
       "title": "루프 엔지니어링: 4단계 루프 스택 완전 해부",
       "date": "2026-08-13",
