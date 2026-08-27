@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>DeepSeek Harness 해부: 이용자 관점과 아키텍트 관점</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-08-27-deepseek-harness-review.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-08-27-deepseek-harness-review.html</guid>
+      <description>Everything is a Plugin을 내세운 DeepSeek Harness v0.1의 Cordis 커널·3계층 설정·주요 플러그인 구조와, Claude Code 대비 8개 항목 장단점 비교</description>
+      <pubDate>Thu, 27 Aug 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>Windows에서 AirDrop 구현하기: AWDL부터 WiFiCx까지 용어 정리</title>
       <link>https://bluaura.github.io/devblog/posts/2026-08-26-windows-airdrop-awdl-glossary.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-08-26-windows-airdrop-awdl-glossary.html</guid>

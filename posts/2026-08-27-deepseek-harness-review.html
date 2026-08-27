@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DeepSeek Harness 해부: 이용자 관점과 아키텍트 관점 · 블루오라 개발노트</title>
+<meta name="description" content="Everything is a Plugin을 내세운 DeepSeek Harness v0.1의 Cordis 커널·3계층 설정·주요 플러그인 구조와, Claude Code 대비 8개 항목 장단점 비교">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DeepSeek Harness 해부: 이용자 관점과 아키텍트 관점">
+<meta property="og:description" content="Everything is a Plugin을 내세운 DeepSeek Harness v0.1의 Cordis 커널·3계층 설정·주요 플러그인 구조와, Claude Code 대비 8개 항목 장단점 비교">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-08-27-deepseek-harness-review.html">
+<meta property="article:published_time" content="2026-08-27">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-08-27-deepseek-harness-review.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>DeepSeek Harness 해부: 이용자 관점과 아키텍트 관점</h1>
+    <p class="sub"><span class="tag">AI</span><span class="tag">회고</span><span class="tag">DeepSeek</span><span class="tag">Claude Code</span> &nbsp;2026-08-27</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">공개일</div><div class="value">2026-08-13</div><div class="delta">v0.1 developer preview</div></div>
+  <div class="stat"><div class="label">라이선스</div><div class="value">MIT</div><div class="delta">TypeScript / Node 22.19+</div></div>
+  <div class="stat"><div class="label">패키지 수</div><div class="value">약 49개</div><div class="delta">전부 플러그인</div></div>
+  <div class="stat"><div class="label">지원 모델</div><div class="value">비종속</div><div class="delta">DeepSeek, Claude, GPT, Gemini, Ollama</div></div>
+</div>
+
+<blockquote>DeepSeek Harness(dsh)는 "Everything is a Plugin"을 내세운 오픈소스 코딩 에이전트 런타임이다. Claude Code나 Codex CLI가 완성된 에이전트에 확장 포인트를 붙인 구조라면, dsh는 에이전트 루프 자체까지 교체 가능한 마이크로커널이다. 구조적으로는 현재 나온 하네스 중 가장 잘 분해되어 있지만, 사용성과 성숙도는 아직 프리뷰 수준이다. 앱 개발자이면서 AI 보조 개발에 관심 있는 입장에서 이용자 관점과 아키텍트 관점을 나눠 정리했다.</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">기본 팩트</a></li>
+    <li><a href="#s2">다른 하네스와 무엇이 다른가</a></li>
+    <li><a href="#s3">내부 구조: Cordis 커널과 3계층 설정</a></li>
+    <li><a href="#s4">주요 플러그인 카탈로그</a></li>
+    <li><a href="#s5">Claude Code 대비 장단점</a></li>
+    <li><a href="#s6">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">기본 팩트</h2>
+
+<p>2026년 8월 13일 DeepSeek-V4-Pro(1.6T 파라미터, 토큰당 49B 활성, 1M 컨텍스트)와 함께 공개됐다. MIT 라이선스, TypeScript/Node.js 22.19 이상, pnpm 모노레포 구조다. 설치와 실행은 한 줄이다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">terminal</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-bash">export DEEPSEEK_API_KEY=YOUR_API_KEY
+npx @deepseek-ai/dsh web
+# Web UI: http://127.0.0.1:3080</code></pre>
+</div>
+
+<p>Web UI 외에 CLI와 Python SDK가 있다. 모델은 DeepSeek에 묶여 있지 않고 Anthropic, OpenAI, AWS Bedrock, Azure, Gemini, OpenAI 호환 게이트웨이, Ollama 같은 로컬 서버까지 붙는다. 특이하게 Claude Code와 Codex를 서브에이전트로 호출하는 브리지가 들어 있어, dsh를 플래너로 두고 실제 작업을 다른 에이전트에 위임하는 구성도 가능하다.</p>
+
+<p>같은 날 API 가격이 인상됐다(8월 16일 적용). V4-Flash 오프피크 기준 입력 $0.22/M, 출력 $0.66/M, V4-Pro는 $0.66/M, $1.98/M이다. 이전 대비 1.5~2.3배 올랐지만 여전히 Claude 대비 크게 저렴하다.</p>
+
+<div class="callout warn">V4-Flash-0731의 공식 벤치마크(Terminal Bench 2.1 82.7 vs Claude Opus 4.8 85.0)는 Harness의 Minimal 모드로 측정됐다. 즉 발표된 점수는 모델 단독이 아니라 모델과 하네스의 합산 결과다. 다른 런타임에서 재현하면 차이가 날 수 있다.</div>
+
+<p>공개 직후 GitHub 스타가 수만 개 붙었지만, DeepSeek는 외부 PR을 받지 않는다. 기여는 커뮤니티 플러그인과 Discussion으로만 유도한다.</p>
+
+<h2 id="s2">다른 하네스와 무엇이 다른가</h2>
+
+<p>첫째, 특권 코어가 없다. Claude Code, Codex CLI, Qwen Code, Kimi CLI는 완성된 에이전트 위에 MCP, hooks, plugins 같은 확장 포인트를 제공한다. dsh는 모델 어댑터, 툴 레지스트리, 세션 로그, 에이전트 루프 자체가 모두 교체 가능한 플러그인이라 코어를 패치할 필요 없이 어떤 부품이든 갈아끼울 수 있다.</p>
+
+<p>둘째, 네 가지 런타임 모드가 프리셋으로 제공된다.</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>모드</th><th>구성</th><th>용도</th></tr></thead>
+<tbody>
+<tr><td>Standard</td><td>파일시스템, 쉘, 웹 검색, 플래닝, 서브에이전트 전체</td><td>일반 코딩 에이전트</td></tr>
+<tr><td>Code</td><td>툴을 TypeScript SDK로 노출, 모델이 코드로 오케스트레이션</td><td>다단계 툴콜 왕복 비용 절감</td></tr>
+<tr><td>Minimal</td><td>bash와 텍스트 에디터 두 개만</td><td>공식 벤치마크 측정용</td></tr>
+<tr><td>Creator</td><td>커스텀 프리셋 개발 환경</td><td>플러그인 테스트, 진단</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>셋째, append-only 세션 이벤트 로그가 1급 시민이다. 시스템 프롬프트, 추론, 툴 호출과 결과, 컨텍스트 주입, 서브에이전트 스케줄링까지 모델이 본 모든 것이 기록되고, resume, fork, replay, 전문 검색, 텔레메트리가 이 하나의 스트림에서 파생된다. 자율 에이전트를 디버깅하거나 재현할 때 다른 도구보다 투명하다.</p>
+
+<p>넷째, 설정이 코드가 아니라 YAML 플러그인 트리이며 핫리로드된다. 소스를 건드리지 않고 설정 파일만 바꿔 모델 엔드포인트나 실행 워크플로를 교체할 수 있다.</p>
+
+<h2 id="s3">내부 구조: Cordis 커널과 3계층 설정</h2>
+
+<p>커널은 Cordis라는 메타 프레임워크다. DeepSeek는 이 설계를 "A Programming Paradigm for Spatiotemporal Composability"라는 논문으로 설명한다. 핵심 개념은 다섯 가지다.</p>
+
+<ol class="steps">
+  <li><strong>Context</strong> — 공유 런타임 컨테이너. 런처가 루트 Context를 만들고 <code>cordis.yml</code>을 읽어 Loader 플러그인이 나머지를 마운트한다.</li>
+  <li><strong>Plugin</strong> — ctx를 인자로 받아 기능을 등록하는 함수. 툴, LLM 어댑터, 파일 접근, 에이전트 루프 전부 이 형태다.</li>
+  <li><strong>Service</strong> — ctx에 노출되는 기능. 다른 플러그인은 <code>inject</code>로 필요한 서비스를 선언해 의존성 주입을 받는다.</li>
+  <li><strong>Event</strong> — 타입드 이벤트 시스템. broadcast 방식과 waterfall(조건 충족 시 단락) 방식을 지원하며 declaration merging으로 이벤트 인터페이스를 확장한다.</li>
+  <li><strong>Lifecycle / Fiber</strong> — mount와 unmount 단계가 있고, 플러그인이 내려가면 그 플러그인이 등록한 서비스, 리스너, 툴이 자동으로 정리된다. 세션마다 격리된 fiber에 마운트된다.</li>
+</ol>
+
+<p>설정은 세 층으로 쌓인다.</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>계층</th><th>역할</th><th>예</th></tr></thead>
+<tbody>
+<tr><td>Bundle</td><td>플러그인 묶음, 런타임 토대</td><td>Base(LLM, 세션 저장), Headless(쉘 툴), Web-App(API 게이트웨이, WebSocket)</td></tr>
+<tr><td>Profile</td><td>번들 조합에 오버라이드 적용</td><td><code>cordis.patch.yml</code>로 엔드포인트, 경로 등 배포별 값 덮어쓰기</td></tr>
+<tr><td>Agent Preset</td><td>세션별 페르소나</td><td>지시문, 툴 접근 범위, 서브에이전트 정책을 YAML로 정의, 디렉토리 자동 발견</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>프리셋은 세션 전용 fiber에 마운트되므로 한 인스턴스가 완전히 다른 툴셋과 정체성을 가진 에이전트 여러 개를 동시에 호스팅할 수 있다. 설정 파일 형태는 다음과 같다(카탈로그 문서 기준, 옵션명은 프리뷰 중 바뀔 수 있다).</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">cordis.yml</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-yaml">- dsh-agent-loop:
+    maxParallelToolCalls: 2
+
+- dsh-llm-deepseek:
+    apiKeyEnv: DEEPSEEK_API_KEY
+    thinking: enabled
+    reasoningEffort: high
+    maxTokens: 256000
+
+- dsh-session-persistence-jsonl:
+    root: ./.sessions
+    packChunks: true
+    compression: zstd
+
+- dsh-sandbox-policy:
+    mode: read-only
+    workspaceRoot: /workspace
+
+- dsh-compaction-basic:
+    thresholdRatio: 0.8
+    retainRatio: 0.16</code></pre>
+</div>
+
+<h2 id="s4">주요 플러그인 카탈로그</h2>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>분류</th><th>플러그인</th><th>역할</th></tr></thead>
+<tbody>
+<tr><td>루프</td><td><code>dsh-agent-loop</code></td><td>추론 사이클 오케스트레이션, 병렬 툴콜 상한</td></tr>
+<tr><td>모델</td><td><code>dsh-llm-deepseek</code>, <code>dsh-llm-pi-ai</code>, <code>dsh-llm-replay</code></td><td>DeepSeek 어댑터, 멀티프로바이더 게이트웨이, 테스트 픽스처 재생</td></tr>
+<tr><td>실행</td><td><code>dsh-bash-local</code>, <code>dsh-pwsh-local</code>, <code>dsh-code-runtime-worker-thread</code></td><td>쉘 실행, JS 실행(힙과 컴퓨트 예산 제한)</td></tr>
+<tr><td>연동</td><td><code>dsh-mcp-client</code></td><td>MCP 서버 연결</td></tr>
+<tr><td>세션</td><td><code>dsh-session-persistence-jsonl</code>, <code>-sqlite</code>, <code>dsh-session-query-sqlite</code></td><td>JSONL(zstd) 또는 SQLite 저장, 전문 검색</td></tr>
+<tr><td>컨텍스트</td><td><code>dsh-compaction-basic</code>, <code>dsh-compaction-tool-result-pruner</code></td><td>임계치 기반 요약, 툴 출력 문자 예산 제한</td></tr>
+<tr><td>스킬</td><td><code>dsh-skill</code>, <code>dsh-skill-filesystem</code></td><td>스킬 레지스트리, 로컬 디렉토리 핫리로드 감시</td></tr>
+<tr><td>보안</td><td><code>dsh-sandbox-local</code>, <code>dsh-sandbox-policy</code>, <code>dsh-permission-presets</code></td><td>bubblewrap/Landlock, macOS Seatbelt, Windows ACL 토큰 격리와 승인 정책 묶음</td></tr>
+<tr><td>멀티에이전트</td><td><code>dsh-experimental-agent-team</code></td><td>메시지 큐 기반 다중 에이전트 조율</td></tr>
+<tr><td>호스트</td><td><code>dsh-host-apiproxy</code>, <code>dsh-client-connection</code>, <code>dsh-settings-file</code></td><td>HTTP 게이트웨이, 비루프백 신뢰 경계, YAML 설정 핫리로드</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>문서에서 빠져 있는 부분도 있다. 컨텍스트 윈도 관리의 세부 전략, 서브에이전트 간 조율 방식, 알려진 실패 모드는 아직 정리되어 있지 않다.</p>
+
+<h2 id="s5">Claude Code 대비 장단점</h2>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>항목</th><th>DeepSeek Harness</th><th>Claude Code</th></tr></thead>
+<tbody>
+<tr><td>개방성</td><td>MIT, 에이전트 루프까지 교체 가능</td><td>상용, MCP/hooks/plugins/SDK로 확장</td></tr>
+<tr><td>모델 선택</td><td>어떤 모델이든, 로컬 LLM 포함</td><td>Claude 전용</td></tr>
+<tr><td>관측성</td><td>이벤트 로그 replay, fork, 검색 내장</td><td>트랜스크립트와 hooks 수준</td></tr>
+<tr><td>성숙도</td><td>프리뷰, 브레이킹 체인지 예고, 문서 지연</td><td>안정, IDE, 데스크톱, 모바일, Slack, GitHub Actions 통합</td></tr>
+<tr><td>사용성</td><td>플러그인 설치와 설정이 고통점, 작업 중 멈춰 continue가 필요하다는 보고</td><td>설치 즉시 동작</td></tr>
+<tr><td>비용</td><td>하네스 무료, 모델 비용만 발생</td><td>구독 또는 API</td></tr>
+<tr><td>생태계</td><td>외부 PR 미수용, 커뮤니티 플러그인 초기 단계</td><td>플러그인 마켓과 Skills 성숙</td></tr>
+<tr><td>GitHub 워크플로</td><td>PR 자동화 미완</td><td>issue-to-PR, 자동 리뷰 네이티브</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>이용자 관점에서 가장 자주 나오는 비판은 GitHub Discussion #326에 정리되어 있다. 요지는 "49개 패키지 줄 테니 에이전트를 직접 조립하라"는 접근이 그냥 코딩 어시스턴트를 쓰고 싶은 사람에게는 부담이고, VS Code나 Obsidian 생태계에서 봤듯 툴 등록 중복과 서비스 주입 순서 문제로 플러그인 충돌이 필연적이라는 것이다. 제안은 검증되고 동결된 기본 프로필을 제공하라는 것인데, 작성 시점 기준 유지보수자 답변은 없다.</p>
+
+<p>아키텍트 관점에서는 반대로 이 분해도가 장점이다. 하네스 엔지니어링을 공부하거나 자체 에이전트 런타임을 설계하려는 사람에게는 Cordis의 Context, Service, Event, Lifecycle 구조와 3계층 설정이 현재 공개된 코드 중 가장 참고할 만한 레퍼런스다.</p>
+
+<h2 id="s6">정리</h2>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>상황</th><th>판단</th></tr></thead>
+<tbody>
+<tr><td>실무 코딩 워크플로</td><td>Claude Code 유지. dsh는 프리뷰라 브레이킹 체인지와 멈춤 현상을 감수해야 한다.</td></tr>
+<tr><td>로컬 LLM으로 코딩 에이전트 실험</td><td>dsh가 적합. Ollama나 로컬 서버를 모델 플러그인으로 붙이면 비용 없이 시도할 수 있다.</td></tr>
+<tr><td>에이전트 런타임 설계 학습</td><td>dsh 소스와 Cordis 튜토리얼이 가장 좋은 교재.</td></tr>
+<tr><td>벤치마크 해석</td><td>DeepSeek 공식 점수는 Harness Minimal 모드 포함 결과임을 감안한다.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout">작성 시점(2026-08-27) 기준 DeepSeek Harness v0.1 developer preview. 플러그인 이름과 설정 옵션은 이후 버전에서 바뀔 수 있다.</div>
+
+<h2>참고 자료</h2>
+<ul>
+  <li><a href="https://github.com/deepseek-ai/deepseek-harness">deepseek-ai/deepseek-harness (GitHub)</a></li>
+  <li><a href="https://deepseek.com/harness/en/">DeepSeek Harness 공식 페이지</a></li>
+  <li><a href="https://deepseek-harness.github.io/deepseek-harness/en/develop/cordis-tutorial/">Cordis 튜토리얼</a>, <a href="https://deepseek-harness.github.io/deepseek-harness/en/reference/config-catalog">Plugin Config Catalog</a></li>
+  <li><a href="https://github.com/deepseek-ai/deepseek-harness/discussions/326">Discussion #326 — Everything is a Plugin의 사용자 측 비용</a></li>
+  <li><a href="https://venturebeat.com/technology/deepseek-harness-launches-as-open-source-rival-to-claude-code-alongside-v4-pro-on-api-with-higher-prices">VentureBeat</a>, <a href="https://www.infoq.com/news/2026/08/deep-seek-harness/">InfoQ</a>, <a href="https://thenewstack.io/deepseek-harness-open-source-plugins/">The New Stack</a></li>
+  <li><a href="https://www.datacamp.com/tutorial/deepseek-harness">DataCamp 핸즈온</a>, <a href="https://www.cometapi.com/deepseek-v4-flash-0731-deepseek-harness-guide-to-the-agentic-coding-breakthrough-2026/">CometAPI (V4 Flash 벤치마크)</a></li>
+</ul>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
