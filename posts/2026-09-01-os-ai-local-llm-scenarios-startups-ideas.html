@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로컬 LLM 시대의 OS + AI: 유저 시나리오, 스타트업 지형, AI OS 서비스, 앱 개발자의 기회 (2026.09) · 블루오라 개발노트</title>
+<meta name="description" content="Apple·MS·Google의 에이전틱 OS 현황, OpenClaw 이후 스타트업 25곳 지형, AI OS 서비스 프리미티브 14종, 그리고 씬 클라이언트·승인 UX·허브 콘솔 등 앱 개발자 아이디어 12선과 우선순위 3개">
+<meta property="og:type" content="article">
+<meta property="og:title" content="로컬 LLM 시대의 OS + AI: 유저 시나리오, 스타트업 지형, AI OS 서비스, 앱 개발자의 기회 (2026.09)">
+<meta property="og:description" content="Apple·MS·Google의 에이전틱 OS 현황, OpenClaw 이후 스타트업 25곳 지형, AI OS 서비스 프리미티브 14종, 그리고 씬 클라이언트·승인 UX·허브 콘솔 등 앱 개발자 아이디어 12선과 우선순위 3개">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-01-os-ai-local-llm-scenarios-startups-ideas.html">
+<meta property="article:published_time" content="2026-09-01">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-09-01-os-ai-local-llm-scenarios-startups-ideas.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>로컬 LLM 시대의 OS + AI: 유저 시나리오, 스타트업 지형, AI OS 서비스, 앱 개발자의 기회 (2026.09)</h1>
+    <p class="sub"><span class="tag">AI</span><span class="tag">회고</span><span class="tag">LLM</span><span class="tag">에이전트</span><span class="tag">macOS</span><span class="tag">Windows</span><span class="tag">Android</span> &nbsp;2026-09-01</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat">
+    <div class="label">Mac Studio M5 Ultra</div>
+    <div class="value">512GB</div>
+    <div class="delta">1.2TB/s, 9/22 출하</div>
+  </div>
+  <div class="stat">
+    <div class="label">OpenClaw GitHub 스타</div>
+    <div class="value">323k+</div>
+    <div class="delta">2026-05, 역대 6위</div>
+  </div>
+  <div class="stat">
+    <div class="label">Ollama Series B</div>
+    <div class="value">$65M</div>
+    <div class="delta">월간 개발자 890만</div>
+  </div>
+  <div class="stat">
+    <div class="label">OS AI 하드웨어 문턱</div>
+    <div class="value">12GB</div>
+    <div class="delta">Apple AFM 3 = Gemini Intelligence</div>
+  </div>
+</div>
+
+<blockquote>
+2026년 9월 현재 "OS + AI"는 세 층으로 갈라졌다. OS 벤더는 App Intents·MCP·AppFunctions로 <strong>앱을 에이전트의 도구로 등록하는 레지스트리</strong>를 깔고 있고, 3rd-party는 OpenClaw 이후 <strong>상주형 개인 에이전트</strong>와 <strong>로컬↔클라우드 라우팅</strong>으로 이동했으며, 하드웨어는 Mac Studio 512GB·DGX Spark·Strix Halo로 "가정용 프런티어 근접" 티어를 만들었다. 토큰 단가만 보면 로컬은 클라우드를 못 이긴다. 로컬의 정당성은 프라이버시, 24시간 상주, 가족 공유 허브, 정책 리스크 헤지에서 나온다. 앱 개발자의 기회는 런타임이 아니라 그 위의 <strong>씬 클라이언트·승인 UX·기기 연동·에이전트 발견성</strong>에 있다.
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">왜 지금인가: 하드웨어 티어와 경제성</a></li>
+    <li><a href="#s2">1st-party OS AI 현황: Apple · Microsoft · Google</a></li>
+    <li><a href="#s3">유저 시나리오: 오늘 되는 것과 홈·엣지 확장</a></li>
+    <li><a href="#s4">스타트업 지형 25선과 OpenClaw 이후</a></li>
+    <li><a href="#s5">AI OS가 제공할 수 있는 서비스 프리미티브</a></li>
+    <li><a href="#s6">아이디에이션: 비어 있는 자리</a></li>
+    <li><a href="#s7">앱 개발자가 할 수 있는 아이디어 12선</a></li>
+    <li><a href="#s8">정리</a></li>
+  </ol>
+</div>
+
+<div class="callout">
+<strong>범위와 조사 방법</strong> — 2026-09-01 기준 웹 조사(검색 약 60회, 원문 확인 약 80건). 1st-party OS AI, 3rd-party 에이전트 레이어, 로컬 LLM 인프라, 스마트홈·엣지까지 다룬다. 출처로 확정하지 못한 항목은 <strong>[미검증]</strong>으로 표기했다. 하드웨어 시장·투자 관점은 <a href="/posts/2026-09-01-local-llm-hardware-mac-vs-spark.html">투자 블로그의 별도 글</a>에서 다뤘고, 이 글은 사용자 시나리오와 개발자 관점에 집중한다.
+</div>
+
+<h2 id="s1">1. 왜 지금인가: 하드웨어 티어와 경제성</h2>
+
+<p>2026년의 변화는 "로컬에서 돌아간다"가 아니라 "로컬에서 돌아가는 모델이 쓸 만해졌다"이다. MoE 구조(gpt-oss-120b, Qwen3 235B-A22B, DeepSeek 계열)가 대용량 유니파이드 메모리와 궁합이 맞으면서, 디코드 속도가 <em>메모리 대역폭 ÷ 활성 파라미터</em>로 결정되는 Mac 계열이 대화·에이전트 루프에 유리해졌다. Apple은 2026-08-25 M5 Max/M5 Ultra Mac Studio를 "온디바이스 AI를 위한 궁극의 데스크톱"으로 발표했고, 4대 클러스터 시 단일 대비 최대 3배 추론을 공식 언급했다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>메모리 티어</th><th>대표 기기</th><th>실용 모델</th><th>속도 (출처 기준)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>16~32GB</td><td>Mac mini M4, RTX 4090/5090</td><td>Gemma 4 12B/26B MoE, Qwen3 30B-A3B, gpt-oss-20b</td><td>DGX Spark gpt-oss-20b 약 50 tok/s</td></tr>
+    <tr><td>64GB</td><td>MacBook Pro / Studio M4·M5 Max</td><td>30~35B급 여유, 70B Q4 저속</td><td>Qwen3.5 35B에서 M4 64GB가 Spark 대비 약 2배</td></tr>
+    <tr><td>128GB</td><td>M4 Max 128GB($3,999) / DGX Spark($4,699) / Strix Halo($1,800~3,000)</td><td>gpt-oss-120b, 70B Q4</td><td>Spark: 120B 38.6 tok/s, 프리필 1,723 tok/s</td></tr>
+    <tr><td>256GB</td><td>M3 Ultra / M5 Ultra($5,499~)</td><td>120B MoE 여유, 235B MoE Q4</td><td>M3 Ultra 120B 약 70 tok/s. M5 Ultra 수치는 <strong>[미검증]</strong> 추정</td></tr>
+    <tr><td>512GB</td><td>M5 Ultra 512GB($18,299)</td><td>Llama 4 Maverick 400B Q4(약 220GB)</td><td>400B MoE 약 12 tok/s 추정 <strong>[미검증]</strong></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>경제성: 개인은 클라우드가 싸다</h3>
+
+<p>API 바닥가는 입력 $0.20/M 수준까지 내려왔다(2026-07 OpenAI 인하 이후, 단일 출처). SitePoint의 12개월 TCO(2026-08)에서 50만 토큰/일 개인 사용자는 OpenAI API $1,260, 오픈웨이트 API $360, 로컬(M4 Ultra) $6,457로, <strong>100만 토큰/일 미만 개인·프로슈머는 클라우드가 경제적</strong>이라는 결론이다. 팀 단위 500만 토큰/일에서 18~24개월에 패리티가 온다.</p>
+
+<p>따라서 로컬 LLM의 정당화 근거는 비용이 아니라 다음 네 가지다.</p>
+
+<ul>
+  <li><strong>연속 스트림 데이터</strong> — 카메라·마이크·화면 이력은 토큰 수가 폭발하고, 클라우드 전송 자체가 프라이버시 문제가 된다. Limitless는 Meta 인수 직후 EU·영국·한국 등에서 즉시 서비스를 종료했고, OpenAI Codex "Chronicle"은 스크린샷을 비암호화 클라우드로 보낸다는 비판을 받았다.</li>
+  <li><strong>24시간 상주 에이전트</strong> — OpenClaw 같은 상시 에이전트는 API 과금이 예측 불가능하다. Mac mini M4 idle 8~12W, 연 전기료 약 $15 수준이 대안이 된다.</li>
+  <li><strong>가족·다중 기기 허브</strong> — 폰·태블릿·TV·카메라가 하나의 홈 모델을 공유하는 구조는 클라우드 구독을 사람 수만큼 사는 것보다 단순하다.</li>
+  <li><strong>정책·가용성 헤지</strong> — 모델 변경, 가격 인상, 지역 차단, 인터넷 단절에 대한 보험.</li>
+</ul>
+
+<h2 id="s2">2. 1st-party OS AI 현황: Apple · Microsoft · Google</h2>
+
+<p>세 진영 모두 2026년에 "OS를 에이전트의 실행 환경으로" 재정의했다. 공통점은 셋이다. 앱 기능을 자연어 설명과 함께 등록하는 <strong>도구 레지스트리</strong>(App Intents / MCP On-Device Registry / AppFunctions), 온디바이스 <strong>개인 컨텍스트 인덱스</strong>(Spotlight 시맨틱 인덱스 / Recall+Semantic Search / Gemini Intelligence), 그리고 <strong>12GB RAM</strong>으로 수렴한 하드웨어 문턱이다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>축</th><th>Apple (iOS/macOS 27, WWDC26)</th><th>Microsoft (Windows 11)</th><th>Google (Android 17, I/O 26)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>상태</td><td>Siri AI 개발자 베타, 사용자 베타 "올해 후반", 초기 영어만</td><td>Copilot Actions·Agent Workspace는 Insider 프리뷰. Recall·Click to Do·Settings 에이전트는 Copilot+ PC에서 출시</td><td>Gemini Intelligence는 Pixel 11·Galaxy Z Fold8/Flip8에 7~8월 출시. Pixel 10 지원 여부 불확실</td></tr>
+    <tr><td>앱→에이전트 노출</td><td>App Intents 스키마 + IndexedEntity + View Annotations. SiriKit 폐기 예고</td><td>MCP On-Device Registry(odr.exe), File Explorer MCP 서버, App Actions (Preview)</td><td>AppFunctions = 앱을 온디바이스 MCP 서버로 노출 (실험 프리뷰)</td></tr>
+    <tr><td>온디바이스 모델</td><td>AFM 3 Core 3B / Core Advanced 20B 희소(활성 1~4B), 12GB 기기 한정</td><td>Phi Silica → 2026-11 Aion Instruct로 교체 예정(Snapdragon 우선). Phi Silica GPU 실행 실험(RTX 30+)</td><td>Gemini Nano 4, 12GB + 플래그십 SoC</td></tr>
+    <tr><td>개발자 API</td><td>Foundation Models(이미지 입력, 서버 모델 tool calling, PCC 200만 DL 미만 무료), 신규 Core AI 프레임워크(3B~70B), MLX Thunderbolt RDMA</td><td>Windows AI APIs 1.8(요약·객체 지우기), Phi Silica LoRA, Windows ML, Foundry Local</td><td>ML Kit Prompt API(Structured Output 예정), LiteRT-LM, Firebase AI Logic 하이브리드 라우팅, ADK for Android</td></tr>
+    <tr><td>격리·권한</td><td>온디바이스 인덱스 + PCC(무상태·검증 가능), PCC를 Google Cloud NVIDIA GPU로 확장</td><td>에이전트 전용 계정, 6개 폴더 범위 제한, XPIA 경고 명시, Intune 제어</td><td>Private Compute Core(pKVM), 정밀 위치 명시 동의. 세부 에이전트 권한 모델 미공개</td></tr>
+    <tr><td>코딩 에이전트</td><td>Xcode 27: ACP + MCP + Anthropic/OpenAI/Google 에이전트, 시뮬레이터 조작</td><td>VS/VS Code Copilot 에이전트 모드가 Windows MCP 커넥터</td><td>Antigravity (세부 미확인)</td></tr>
+    <tr><td>데스크톱 포지셔닝</td><td>Mac Studio M5 Ultra 512GB "프런티어급 오픈웨이트 모델 온디바이스"</td><td>2026-01 Copilot 통합 축소·Recall 개편 검토 보도. 에이전트 기능은 기업 우선</td><td>Gemini for macOS(Gemini Spark 폴더 정리), Googlebook/Aluminium OS 발표(출하 시점 미확인)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>주요 출처: <a href="https://www.apple.com/newsroom/2026/06/apple-introduces-siri-ai-a-profoundly-more-capable-and-personal-assistant/">Apple Newsroom (Siri AI)</a>, <a href="https://machinelearning.apple.com/research/introducing-third-generation-of-apple-foundation-models">Apple ML Research (AFM 3)</a>, <a href="https://developer.apple.com/videos/play/wwdc2026/102/">WWDC26 Platforms State of the Union</a>, <a href="https://learn.microsoft.com/en-us/windows/ai/mcp/overview">MS Learn (MCP on Windows)</a>, <a href="https://support.microsoft.com/en-us/windows/ai/ai-features/experimental-agentic-features">MS Support (Agentic features)</a>, <a href="https://android-developers.googleblog.com/2026/05/android-ai-intelligence-system.html">Android Developers Blog (I/O 26)</a>, <a href="https://9to5google.com/2026/08/27/gemini-intelligence-nano-4/">9to5Google (Gemini Nano 4)</a>.</p>
+
+<div class="callout warn">
+<strong>주의</strong> — Microsoft는 2026-01 Windows Central 보도 기준으로 Copilot 버튼 남발을 중단하고 Recall을 "현 형태로는 실패"로 보고 개편을 검토 중이다. 반면 Semantic Search, Agent Workspace, Windows ML, MCP 레지스트리는 계속 개발한다. 즉 <strong>표면 UI는 후퇴, 플랫폼 계층은 전진</strong>이다. Windows 앱 개발자라면 Copilot 버튼이 아니라 MCP 커넥터·App Actions 쪽을 봐야 한다.
+</div>
+
+<h2 id="s3">3. 유저 시나리오: 오늘 되는 것과 홈·엣지 확장</h2>
+
+<h3>3-1. 2026-09-01 기준 실제로 가능한 것</h3>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>시나리오</th><th>플랫폼</th><th>상태</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>전화·FaceTime·메시지 실시간 통역(한국어 포함)</td><td>iOS 26 Live Translation</td><td>출시</td></tr>
+    <tr><td>인디 앱이 클라우드 비용 없이 온디바이스 3B 모델로 요약·태그·구조화 출력</td><td>Foundation Models framework</td><td>출시</td></tr>
+    <tr><td>Shortcuts에서 Apple Intelligence 모델 액션으로 파일 정리·메일 요약 자동화</td><td>iOS/macOS 26</td><td>출시</td></tr>
+    <tr><td>"지난주 본 파란 차트 있는 PDF" 자연어 검색(옵트인)</td><td>Copilot+ PC Recall</td><td>출시</td></tr>
+    <tr><td>화면 속 표 선택 → 요약·재작성, 표→Excel 변환</td><td>Click to Do (Phi Silica)</td><td>출시 / Excel 변환은 기업 우선</td></tr>
+    <tr><td>"화면이 너무 밝아"라고 쓰면 설정 항목을 찾아 적용</td><td>Windows Settings 에이전트</td><td>출시 (Copilot+ PC)</td></tr>
+    <tr><td>웹앱이 이미지·오디오를 로컬 Gemini Nano에 넘겨 처리</td><td>Chrome 148 Prompt API</td><td>출시 (22GB 여유·4GB VRAM 조건)</td></tr>
+    <tr><td>두서없는 음성을 정돈된 텍스트로, 40+ 앱 멀티스텝 작업 위임</td><td>Pixel 11 Rambler / Gemini Intelligence</td><td>출시 (Pixel 11·Z Fold8 한정)</td></tr>
+    <tr><td>Mac 화면을 Command 두 번으로 보여주고 폴더 정리·Docs 요약 위임</td><td>Gemini for macOS (Gemini Spark)</td><td>출시 (AI Ultra, 영어)</td></tr>
+    <tr><td>격리된 에이전트 계정에 6개 폴더만 열어주고 파일 작업 위임</td><td>Windows Copilot Actions</td><td>Insider 프리뷰</td></tr>
+    <tr><td>Siri가 메시지·메일·사진을 개인 맥락으로 검색하고 3rd-party 앱 액션 실행</td><td>iOS 27 Siri AI</td><td>개발자 베타</td></tr>
+    <tr><td>에이전트가 시뮬레이터 조작·테스트·크래시 수정</td><td>Xcode 27</td><td>베타</td></tr>
+    <tr><td>프런티어급 오픈웨이트 LLM을 로컬에서 실행</td><td>Mac Studio M5 Ultra + MLX/Core AI</td><td>예약 중, 9/22 출하</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>3-2. 홈·엣지 확장 시나리오</h3>
+
+<p>Mac mini/Studio를 "가정용 AI 허브"로 쓰는 시나리오는 이미 오픈소스 스택으로 구현 가능하다. Home Assistant Voice Preview Edition($59) + faster-whisper + Ollama(Qwen3 30B) + Piper 조합은 클라우드 0바이트로 음성 제어가 되고, Frigate는 qwen3-vl로 카메라 이벤트를 자연어 요약하며, Immich는 CLIP으로 사진을 시맨틱 검색한다. LM Studio 0.4.16의 LM Link(2026-06)는 Tailscale을 내장해 별도 VPN 없이 iPhone에서 홈 Mac 모델을 쓴다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>시나리오</th><th>구성 요소</th><th>로컬이어야 하는 이유</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>완전 로컬 음성 비서 — "거실 춥다" 한마디로 난방·커튼</td><td>Voice PE 위성 + Mac mini + Qwen3 30B</td><td>마이크 상시 개방</td></tr>
+    <tr><td>카메라 자연어 요약 — "오늘 낮에 현관에 누가 왔어?"</td><td>Frigate + qwen3-vl</td><td>영상 스트림 외부 반출 불가</td></tr>
+    <tr><td>가족 사진 사서 — "작년 제주 여행 할머니 사진으로 앨범"</td><td>Immich CLIP + 로컬 LLM</td><td>가족 얼굴 데이터</td></tr>
+    <tr><td>밤새 도는 백그라운드 에이전트 — 영수증 OCR·가계부 분류, 아침에 승인 목록만</td><td>격리 워크스페이스 + 상주 에이전트</td><td>24시간 API 비용</td></tr>
+    <tr><td>폰은 단말, 뇌는 집 — 출장 중 iPhone으로 홈 Studio의 120B 모델에 문서 요약</td><td>LM Link / Tailscale + Ollama</td><td>회사 문서 반출 금지</td></tr>
+    <tr><td>가족 구성원별 프로필 — 아이는 숙제 도우미, 부모는 일정 브리핑, 메모리 분리</td><td>Apple 홈 허브 루머(2026-10?) <strong>[미검증]</strong> 또는 자체 구성</td><td>가족 간 프라이버시</td></tr>
+    <tr><td>민감도 기반 라우팅 — 의료 질문은 로컬 고정, 상식은 저가 클라우드, 코딩은 프런티어</td><td>Conifer류 라우터 / Apple 3계층</td><td>데이터 분류 정책</td></tr>
+    <tr><td>노인 돌봄 — 낙상·장시간 무동작을 VLM이 판단, 사전 승인 연락처에만 알림</td><td>카메라 + VLM + 승인 게이트</td><td>돌봄 영상의 민감성</td></tr>
+    <tr><td>홈 IT 에이전트 — "게스트 Wi-Fi 이번 주말만 열어줘"</td><td>HA·NAS·라우터 MCP 서버 + 감사 로그</td><td>네트워크 자격증명</td></tr>
+    <tr><td>오프라인 재해 모드 — 인터넷 단절 시 Thread 메시 + 로컬 모델로 조명·잠금·안내</td><td>Matter/Thread + 로컬 허브</td><td>가용성</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>출처: <a href="https://botmonster.com/smart-home/build-private-local-ai-voice-assistant-2026/">Home Assistant 로컬 음성 가이드 (2026-06)</a>, <a href="https://docs.frigate.video/configuration/genai/genai_config/">Frigate GenAI 문서</a>, <a href="https://runaihome.com/blog/lm-studio-locally-lm-link-iphone-setup-2026/">LM Link 설정 (2026-06)</a>, <a href="https://www.myaiagentos.com/blog/mac-mini-ai-server-setup-guide-2026">Mac mini 에이전트 서버 가이드 (2026-05)</a>.</p>
+
+<h2 id="s4">4. 스타트업 지형 25선과 OpenClaw 이후</h2>
+
+<h3>4-1. OpenClaw에 무슨 일이 있었나</h3>
+
+<p>OpenClaw는 2025-11 Peter Steinberger가 "Warelay"로 시작해 Clawdbot → Moltbot → OpenClaw(2026-01-30)로 이름을 바꾼, 메신저(Telegram·WhatsApp·Discord)를 인터페이스로 PC 작업을 대행하는 로컬 상주 에이전트다. 2026-05 GitHub 323k+ 스타로 역대 6위, 주간 신규 인스턴스 약 450만 건을 기록했고 Tim Cook이 2026-05 실적발표에서 Mac mini/Studio 품절의 원인으로 "에이전트 툴 수요"를 언급할 정도였다.</p>
+
+<p>그 다음이 중요하다. 2026-02 Steinberger는 OpenAI에 합류해 "Claw Labs"를 이끌고, 프로젝트는 비영리 재단(2026-07 501(c)(3), 스폰서 OpenAI·GitHub·NVIDIA)으로 넘어갔다. 보안 사고가 잇따랐다. Cisco가 3,000여 개 스킬 중 386개를 악성으로 확인했고, 2026-07에만 CVE 14건 이상(MCP 루프백 정책 우회, 심링크 샌드박스 탈출)이 나왔다. 핵심 설계 결함은 <strong>스킬 API 키가 샌드박스가 아닌 호스트 에이전트 프로세스에 주입</strong>된다는 점이었다.</p>
+
+<p>결과적으로 OpenClaw는 세 갈래로 분화했다. 8주 만에 4개 재작성 프로젝트(Nanobot·ZeroClaw·PicoClaw·NanoClaw)가 합계 116k 스타를 모았고, 대기업은 "안전한 클로" 패키징으로 상품화했으며(NVIDIA NemoClaw, Cisco DefenseClaw, Tencent ClawPro, Microsoft ClawPilot, Google Remy), Nous Research의 <strong>Hermes Agent</strong>(214k 스타, 3계층 메모리, 워크플로를 자동으로 스킬로 추상화)가 2026-06 OpenRouter 일일 토큰에서 OpenClaw를 추월했다. Sequoia 집계로 OpenClaw 주변 생태계 스타트업은 168개, 합산 월 매출은 약 $40만이다. 열기에 비해 돈은 아직 작다.</p>
+
+<h3>4-2. 카테고리별 지형</h3>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>분류</th><th>이름</th><th>한 줄</th><th>펀딩·상태 (2026)</th><th>BM</th></tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="8">A. 데스크톱 에이전트</td><td><a href="https://en.wikipedia.org/wiki/OpenClaw">OpenClaw</a></td><td>메신저로 조작하는 로컬 상주 에이전트</td><td>비영리 재단, 323k 스타</td><td>무료</td></tr>
+    <tr><td><a href="https://techcrunch.com/2026/07/13/hermes-agent-maker-nous-research-in-talks-for-new-funding-at-1-5b-valuation/">Hermes Agent (Nous)</a></td><td>스스로 스킬을 만드는 셀프호스팅 에이전트</td><td>$75M+ @ $1.5B 협상 보도(2026-07)</td><td>오픈소스 + 호스팅 $20~200/월</td></tr>
+    <tr><td><a href="https://www.simular.ai/articles/simular-raises-21-5m-to-build-autonomous-computer-agents">Simular</a></td><td>macOS/Windows 네이티브 컴퓨터 사용 에이전트, OSWorld 69.9%</td><td>Series A $21.5M (Felicis, NVentures, 2025-12)</td><td>Pro 유료 앱 + 오픈소스</td></tr>
+    <tr><td><a href="https://github.com/trycua/cua">Cua (YC)</a></td><td>컴퓨터 사용 에이전트용 Docker, Apple Silicon VM</td><td>YC 시드, 21.9k 스타</td><td>클라우드 샌드박스 과금</td></tr>
+    <tr><td><a href="https://startupintros.com/orgs/browser-use">Browser Use (YC W25)</a></td><td>오픈소스 브라우저 에이전트</td><td>시드 $17M (Felicis, 2025-03)</td><td>클라우드 API</td></tr>
+    <tr><td><a href="https://www.explainx.ai/blog/warmwind-os-ai-operating-system-1-0-launch-august-2026">Warmwind OS</a></td><td>클라우드 데스크톱 위 "디지털 직원", 1.0 출시(2026-08-26)</td><td>시드 EUR 1.5M</td><td>미공개. 완전 클라우드</td></tr>
+    <tr><td><a href="https://www.macrumors.com/2026/04/16/perplexity-personal-computer-for-mac/">Perplexity Personal Computer</a></td><td>Mac mini 상주, 로컬 파일·앱 조작, iPhone 원격</td><td>2026-04 출시, 추론은 클라우드</td><td>Max $200/월</td></tr>
+    <tr><td><a href="https://www.aitimes.com/news/articleView.html?idxno=207841">OpenJarvis (스탠포드)</a></td><td>0.5~9B 로컬 모델 자동 선택 온디바이스 에이전트 프레임워크</td><td>2026-03 공개, Apache 2.0</td><td>오픈소스</td></tr>
+    <tr><td rowspan="8">B. 런타임·툴링</td><td><a href="https://www.businesswire.com/news/home/20260709429551/en/Ollama-Raises-$65M-Series-B-Funding-to-Grow-its-Open-source-AI-Platform">Ollama</a></td><td>로컬 모델 실행 표준. MLX 백엔드 프리뷰(2026-03)</td><td>Series B $65M (Theory, Benchmark), 누적 $88M</td><td>Cloud $20/$200 + 엔터프라이즈</td></tr>
+    <tr><td><a href="https://huggingface.co/blog/ggml-joins-hf">llama.cpp / ggml</a></td><td>추론 엔진</td><td>2026-02 팀이 Hugging Face 합류</td><td>오픈소스</td></tr>
+    <tr><td><a href="https://getlatka.com/companies/lmstudio.ai">LM Studio</a></td><td>GUI 런타임, LM Link로 폰 접속</td><td>부트스트랩, ARR 약 $1.8M 추정 <strong>[미검증]</strong></td><td>개인 무료 + 팀 라이선스</td></tr>
+    <tr><td><a href="https://www.crunchbase.com/organization/exo-labs">Exo Labs</a></td><td>여러 Mac을 Thunderbolt 5 RDMA로 묶는 분산 추론</td><td>시드(Archetype, Dragonfly), 금액 비공개</td><td><strong>[미검증]</strong></td></tr>
+    <tr><td><a href="https://www.menlo.ai/blog/jan-nano">Jan (Menlo Research)</a></td><td>오프라인 우선 ChatGPT 대체 + 자체 소형 모델</td><td>싱가포르, 펀딩 비공개</td><td>오픈소스</td></tr>
+    <tr><td><a href="https://app.dealroom.co/companies/mintplex_labs">AnythingLLM</a></td><td>로컬 RAG + 노코드 에이전트</td><td>YC + 시드 총 $625k</td><td>데스크톱 무료 + 호스팅</td></tr>
+    <tr><td><a href="https://www.ycombinator.com/launches/RY1-conifer-local-first-least-cost-routing-system">Conifer (YC S26)</a></td><td>요청의 80%를 로컬로, 나머지를 최저가 클라우드로 라우팅</td><td>YC S26</td><td>팀 토큰 비용 절감</td></tr>
+    <tr><td><a href="https://docs.openwebui.com/license/">Open WebUI</a></td><td>셀프호스팅 챗 UI</td><td>2025-05 라이선스 변경 논란</td><td><strong>[미검증]</strong></td></tr>
+    <tr><td rowspan="5">C. 메모리·컨텍스트</td><td><a href="https://winbuzzer.com/2025/12/05/meta-acquires-ai-wearables-startup-limitless-kills-pendant-sales-and-sunsets-rewind-app-xcxwbn/">Limitless (구 Rewind)</a></td><td>화면·음성 기억</td><td>2025-12 Meta 인수, Rewind 앱 캡처 영구 종료, EU·한국 즉시 종료</td><td>-</td></tr>
+    <tr><td><a href="https://github.com/screenpipe/screenpipe">Screenpipe (YC S26)</a></td><td>24/7 화면·오디오 로컬 녹화를 MCP로 에이전트에 공급</td><td>21.3k 스타</td><td>앱 $25/월, Pro $50/시트</td></tr>
+    <tr><td><a href="https://www.prnewswire.com/news-releases/mem0-raises-24m-series-a-to-build-memory-layer-for-ai-agents-302597157.html">Mem0</a></td><td>에이전트 메모리 레이어</td><td>$24M (Basis Set, 2025-10), API 호출 186M/분기</td><td>오픈소스 + 사용량 과금</td></tr>
+    <tr><td><a href="https://www.letta.com/blog/our-next-phase/">Letta (구 MemGPT)</a></td><td>서버형 → 클라이언트형 Letta Code로 전환(2026-03)</td><td>Felicis 시드 $10M <strong>[미검증]</strong></td><td>오픈소스</td></tr>
+    <tr><td><a href="https://www.ycombinator.com/companies/khoj">Khoj (YC S23)</a></td><td>오프라인 가능 세컨드 브레인</td><td>2명</td><td><strong>[미검증]</strong></td></tr>
+    <tr><td rowspan="2">D. 로컬 생산성</td><td><a href="https://www.ycombinator.com/companies/char">Hyprnote / Char (YC S25, 서울)</a></td><td>완전 로컬 미팅 노트, Granola의 로컬 대안</td><td>한국인 창업, 2명</td><td><strong>[미검증]</strong></td></tr>
+    <tr><td><a href="https://weesperneonflow.ai/en/blog/2026-07-28-macwhisper-vs-superwhisper-offline-mac-2026/">MacWhisper / Superwhisper</a></td><td>온디바이스 전사·음성 입력</td><td>인디, 외부 투자 없음</td><td>일회성 EUR 64 / $8.49월·$249.99 평생</td></tr>
+    <tr><td rowspan="4">E. 홈·엣지</td><td><a href="https://botmonster.com/smart-home/build-private-local-ai-voice-assistant-2026/">Home Assistant (Nabu Casa)</a></td><td>Voice PE $59 + Ollama 네이티브 통합</td><td>-</td><td>클라우드 구독 + 하드웨어</td></tr>
+    <tr><td><a href="https://nvidianews.nvidia.com/news/nvidia-announces-nemoclaw">NVIDIA NemoClaw</a></td><td>Nemotron + OpenShell 샌드박스 + 프라이버시 라우터 한 줄 설치</td><td>GTC 2026 (2026-03)</td><td>DGX Spark $4,699 / RTX</td></tr>
+    <tr><td><a href="https://www.buysellram.com/blog/how-to-choose-the-best-mini-pc-for-local-ai-in-2026/">Strix Halo 미니PC</a></td><td>Framework Desktop, GMKtec EVO-X2 등 128GB 통합 메모리</td><td>$1,800~3,000</td><td>하드웨어</td></tr>
+    <tr><td><a href="https://www.starryhope.com/minipcs/hyperbox-mac-mini-always-on-ai-server/">Hyperbox</a></td><td>데이터센터 Mac mini를 월 $40에 임대, 코딩 에이전트 사전 설치</td><td><strong>[미검증]</strong></td><td>구독 (호스팅)</td></tr>
+    <tr><td rowspan="2">F. 한국</td><td><a href="https://v.daum.net/v/5rg9qYsAAr">아웃오브셋</a></td><td>인터넷 없이 동작하는 경량 온디바이스 음성 인식·합성</td><td>더벤처스 시드 (2026-05)</td><td>B2B (의료·법률·차량)</td></tr>
+    <tr><td><a href="https://dealsite.co.kr/articles/149811">노타</a></td><td>모델 경량화 넷츠프레소, 온디바이스 비전</td><td>2025-11 코스닥 상장</td><td>B2B</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>4-3. 관찰되는 패턴 7가지</h3>
+
+<ol class="steps">
+  <li><strong>폼팩터가 소프트웨어보다 먼저 정해졌다.</strong> OpenClaw가 "개인 에이전트 = 상주형 Mac mini"를 대중화했고, Perplexity·Hyperbox·Sequoia(파트너들에게 각인 Mac mini 200대 배포)가 그 폼팩터를 전제로 움직인다.</li>
+  <li><strong>오픈소스 코어 + 클라우드/호스팅 과금</strong>이 지배적 BM이다. Ollama·Hermes·Mem0·Cua·Screenpipe 모두 같은 구조다. 코드는 무료, 운영 편의가 유료.</li>
+  <li><strong>하이브리드 라우팅이 새 레이어</strong>가 됐다. Conifer, NemoClaw 프라이버시 라우터, Ollama Cloud, Apple의 온디바이스→PCC 3계층까지 "쉬운 건 로컬, 어려운 건 클라우드"가 기본값이다. 순수 로컬만 고집하는 곳은 소수.</li>
+  <li><strong>로컬을 택하는 진짜 이유는 비용이 아니다.</strong> 상시 에이전트의 예측 불가 API 비용, 화면·음성 상시 기록의 규제(GDPR), 규제 산업 컴플라이언스가 순서대로 온다. 속도는 부차적이다.</li>
+  <li><strong>메모리 레이어는 통폐합 중.</strong> 소비자 앱(Rewind·Limitless)은 빅테크에 흡수됐고, 남은 독립 플레이어는 "에이전트에 컨텍스트를 공급하는 MCP/파일 기반 인프라"로 포지션을 옮겼다. 소비자 앱보다 개발자 인프라가 생존했다.</li>
+  <li><strong>보안이 최대 병목이자 대기업의 진입로.</strong> 악성 스킬과 프롬프트 인젝션 사고 이후 "안전한 클로" 패키징이 대기업 상품화의 표준 방식이 됐다.</li>
+  <li><strong>런타임 계층은 통합·인수 단계.</strong> llama.cpp → Hugging Face, Ollama $88M을 제외하면 LM Studio·Msty·Jan·Pinokio는 소규모 부트스트랩이다. 런타임 자체로는 돈이 안 되고, 위(에이전트)나 아래(하드웨어)에서 수익이 난다.</li>
+</ol>
+
+<h2 id="s5">5. AI OS가 제공할 수 있는 서비스 프리미티브</h2>
+
+<p>Karpathy의 2023년 "LLM OS" 은유(LLM=CPU, 컨텍스트=RAM, 임베딩=디스크, 도구=주변기기)는 2025~26년에 실제 OS 벤더의 로드맵이 됐다. 그가 2025-06 YC 강연에서 "지금은 클라우드에 단말로 접속하는 1960년대 시분할 단계이고 개인용 컴퓨팅 혁명은 아직 오지 않았다"고 말했는데, 256GB 유니파이드 메모리 Mac이 바로 그 "개인용 LLM 컴퓨터"의 첫 세대다. 벤더 발표, 오픈소스 Agent OS 프로젝트, 보안 사고에서 추출한 프리미티브를 정리하면 다음과 같다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>#</th><th>프리미티브</th><th>근거·선례</th><th>현재 제공 주체</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">1</td><td>에이전트 프로세스 모델·스케줄러 — 시작·일시정지·체크포인트·재개, 자원 쿼터</td><td>MS Agent Workspace, 오픈소스 Agent OS 6대 프리미티브</td><td>Windows(프리뷰), 3rd-party</td></tr>
+    <tr><td class="num">2</td><td>에이전트 신원·계정 — 사용자와 분리된 주체, 부인방지 로그</td><td>Windows 에이전트 전용 계정</td><td>Windows</td></tr>
+    <tr><td class="num">3</td><td>capability 기반 권한 — 도구·폴더·네트워크 allowlist + 결과적 행동(결제·삭제·전송) 승인 게이트</td><td>Cowork 폴더별 승인, Windows 6개 폴더</td><td>부분적</td></tr>
+    <tr><td class="num">4</td><td>격리 워크스페이스 — VM·gVisor·pKVM, 자격증명을 샌드박스 경계 안에 주입</td><td>OpenClaw 호스트 키 주입 결함의 반면교사</td><td>Cowork, Android PCC</td></tr>
+    <tr><td class="num">5</td><td>도구·액션 레지스트리 — 앱이 자연어 설명으로 기능 등록, OS가 발견·중개</td><td>App Intents / MCP ODR / AppFunctions</td><td>3사 모두 (베타~프리뷰)</td></tr>
+    <tr><td class="num">6</td><td>접근성 기반 범용 UI 자동화 폴백 — 미등록 앱도 조작</td><td>Android 17, Apple Passwords 자동 로그인</td><td>Android, Apple(일부)</td></tr>
+    <tr><td class="num">7</td><td>개인 컨텍스트 인덱스 — 파일·메일·메시지·화면 이력의 시맨틱 인덱스, 저장과 프로세스 경계 모두 보호</td><td>Spotlight 시맨틱 인덱스, Recall(메모리 덤프 취약 사례)</td><td>Apple(베타), Windows</td></tr>
+    <tr><td class="num">8</td><td>시맨틱 파일시스템·미디어 인덱스 — CLIP/VLM 임베딩 자연어 검색</td><td>Immich, Frigate</td><td>3rd-party</td></tr>
+    <tr><td class="num">9</td><td>모델 라우터 — 온디바이스 소형 → 로컬 허브 대형 → 무상태 검증 클라우드</td><td>Apple 3계층, Foundry Local, Conifer</td><td>Apple(자사 한정), 3rd-party</td></tr>
+    <tr><td class="num">10</td><td>모델 서빙 데몬·메모리 관리 — 상주 모델 핫스왑, KV 캐시 공유, 다중 사용자 큐잉</td><td>Ollama/LM Studio 서버 역할의 OS 내재화</td><td>3rd-party</td></tr>
+    <tr><td class="num">11</td><td>음성·시각 파이프라인 — 웨이크워드→STT→LLM→TTS를 1초 예산 안에 표준화</td><td>Wyoming 프로토콜, Apple AFM 3 음성</td><td>HA, Apple</td></tr>
+    <tr><td class="num">12</td><td>이벤트·트리거 버스 — 카메라·캘린더·센서(Matter) 이벤트로 에이전트 깨우기</td><td>Safari "Notify Me", HA 자동화</td><td>부분적</td></tr>
+    <tr><td class="num">13</td><td>관측성·감사 로그 — 에이전트 도구 호출을 사용자 행동과 구별해 기록, 안전 삭제</td><td>Cowork 로그 644 권한 결함의 반면교사</td><td>미성숙</td></tr>
+    <tr><td class="num">14</td><td>원격 씬 클라이언트 프로토콜 — 폰·태블릿이 홈 허브의 모델·에이전트·메모리에 E2E 접속, 기기 바인딩·MFA</td><td>LM Link, Tailscale + Ollama</td><td>3rd-party, 개발자 수준</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout warn">
+<strong>신뢰 모델은 아직 미해결</strong> — Recall은 출시 1년 후에도 일반 사용자 권한 악성코드가 인프로세스 메모리에서 스크린샷을 복사할 수 있었고(2026-04 PoC), Brave는 Perplexity Comet에서 웹페이지 텍스트가 명령으로 해석되는 간접 프롬프트 인젝션을 시연했다(2025-08). Anthropic은 Cowork 내부 테스트에서 인젝션 성공률 약 1%를 보고했다. "관리되지만 제거되진 않음"이 현재 상태이고, 사용자가 승인에 익숙해져 늘 동의하게 되는 <strong>승인 피로</strong>가 다음 문제다. 이건 프레임워크가 아니라 UX의 문제이고, 앱 개발자가 풀 수 있는 자리다.
+</div>
+
+<p>출처: <a href="https://www.windowscentral.com/microsoft/windows-11/microsoft-just-revealed-how-windows-11-is-evolving-into-an-agentic-os-finally-the-explanation-weve-all-been-waiting-for">Windows Central (Agentic OS, 2025-11)</a>, <a href="https://www.infoq.com/news/2026/07/apple-pcc-google-cloud/">InfoQ (PCC on Google Cloud, 2026-07)</a>, <a href="https://www.geekwire.com/2026/one-year-after-its-rocky-launch-microsofts-windows-recall-still-raises-security-red-flags/">GeekWire (Recall 1년 후, 2026-04)</a>, <a href="https://pluto.security/blog/inside-claude-cowork-how-anthropics-autonomous-agent-actually-works/">Pluto Security (Cowork 분석)</a>, <a href="https://cellcog.ai/blog/openclaw-security/">OpenClaw 보안 분석 (2026-07)</a>, <a href="https://a16z.com/newsletter/big-ideas-2026-part-1/">a16z Big Ideas 2026</a>.</p>
+
+<h2 id="s6">6. 아이디에이션: 비어 있는 자리</h2>
+
+<p>조사 결과를 겹쳐 보면 채워진 자리와 빈 자리가 보인다. 아래는 팩트가 아니라 내 해석이다.</p>
+
+<h3>6-1. 이미 붐비는 곳</h3>
+
+<ul>
+  <li><strong>런타임·챗 UI</strong> — Ollama, LM Studio, Jan, Open WebUI, Msty. 신규 진입 의미 없음.</li>
+  <li><strong>범용 데스크톱 에이전트 본체</strong> — OpenClaw 포크 4종, Hermes, Simular, 대기업 "클로". 프레임워크 자체로 차별화 어려움.</li>
+  <li><strong>macOS 로컬 전사</strong> — MacWhisper, Superwhisper, Hyprnote. 포화.</li>
+  <li><strong>화면 기억(Recall류)</strong> — 규제·보안 리스크가 커서 개인 개발자가 지기 어려운 영역. Screenpipe가 개발자 인프라로 남은 것이 시사적.</li>
+</ul>
+
+<h3>6-2. 비어 있거나 개발자 수준에 머문 곳</h3>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>빈 자리</th><th>현재 상태</th><th>왜 비었나</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>소비자용 씬 클라이언트</strong> — 폰·태블릿·Windows에서 홈 Mac의 모델·에이전트를 쓰는 앱</td><td>LM Link(LM Studio 전용), Tailscale 수동 설정, Enchanted 등 개발자 수준</td><td>기기 발견·페어링·E2E·오프라인 폴백을 다 만들어야 함. 연동 기술 경험이 있어야 함</td></tr>
+    <tr><td><strong>승인·감사 UX</strong> — 에이전트의 결과적 행동을 폰에서 승인하고 로그를 읽는 인터페이스</td><td>각 프레임워크의 CLI/채팅 내 yes/no</td><td>프레임워크 개발자들은 모델·도구에 집중, UX는 후순위</td></tr>
+    <tr><td><strong>가족 다중 사용자</strong> — 프로필·메모리 분리, 아이 안전 모드, 부모 승인</td><td>Apple 홈 허브 루머 외 없음</td><td>모든 에이전트가 1인 사용자 전제로 설계됨</td></tr>
+    <tr><td><strong>Windows 로컬 생산성</strong> — 로컬 회의록, 로컬 파일 시맨틱 검색(스크린샷 없이)</td><td>Mac 쪽 대비 공백. Phi Silica GPU 실행(RTX 30+) 실험 중</td><td>Windows 개발자 생태계가 AI 유틸리티에 늦음</td></tr>
+    <tr><td><strong>스킬·MCP 서버 안전성</strong> — 설치 전 스캔, 권한 시각화, 서명</td><td>Cisco·NVIDIA가 기업용으로만</td><td>개인 사용자용 도구 없음. 386/3,000 악성 스킬이 수요 증거</td></tr>
+    <tr><td><strong>에이전트 발견성(Agent SEO)</strong> — 앱을 App Intents + AppFunctions + MCP로 동시에 노출하는 도구</td><td>각 플랫폼 문서만 존재</td><td>3사 API가 2026년에야 동시 등장. "앱 스토어 노출보다 AppFunctions 등록이 중요해진다"는 관측</td></tr>
+    <tr><td><strong>구형 기기 재활용</strong> — 서랍 속 폰·태블릿을 음성 위성·카메라·디스플레이로</td><td>Voice PE $59 하드웨어, ESP32 DIY</td><td>앱 스토어 정책과 백그라운드 오디오 제약</td></tr>
+    <tr><td><strong>홈 허브 운영 대시보드</strong> — 모델 상주 상태, tok/s, 메모리, 전력, 에이전트 실행 이력을 폰에서</td><td>터미널 명령</td><td>프로슈머 시장이 이제 막 생김(Mac mini 품절, Sequoia 배포)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>6-3. AI OS 서비스 아이디어 (벤더가 아직 안 한 것)</h3>
+
+<ul>
+  <li><strong>위임 프로필(Delegation Profile)</strong> — "출장 중", "야간 배치", "아이 사용" 같은 상황별 권한 번들. 승인 피로를 개별 승인이 아니라 정책으로 푼다. Windows의 6개 폴더 고정 범위보다 한 단계 위.</li>
+  <li><strong>서명된 스킬 스토어</strong> — 앱 스토어처럼 스킬·MCP 서버에 코드 서명·권한 매니페스트·리뷰를 강제. OpenClaw 재단이 하지 못한 일이고, OS가 하면 자연스럽다.</li>
+  <li><strong>가구(Household) 신원</strong> — Apple Family Sharing, Google Family Link 위에 "가족 공유 모델·메모리·승인 체계"를 얹는 계층.</li>
+  <li><strong>에너지·열 스케줄러</strong> — 배터리·전기요금·팬 소음을 고려해 무거운 에이전트 작업을 야간이나 충전 중으로 미루는 OS 스케줄링. 모바일에서는 이미 Doze가 하는 일의 에이전트 버전.</li>
+  <li><strong>컨텍스트 이식성</strong> — 메모리·선호·승인 이력을 표준 포맷으로 내보내고 다른 기기·모델로 옮기는 권리. Limitless 종료 때 사용자들이 겪은 문제의 해법.</li>
+  <li><strong>기기 간 모델 협업</strong> — 폰 온디바이스 모델이 프리필·분류를 하고 홈 허브가 디코드를, 클라우드가 검증을 맡는 계층 분업. Exo의 분산 추론을 이기종 기기로 확장한 것.</li>
+</ul>
+
+<h2 id="s7">7. 앱 개발자가 할 수 있는 아이디어 12선</h2>
+
+<p>기준은 셋이다. 런타임이나 에이전트 본체를 다시 만들지 않는다. 3사가 2026년에 연 API(Foundation Models, Windows AI APIs·MCP ODR, ML Kit Prompt API·AppFunctions)를 활용한다. 1인 또는 소규모 팀이 6개월 안에 첫 버전을 낼 수 있어야 한다. 앞 6개는 기기 연동 경험을 살리는 쪽, 뒤 6개는 범용이다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>#</th><th>아이디어</th><th>문제</th><th>솔루션 핵심</th><th>왜 지금</th><th>BM</th><th>난이도</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">1</td><td><strong>Home Brain Relay</strong> — iOS·Android·Windows 공통 씬 클라이언트</td><td>홈 Mac의 모델을 폰에서 쓰려면 Tailscale·포트·인증서를 직접 다뤄야 함</td><td>mDNS/BLE로 홈 허브 자동 발견 → QR 페어링 → gRPC 스트리밍(E2E). 연결 끊기면 폰 온디바이스 모델(Foundation Models / Gemini Nano)로 자동 폴백. Ollama·LM Studio·vLLM 백엔드 공통 지원</td><td>LM Link가 수요를 증명했지만 LM Studio 전용·iOS 한정</td><td>앱 유료($9.99) 또는 허브당 라이선스</td><td>중</td></tr>
+    <tr><td class="num">2</td><td><strong>Approval Inbox</strong> — 에이전트 승인·감사 앱</td><td>상주 에이전트의 결제·삭제·전송 승인이 터미널 yes/no에 머묾. 승인 피로</td><td>OpenClaw·Hermes·Cowork 훅으로 승인 요청을 폰 푸시·Watch로. 위임 프로필(출장·야간·아이) 정책, 감사 로그 타임라인, 이상 행동 알림</td><td>CVE 14건, 악성 스킬 386개 이후 "신뢰"가 구매 기준이 됨</td><td>구독 $4.99/월, 팀 플랜</td><td>중</td></tr>
+    <tr><td class="num">3</td><td><strong>Context Bridge</strong> — PC 화면·클립보드 ↔ 폰 카메라·센서 컨텍스트 교환</td><td>PC 에이전트는 폰 카메라를, 폰 AI는 PC 화면을 못 봄. Continuity Camera는 Apple 생태계 안에서만</td><td>Windows↔Android, Mac↔Android 크로스. 폰으로 찍은 영수증·화이트보드가 PC 에이전트 컨텍스트로, PC 선택 영역이 폰 온디바이스 요약으로. WiFi Direct/BLE 근접 페어링</td><td>Click to Do·Visual Intelligence가 "화면 컨텍스트"를 표준 UX로 만듦</td><td>프리미엄 기능 인앱</td><td>중</td></tr>
+    <tr><td class="num">4</td><td><strong>Satellite</strong> — 구형 폰·태블릿을 음성 위성으로</td><td>Voice PE 하드웨어를 사거나 ESP32를 납땜해야 함</td><td>온디바이스 웨이크워드 → 오디오를 홈 허브로 스트리밍(Wyoming 호환) → TTS 재생. 방마다 구형 기기 배치. 태블릿은 대시보드 겸용</td><td>HA + Ollama 스택이 성숙, 서랍 속 기기는 넘침</td><td>일회성 $14.99</td><td>중 (백그라운드 오디오 정책 리스크)</td></tr>
+    <tr><td class="num">5</td><td><strong>Photo Librarian</strong> — 폰 사진 → 홈 허브 로컬 인덱싱 → 폰 자연어 검색</td><td>Immich는 Docker·NAS 지식이 필요. Google Photos 대안은 클라우드</td><td>macOS 메뉴바 앱(1클릭 설치, CLIP·VLM 인덱싱, Core AI 활용) + 모바일 앱(자동 백업, "작년 제주 할머니" 검색, 앨범 생성). 가족 계정 분리</td><td>M5 Neural Accelerator로 VLM 인덱싱 속도 확보, 가족 얼굴 데이터는 로컬 수요 명확</td><td>허브 앱 $29 + 가족 구독</td><td>상</td></tr>
+    <tr><td class="num">6</td><td><strong>Hub Console</strong> — 홈 AI 허브 운영 대시보드</td><td>어떤 모델이 떠 있고 메모리·tok/s·전력이 얼마인지, 에이전트가 밤새 뭘 했는지 터미널 없이는 모름</td><td>Ollama·LM Studio·OpenClaw·HA 상태를 한 화면에, 폰 위젯·Watch 컴플리케이션, 모델 핫스왑·재시작 원격 제어, 전기료 추정</td><td>Mac mini 품절, Sequoia Mac mini 배포 — 프로슈머 허브 운영자가 급증</td><td>구독 $2.99/월</td><td>하</td></tr>
+    <tr><td class="num">7</td><td><strong>Windows Local Notes</strong> — Windows용 완전 로컬 회의록</td><td>Mac은 MacWhisper·Hyprnote가 있지만 Windows는 클라우드(Teams·Granola) 일색</td><td>whisper.cpp/ONNX 전사 + Phi Silica(NPU) 또는 GPU 로컬 LLM 요약 + 화자 분리. 기업 반입 가능한 에어갭 모드</td><td>Phi Silica GPU 실행 실험(RTX 30+)으로 Copilot+ PC 없이도 가능해짐</td><td>일회성 $49 + 팀 라이선스</td><td>중</td></tr>
+    <tr><td class="num">8</td><td><strong>Skill Guard</strong> — 스킬·MCP 서버 설치 전 스캐너</td><td>OpenClaw 스킬 3,000개 중 386개 악성. 개인용 검사 도구 없음</td><td>매니페스트 권한 시각화(네트워크·파일·자격증명 접근), 정적 분석, 알려진 악성 시그니처, 샌드박스 드라이런. OpenClaw·Hermes·Claude Code·Cursor MCP 설정 공통</td><td>Cisco·NVIDIA는 기업용만. 개인·소규모 팀이 비어 있음</td><td>무료 + Pro $5/월 (팀 정책)</td><td>중</td></tr>
+    <tr><td class="num">9</td><td><strong>Local Finder</strong> — 스크린샷 없는 로컬 시맨틱 파일 검색 (Windows·Mac)</td><td>Recall은 신뢰를 잃었고, Spotlight 시맨틱 인덱스는 Apple 앱 위주</td><td>문서·PDF·코드·브라우저 히스토리만 임베딩(화면 캡처 없음), 로컬 소형 모델로 질의 재작성, 결과에 근거 스니펫. 인덱스 암호화·엔클레이브</td><td>Recall 반발이 "캡처 없는 기억"의 수요를 만듦</td><td>일회성 $39</td><td>중</td></tr>
+    <tr><td class="num">10</td><td><strong>Intent Forge</strong> — 앱을 App Intents + AppFunctions + MCP로 동시에 노출하는 개발자 도구</td><td>세 플랫폼의 에이전트 레지스트리 스키마가 제각각. "등록이 새로운 ASO"인데 도구가 없음</td><td>기능 정의 1회(YAML) → Swift App Intents, Kotlin AppFunctions, MCP 서버 스텁 코드젠 + 에이전트 시뮬레이터로 발견성 테스트</td><td>2026년에 3사 API가 동시에 열림. Xcode 27·Android Studio 에이전트 모드가 소비자</td><td>개발자 구독 $19/월</td><td>중</td></tr>
+    <tr><td class="num">11</td><td><strong>Route Kit</strong> — 모바일 앱용 3단 모델 라우팅 SDK</td><td>앱 개발자가 온디바이스(Foundation Models·Nano)·홈 허브·클라우드 분기를 매번 직접 구현</td><td>민감도·지연·비용 정책 선언 → 자동 라우팅, 폴백, 비용 대시보드. Firebase AI Logic 하이브리드가 Google 한정인 것을 크로스플랫폼으로</td><td>Conifer가 팀용 라우터로 YC S26에 들어옴. 모바일 SDK 관점은 공백</td><td>MAU 기반 과금</td><td>상</td></tr>
+    <tr><td class="num">12</td><td><strong>Care Watch</strong> — 노인 돌봄용 로컬 VLM 카메라 앱</td><td>클라우드 카메라는 돌봄 영상 반출 우려. Frigate는 설치 난이도가 높음</td><td>구형 폰을 카메라로, 홈 허브 VLM이 낙상·장시간 무동작 판단, 사전 승인 연락처에만 알림. 영상은 집 밖으로 안 나감</td><td>Frigate + qwen3-vl 스택 성숙, 고령화 시장</td><td>가족 구독 $9.99/월</td><td>상 (오탐 책임)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>우선순위</h3>
+
+<p>시장 증거·차별화·구현 난이도를 겹치면 세 개가 남는다.</p>
+
+<ol class="steps">
+  <li><strong>#1 Home Brain Relay</strong> — 수요는 LM Link와 OpenClaw 폰 조작 사례로 증명됐고, 기기 발견·페어링·gRPC 스트리밍·E2E는 연동 앱 개발자가 이미 가진 무기다. 여기에 온디바이스 폴백을 붙이면 "인터넷 없어도 되는 개인 AI"라는 한 줄 설명이 된다. Windows까지 지원하는 곳이 없다.</li>
+  <li><strong>#2 Approval Inbox</strong> — 보안 사고 이후 가장 명확한 페인포인트이고, 프레임워크들이 후순위로 미루는 UX 문제라 경쟁이 적다. 어떤 에이전트가 이기든 승인 인터페이스는 필요하다. 위임 프로필 개념이 차별점.</li>
+  <li><strong>#6 Hub Console</strong> — 난이도가 가장 낮고, 허브 운영자라는 좁지만 열성적인 시장이 지금 생기고 있다. #1·#2로 가는 관문 상품으로 적합하다.</li>
+</ol>
+
+<p>이 세 개는 하나의 앱 패밀리가 될 수 있다. 콘솔(운영) → 릴레이(사용) → 승인(신뢰)으로 확장하면, "집에 있는 Mac을 개인 AI 서버로 만드는 모바일 앱"이라는 하나의 포지션이 된다. 지난달 AI PC 앱 아이디에이션에서 나온 Spark Companion·Home AI Node·Local AI Relay와도 같은 방향이다.</p>
+
+<div class="callout">
+<strong>피해야 할 것</strong> — 특정 프레임워크(OpenClaw 등)에 종속된 설계. 8주 만에 포크 4종이 116k 스타를 모았고, 토큰 점유율 1위가 Hermes로 바뀌었다. 백엔드는 어댑터로 두고 프로토콜(MCP·Wyoming·OpenAI 호환 API)에 붙어야 한다.
+</div>
+
+<h2 id="s8">8. 정리</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>질문</th><th>답</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>OS + AI 유저 시나리오는 무엇이 있나</td><td>오늘 출시된 것은 통역·화면 컨텍스트 요약·설정 에이전트·온디바이스 개발자 API 수준. 개인 맥락 Siri·Copilot Actions·Gemini Intelligence 같은 "에이전틱" 기능은 2026년 하반기 베타~한정 출시. 홈·엣지는 오픈소스 스택으로 이미 구현 가능하나 설치 난이도가 높다.</td></tr>
+    <tr><td>OpenClaw 이후 스타트업은 어디로 갔나</td><td>에이전트 본체는 포크·대기업 패키징으로 분산, 돈은 하이브리드 라우팅(Conifer·Ollama Cloud), 컨텍스트 인프라(Mem0·Screenpipe), 컴퓨터 사용 인프라(Cua·Simular)로 이동. 소비자 메모리 앱은 빅테크에 흡수됐다.</td></tr>
+    <tr><td>AI OS가 제공할 서비스는</td><td>도구 레지스트리·에이전트 신원·capability 권한·격리 워크스페이스·개인 컨텍스트 인덱스·모델 라우터·감사 로그·씬 클라이언트 프로토콜 14종. 3사 모두 레지스트리와 격리는 시작했고, 승인 UX·다중 사용자·컨텍스트 이식성은 비어 있다.</td></tr>
+    <tr><td>앱 개발자의 기회는</td><td>런타임이 아니라 그 위. 씬 클라이언트(Home Brain Relay), 승인·감사 UX(Approval Inbox), 허브 운영(Hub Console)이 우선순위. Windows 로컬 생산성과 에이전트 발견성 도구(Intent Forge)가 차순위.</td></tr>
+    <tr><td>로컬 LLM 시장 크기는</td><td>토큰 단가로는 개인은 클라우드가 싸다. 로컬은 상시 에이전트·연속 스트림 데이터·가족 허브·규제 헤지의 니치이고, 그 니치가 Mac mini 품절을 만들 만큼은 커졌다.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>다음 단계로는 #1 Home Brain Relay의 프로토콜 설계(기기 발견 → 페어링 → gRPC 스트리밍 → 온디바이스 폴백)를 별도 글로 정리할 계획이다.</p>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

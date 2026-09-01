@@ -18,6 +18,21 @@
   },
   "posts": [
     {
+      "slug": "2026-09-01-os-ai-local-llm-scenarios-startups-ideas",
+      "title": "로컬 LLM 시대의 OS + AI: 유저 시나리오, 스타트업 지형, AI OS 서비스, 앱 개발자의 기회 (2026.09)",
+      "date": "2026-09-01",
+      "tags": [
+        "AI",
+        "회고",
+        "LLM",
+        "에이전트",
+        "macOS",
+        "Windows",
+        "Android"
+      ],
+      "summary": "Apple·MS·Google의 에이전틱 OS 현황, OpenClaw 이후 스타트업 25곳 지형, AI OS 서비스 프리미티브 14종, 그리고 씬 클라이언트·승인 UX·허브 콘솔 등 앱 개발자 아이디어 12선과 우선순위 3개"
+    },
+    {
       "slug": "2026-09-01-wwdc-2026-top30",
       "title": "WWDC 2026 핵심 30선: 개발자·사용자·AI 생산성 관점과 개발자 반응",
       "date": "2026-09-01",
