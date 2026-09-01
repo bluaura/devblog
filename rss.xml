@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>WWDC 2026 핵심 30선: 개발자·사용자·AI 생산성 관점과 개발자 반응</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</guid>
+      <description>Foundation Models 프로바이더 스왑·PCC 무료(200만 다운로드 미만)·Core AI·Xcode 27 에이전트 등 개발자 12선, Gemini 기반 Siri AI 등 사용자 10선, fm CLI·Shortcuts 자연어 등 AI 생산성 8선. Gruber·Troughton-Smith 등 개발자 반응 포함</description>
+      <pubDate>Tue, 01 Sep 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>DeepSeek Harness 해부: 이용자 관점과 아키텍트 관점</title>
       <link>https://bluaura.github.io/devblog/posts/2026-08-27-deepseek-harness-review.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-08-27-deepseek-harness-review.html</guid>
