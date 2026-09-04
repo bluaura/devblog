@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점 · 블루오라 개발노트</title>
-<meta name="description" content="Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지">
+<meta name="description" content="Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지와 Hermes 용어 26개 참조표">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점">
-<meta property="og:description" content="Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지">
+<meta property="og:description" content="Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지와 Hermes 용어 26개 참조표">
 <meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html">
 <meta property="article:published_time" content="2026-09-04">
 <meta name="twitter:card" content="summary">
@@ -83,6 +83,7 @@ Telegram·Discord·Slack 등 20여 개 메신저를 하나의 게이트웨이로
     <li><a href="#s7">개발자가 손댈 수 있는 여지</a></li>
     <li><a href="#s8">PC-모바일 연동 앱과의 접점 아이디어</a></li>
     <li><a href="#s9">정리</a></li>
+    <li><a href="#s10">참조: Hermes 용어 정리</a></li>
   </ol>
 </div>
 
@@ -117,7 +118,7 @@ Nous Research(Hermes 모델 시리즈로 알려진 오픈소스 AI 연구 조직
     <tr><td>자동화</td><td>자연어로 cron 등록("매일 8시 안 읽은 메일 요약"). v0.21부터 cron 잡도 영속 메모리를 로드하고, 변화 없으면 LLM 호출을 건너뛰는 monitor 모드</td></tr>
     <tr><td>멀티 에이전트</td><td>서브에이전트 위임(delegate), 백그라운드 병렬 작업, Bot Mode(전문 봇 팀이 그룹챗에서 @멘션으로 협업), 봇 간 DM(<code>hermes peer</code>), A2A v1.0 프로토콜, Kanban 보드 기반 태스크 분해</td></tr>
     <tr><td>보안</td><td>게이트웨이 allowlist/페어링, 위험 명령 승인(v0.19부터 별도 리뷰어 모델이 판단하는 smart approval 기본), 컨테이너 격리, MCP 자격증명 필터링·SSRF 방어, 세션 간 격리, Bitwarden/1Password 시크릿 연동</td></tr>
-    <tr><td>개인화</td><td>SOUL.md(성격·말투), 프로젝트 컨텍스트 파일, 프로필(<code>~/.hermes-work/</code>처럼 완전 분리된 인스턴스)</td></tr>
+    <tr><td>개인화</td><td>SOUL.md(성격·말투), 프로젝트 컨텍스트 파일, 프로필(<code>profiles/work/</code>처럼 설정·세션·메모리가 완전 분리된 인스턴스)</td></tr>
     <tr><td>연구용</td><td>배치 처리, trajectory export, Atropos RL 학습 파이프라인 연동 — Nous가 자체 모델 훈련에 쓰는 흔적</td></tr>
   </tbody>
 </table>
@@ -356,6 +357,45 @@ class ContextEngine(ABC):
     <tr><td>맞는 사람</td><td>홈랩·서버 운영이 익숙한 개발자, 자동화 파이프라인을 직접 소유하고 싶은 팀, 로컬 모델로 프라이버시를 지키려는 사용자</td></tr>
     <tr><td>안 맞는 사람</td><td>설치·운영 없이 바로 쓰고 싶은 사람(Claude Code·OpenClaw SaaS), 고객 대면 자동화(전용 헬프데스크 AI)</td></tr>
     <tr><td>개발자에게</td><td>플러그인(툴·훅·미들웨어·어댑터), 메모리/컨텍스트 엔진 교체, 커스텀 프로바이더, 스킬 허브, RL 궤적 export까지 확장 층이 넓다. 기기 연동 앱은 "에이전트의 손발" 툴셋으로 자연스럽게 붙는다</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s10">참조: Hermes 용어 정리</h2>
+
+<p>Hermes를 처음 접할 때 문서와 CLI에서 마주치는 용어를 한곳에 모았다. 처음에는 툴·툴셋·스킬·세션·메모리·승인·프로필 정도만 알면 되고, 나머지는 필요할 때 하나씩 켜면 된다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>용어</th><th>뜻</th></tr></thead>
+  <tbody>
+    <tr><td>툴 (tool)</td><td>에이전트가 호출할 수 있는 함수 하나. 파일 읽기, 터미널 실행, 웹 검색 등 70여 개. 플러그인으로 직접 추가할 수 있다</td></tr>
+    <tr><td>툴셋 (toolset)</td><td>툴 묶음. <code>terminal</code>, <code>file</code>, <code>web</code>, <code>browser</code>처럼 관련 툴을 그룹으로 켜고 끈다. <code>hermes tools</code>로 관리</td></tr>
+    <tr><td>스킬 (skill)</td><td>절차를 적은 마크다운 문서(SKILL.md). "이런 요청이 오면 이 순서로 해라"를 에이전트가 읽고 따른다. 에이전트가 스스로 만들기도 하며 agentskills.io 표준과 호환</td></tr>
+    <tr><td>플러그인 (plugin)</td><td>코드를 더해 툴·훅·명령을 추가하는 확장. Python 패키지 형태로 <code>plugins/</code>에 둔다. 스킬이 "지시문"이면 플러그인은 "코드"</td></tr>
+    <tr><td>훅 (hook)</td><td>에이전트 동작의 특정 시점(툴 호출 직전·직후, LLM 호출 전후, 세션 시작·종료 등)에 끼어드는 콜백. 플러그인이 등록한다</td></tr>
+    <tr><td>cron</td><td>정해진 시각에 작업을 자동 실행하는 스케줄러. 유닉스 cron에서 온 이름이며 Windows 작업 스케줄러와 같은 역할. Hermes에서는 자연어로 "매일 8시에 메일 요약해줘"라고 하면 잡이 등록되고, 그 시각에 새 세션이 열려 결과를 지정 채널로 보낸다. <code>hermes cron list/add/run/remove</code></td></tr>
+    <tr><td>게이트웨이 (gateway)</td><td>Telegram·Discord·Slack·WhatsApp 등 메신저를 에이전트에 연결하는 상주 프로세스. <code>hermes gateway start</code>. Windows에서는 <code>hermes gateway install</code>로 로그인 시 자동 실행</td></tr>
+    <tr><td>세션 (session)</td><td>대화 하나. SQLite(FTS5)에 저장되어 나중에 전문 검색이 된다. <code>/new</code>로 새 세션</td></tr>
+    <tr><td>메모리 (memory)</td><td>세션을 넘어 남는 기억. <code>MEMORY.md</code>(사실)와 <code>USER.md</code>(사용자 선호) 두 파일 + 세션 검색. 메모리 프로바이더 플러그인으로 교체 가능</td></tr>
+    <tr><td>SOUL.md</td><td>에이전트의 성격·말투를 정의하는 파일. 시스템 프롬프트 맨 앞에 들어간다</td></tr>
+    <tr><td>프로필 (profile)</td><td>설정·세션·메모리·스킬이 완전히 분리된 인스턴스. <code>hermes profile create work</code>로 업무용과 실험용을 따로 운영한다. 경로는 <code>&lt;HERMES_HOME&gt;/profiles/&lt;name&gt;</code></td></tr>
+    <tr><td>HERMES_HOME</td><td>데이터 루트 디렉터리. Windows 네이티브는 <code>%LOCALAPPDATA%\hermes</code>, Linux/macOS/WSL은 <code>~/.hermes</code></td></tr>
+    <tr><td>승인 (approval)</td><td>위험한 명령(<code>rm -rf</code> 등)을 실행 전에 사용자에게 묻는 장치. <code>manual</code>(항상 묻기) / <code>smart</code>(보조 LLM이 먼저 판단, 애매하면 묻기 — 기본값) / <code>off</code></td></tr>
+    <tr><td>YOLO 모드</td><td>승인을 전부 끄는 모드(<code>/yolo</code>). 샌드박스 안에서만 권장</td></tr>
+    <tr><td>승인 transport</td><td>승인 질문을 "어디에" 보여줄지 바꾸는 플러그인 인터페이스(<code>register_approval_transport</code>). 폰 앱이나 다른 UI로 승인을 옮길 때 쓴다</td></tr>
+    <tr><td>컨텍스트 압축 (compression)</td><td>대화가 길어지면 중간 턴을 요약해 토큰을 줄이는 기능. v0.20.6부터 lean-tail 전략이 기본</td></tr>
+    <tr><td>서브에이전트 / delegate</td><td>에이전트가 하위 에이전트를 띄워 작업을 나눠 맡기는 것. 병렬 처리와 격리에 쓴다</td></tr>
+    <tr><td>Bot Mode</td><td>이름·성격·모델이 다른 봇 여러 개를 팀으로 운영. 그룹챗에서 @멘션으로 협업하고 <code>hermes peer</code>로 봇 간 DM</td></tr>
+    <tr><td>Kanban</td><td>에이전트용 작업 보드. <code>/kanban add</code>로 태스크를 만들고 봇들이 나눠 처리한다</td></tr>
+    <tr><td>MCP</td><td>Model Context Protocol. GitHub, DB 등 외부 서비스를 툴로 연결하는 표준. Hermes는 stdio·HTTP MCP 서버를 붙일 수 있다</td></tr>
+    <tr><td>ACP</td><td>에디터(VS Code·Zed·JetBrains) 안에서 Hermes를 쓰기 위한 프로토콜</td></tr>
+    <tr><td>프로바이더 (provider)</td><td>모델을 제공하는 곳. Anthropic, OpenAI, OpenRouter, Ollama 등 40여 종. <code>hermes model</code>로 교체. 최소 컨텍스트 64K 토큰</td></tr>
+    <tr><td>Nous Portal</td><td>Nous Research의 통합 구독. 모델과 검색·이미지 생성·TTS 등 툴을 OAuth 로그인 하나로 쓴다</td></tr>
+    <tr><td>터미널 백엔드 (backend)</td><td>셸 명령을 어디서 실행할지. local, Docker, SSH, Singularity, Modal, Daytona, Vercel Sandbox. 격리가 필요하면 Docker</td></tr>
+    <tr><td>TUI</td><td>텍스트 기반 GUI. <code>hermes --tui</code>로 CLI보다 화면이 정돈된 인터페이스</td></tr>
+    <tr><td>대시보드</td><td>브라우저에서 세션·잡·설정을 보는 웹 화면. Windows 네이티브에서는 내장 터미널 탭만 미지원</td></tr>
+    <tr><td>doctor</td><td>환경 진단 명령. <code>hermes doctor</code>(전체), <code>hermes plugins doctor &lt;경로&gt;</code>(플러그인)</td></tr>
   </tbody>
 </table>
 </div>

@@ -18,6 +18,18 @@
   },
   "posts": [
     {
+      "slug": "2026-09-04-hermes-agent-deep-dive",
+      "title": "Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점",
+      "date": "2026-09-04",
+      "tags": [
+        "AI",
+        "회고",
+        "Python",
+        "에이전트"
+      ],
+      "summary": "Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지와 Hermes 용어 26개 참조표"
+    },
+    {
       "slug": "2026-09-04-korean-bookscan-ocr-research",
       "title": "한국어 북스캔 PDF OCR 앱 만들기 전 기술 조사 — Apple Vision·로컬 VLM·클라우드 5개 대안 비교",
       "date": "2026-09-04",
@@ -30,18 +42,6 @@
         "Python"
       ],
       "summary": "M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성. 새 PDF 생성 vs 기존 PDF 텍스트 추가 비교 포함"
-    },
-    {
-      "slug": "2026-09-04-hermes-agent-deep-dive",
-      "title": "Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점",
-      "date": "2026-09-04",
-      "tags": [
-        "AI",
-        "회고",
-        "Python",
-        "에이전트"
-      ],
-      "summary": "Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지"
     },
     {
       "slug": "2026-09-01-os-ai-local-llm-scenarios-startups-ideas",
