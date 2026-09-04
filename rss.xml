@@ -26,6 +26,13 @@
       <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
     </item>
     <item>
+      <title>GPT-6 Astra 조사: Sol 대비 개선점, 벤치마크, Computer Use, 사용 후기</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-09-04-gpt-6-astra-review.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-gpt-6-astra-review.html</guid>
+      <description>OpenAI GPT-6 Astra 출시 다음 날 정리. OSWorld 작업 시간 47% 단축·환각률 12.2%→4.2%·가격 2.5배 인상, 제3자 지수에서는 Claude Fable 5.1(66) 대비 61점, 공식 영상 데모 7건과 실사용 후기·주의할 벤치마크 함정 포함</description>
+      <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>Claude 모델별 프롬프트 상세도와 구현 하네스 요청법</title>
       <link>https://bluaura.github.io/devblog/posts/2026-09-04-claude-prompt-harness.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-claude-prompt-harness.html</guid>

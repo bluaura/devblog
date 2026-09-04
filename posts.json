@@ -18,6 +18,18 @@
   },
   "posts": [
     {
+      "slug": "2026-09-04-gpt-6-astra-review",
+      "title": "GPT-6 Astra 조사: Sol 대비 개선점, 벤치마크, Computer Use, 사용 후기",
+      "date": "2026-09-04",
+      "tags": [
+        "AI",
+        "LLM",
+        "OpenAI",
+        "Computer Use"
+      ],
+      "summary": "OpenAI GPT-6 Astra 출시 다음 날 정리. OSWorld 작업 시간 47% 단축·환각률 12.2%→4.2%·가격 2.5배 인상, 제3자 지수에서는 Claude Fable 5.1(66) 대비 61점, 공식 영상 데모 7건과 실사용 후기·주의할 벤치마크 함정 포함"
+    },
+    {
       "slug": "2026-09-04-ios27-apple-intelligence-developer-guide",
       "title": "iOS 27·macOS 27 Apple Intelligence 개발자 관점 총정리 — Foundation Models, App Schemas, 그리고 기기 제어 에이전트의 한계",
       "date": "2026-09-04",
