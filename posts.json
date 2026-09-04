@@ -18,6 +18,18 @@
   },
   "posts": [
     {
+      "slug": "2026-09-04-hermes-agent-deep-dive",
+      "title": "Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점",
+      "date": "2026-09-04",
+      "tags": [
+        "AI",
+        "회고",
+        "Python",
+        "에이전트"
+      ],
+      "summary": "Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지"
+    },
+    {
       "slug": "2026-09-01-os-ai-local-llm-scenarios-startups-ideas",
       "title": "로컬 LLM 시대의 OS + AI: 유저 시나리오, 스타트업 지형, AI OS 서비스, 앱 개발자의 기회 (2026.09)",
       "date": "2026-09-01",

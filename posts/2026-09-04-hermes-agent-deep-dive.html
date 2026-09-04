@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점 · 블루오라 개발노트</title>
+<meta name="description" content="Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점">
+<meta property="og:description" content="Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html">
+<meta property="article:published_time" content="2026-09-04">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점</h1>
+    <p class="sub"><span class="tag">AI</span><span class="tag">회고</span><span class="tag">Python</span><span class="tag">에이전트</span> &nbsp;2026-09-04</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat">
+    <div class="label">GitHub Stars</div>
+    <div class="value">240k+</div>
+    <div class="delta">공개 6개월 만에</div>
+  </div>
+  <div class="stat">
+    <div class="label">라이선스 / 언어</div>
+    <div class="value">MIT / Python</div>
+    <div class="delta">Node 26 필요</div>
+  </div>
+  <div class="stat">
+    <div class="label">내장 툴 / 툴셋</div>
+    <div class="value">70+ / 28</div>
+    <div class="delta">MCP 연동 포함</div>
+  </div>
+  <div class="stat">
+    <div class="label">최신 버전</div>
+    <div class="value">v0.21.0</div>
+    <div class="delta">2026-08-31 Pantheon</div>
+  </div>
+</div>
+
+<blockquote>
+Hermes Agent는 Nous Research가 2026년 3월 공개한 MIT 오픈소스 셀프호스팅 AI 에이전트다.
+IDE 코딩 도우미가 아니라 "24시간 돌아가면서 기억과 스킬이 쌓이는 개인 비서"를 지향하며,
+Telegram·Discord·Slack 등 20여 개 메신저를 하나의 게이트웨이로 묶는다.
+플러그인 API가 잘 정리되어 있어 앱 개발자가 자기 앱을 에이전트의 손발로 연결하기 좋은 구조다.
+단, 운영 규율(상시 가동·샌드박스·비용)이 없으면 장점이 나오지 않는다는 것이 후기의 공통점이다.
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">Hermes Agent란</a></li>
+    <li><a href="#s2">주요 기능</a></li>
+    <li><a href="#s3">사용자 리뷰와 후기</a></li>
+    <li><a href="#s4">유용한 사용 시나리오</a></li>
+    <li><a href="#s5">유사 오픈소스 에이전트 비교</a></li>
+    <li><a href="#s6">개발자 관점: 아키텍처</a></li>
+    <li><a href="#s7">개발자가 손댈 수 있는 여지</a></li>
+    <li><a href="#s8">PC-모바일 연동 앱과의 접점 아이디어</a></li>
+    <li><a href="#s9">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">Hermes Agent란</h2>
+
+<p>
+Nous Research(Hermes 모델 시리즈로 알려진 오픈소스 AI 연구 조직)가 만든 자율 에이전트 런타임이다.
+저장소는 2025년 7월에 만들어졌고 2026년 2월 말 공개 전환, 3월 12일 정식 런칭했다.
+공개 후 50일 동안 6번의 정식 릴리즈를 냈고, 9월 현재 GitHub 240k 스타·49k 포크·300명 이상의 기여자를 기록 중이다.
+</p>
+
+<p>공식 문서가 스스로를 정의하는 문장은 명확하다. "IDE에 묶인 코딩 코파일럿도, 단일 API를 감싼 챗봇 래퍼도 아니다. 오래 돌릴수록 더 유능해지는 자율 에이전트다."
+핵심은 세 가지다.</p>
+
+<ul>
+  <li><strong>학습 루프</strong> — 복잡한 작업을 끝내면 에이전트가 스스로 SKILL.md를 작성해 다음에 재사용하고, 쓰면서 개선한다.</li>
+  <li><strong>영속 메모리</strong> — MEMORY.md / USER.md 노트 + SQLite FTS5 전체 세션 검색 + (선택) Honcho 기반 사용자 모델링.</li>
+  <li><strong>어디서나 접근</strong> — CLI, 메신저 20여 종, IDE(ACP), 데스크톱 앱, 음성까지 하나의 세션 상태를 공유한다.</li>
+</ul>
+
+<h2 id="s2">주요 기능</h2>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>영역</th><th>내용</th></tr></thead>
+  <tbody>
+    <tr><td>모델</td><td>Nous Portal(300+ 모델 통합 구독), OpenRouter, OpenAI, Anthropic, 커스텀 OpenAI 호환 엔드포인트, Ollama·vLLM·LM Studio 로컬 모델. <code>hermes model</code> 한 줄로 교체. v0.18부터 Mixture-of-Agents를 모델처럼 선택 가능</td></tr>
+    <tr><td>메신저 게이트웨이</td><td>Telegram, Discord, Slack, WhatsApp, Signal, Matrix, Teams, Google Chat, Email, SMS, Feishu, WeCom, QQ, iMessage(BlueBubbles), Home Assistant 등 25개 이상 어댑터. 플랫폼을 넘나들어도 대화가 이어짐</td></tr>
+    <tr><td>툴</td><td>70개 이상 툴을 28개 툴셋으로 묶음(터미널, 파일, 브라우저 자동화, 웹 검색, 이미지 생성, TTS, 비전, computer_use). MCP 서버 연결 지원. <code>execute_code</code>로 코드 안에서 툴을 프로그래밍적으로 호출</td></tr>
+    <tr><td>실행 백엔드</td><td>Local, Docker, SSH, Singularity, Modal, Daytona, Vercel Sandbox 7종. Modal/Daytona는 유휴 시 hibernate되어 비용이 거의 0</td></tr>
+    <tr><td>스킬</td><td>agentskills.io 표준 호환. <code>/learn</code>으로 워크플로 설명만 하면 스킬 자동 생성. v0.12부터 백그라운드 "Curator"가 안 쓰는 스킬을 정리·통합. Skills Hub로 공유</td></tr>
+    <tr><td>자동화</td><td>자연어로 cron 등록("매일 8시 안 읽은 메일 요약"). v0.21부터 cron 잡도 영속 메모리를 로드하고, 변화 없으면 LLM 호출을 건너뛰는 monitor 모드</td></tr>
+    <tr><td>멀티 에이전트</td><td>서브에이전트 위임(delegate), 백그라운드 병렬 작업, Bot Mode(전문 봇 팀이 그룹챗에서 @멘션으로 협업), 봇 간 DM(<code>hermes peer</code>), A2A v1.0 프로토콜, Kanban 보드 기반 태스크 분해</td></tr>
+    <tr><td>보안</td><td>게이트웨이 allowlist/페어링, 위험 명령 승인(v0.19부터 별도 리뷰어 모델이 판단하는 smart approval 기본), 컨테이너 격리, MCP 자격증명 필터링·SSRF 방어, 세션 간 격리, Bitwarden/1Password 시크릿 연동</td></tr>
+    <tr><td>개인화</td><td>SOUL.md(성격·말투), 프로젝트 컨텍스트 파일, 프로필(<code>~/.hermes-work/</code>처럼 완전 분리된 인스턴스)</td></tr>
+    <tr><td>연구용</td><td>배치 처리, trajectory export, Atropos RL 학습 파이프라인 연동 — Nous가 자체 모델 훈련에 쓰는 흔적</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout">
+<strong>설치</strong> — Linux/macOS/WSL2/Termux(Android)는 <code>curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash</code>,
+Windows는 PowerShell 원라이너로 uv·Python 3.11·Node·ripgrep·ffmpeg·Git Bash를 관리자 권한 없이 번들 설치한다.
+v0.20부터 pip/Homebrew 채널은 폐기됐다. Windows/macOS 데스크톱 앱도 있다.
+</div>
+
+<h2 id="s3">사용자 리뷰와 후기</h2>
+
+<h3>긍정</h3>
+<ul>
+  <li>홈랩 운영자: "내 홈랩의 sysadmin이다. 마법 같다." 상태가 유지되는 유능한 에이전트를 갖는 것 자체가 체감 가치라는 평이 많다.</li>
+  <li>Mac mini M4에서 30일 운영한 국내 블로거: 재사용 스킬이 3개에서 19개로 늘었고, 반복 작업 응답 시간이 47초에서 11초로 줄었다. 3주차부터는 "주간 리포트, 평소 형식"이라고만 쳐도 되묻지 않고 처리했다.</li>
+  <li>비용 절감 사례: 월 80~150달러짜리 상용 구성을 10달러 Hetzner VPS + 모델 선택으로 대체. 스크립트 모드로 돌리면 토큰이 0이라는 발견도 있다.</li>
+  <li>공식 User Stories 326건 중 개발 워크플로(77), 개인 비서(49), 통합 확장(32), 창작(26), 비즈니스 운영(23) 순으로 많다.</li>
+</ul>
+
+<h3>부정·주의</h3>
+<ul>
+  <li>UX: 초기 버전은 "시작이 굼뜨고 CLI가 깜빡거리며 지나치게 장황하다"는 지적. v0.19에서 콜드스타트 80% 단축으로 상당 부분 개선됐다고 릴리즈 노트는 주장한다.</li>
+  <li>운영 규율: "메모리가 영속된다"와 "서비스가 살아 있다"는 다르다. 30일 후기에서 38시간 다운타임 동안 승인 워크플로가 끊겼고, Raspberry Pi 4B는 SQLite I/O 병목으로 3일 만에 포기했다. 30일에 디스크 2.3GB가 쌓여 백업 자동화가 필수였다.</li>
+  <li>실질 비용: eesel의 계산기는 VPS 20달러 + API 60달러 + 주 3.5시간 유지보수 인건비를 합쳐 월 535달러 수준으로 본다. 소프트웨어는 공짜지만 운영은 공짜가 아니다.</li>
+  <li>보안: 커뮤니티의 반복되는 조언은 "모든 것에 자유 접근을 주지 말고 샌드박스 안에서 돌려라."</li>
+  <li>메모리 한계: MEMORY.md 약 2,200자, USER.md 약 1,375자로 의도적으로 작다. 토큰 효율을 위한 설계지만 "결국 MEMORY.md 파일 아니냐"는 냉소도 있다.</li>
+  <li>고객지원 같은 대외 업무에는 부적합: 헬프데스크 연동, 신뢰도 기반 라우팅, 에스컬레이션 같은 장치가 없다.</li>
+</ul>
+
+<div class="callout warn">
+<strong>표절 논란</strong> — 2026년 4월 중국 팀 EvoMap이 자사 오픈소스 Evolver(2월 1일 공개)의 10단계 자기진화 루프·3계층 메모리 구조를 Hermes의 self-evolution 모듈(3월 9일 생성)이 무단 차용했다고 GitHub 이슈(#17688)와 비교 보고서로 주장했다.
+Nous는 "저장소는 2025년 7월에 만들어졌고 우리가 선구자"라며 부인했고, 창립자 Teknium은 비교를 "brainless"라 일축했다. 이후 이슈 편집·게시물 삭제로 HN에서 대응 방식을 두고 논쟁이 있었다.
+법적 결론은 없고 미해결 상태다. 기술 채택 판단과는 별개지만, 알고는 있어야 할 사안이다.
+</div>
+
+<h2 id="s4">유용한 사용 시나리오</h2>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>시나리오</th><th>실제 사례</th><th>왜 Hermes가 맞는가</th></tr></thead>
+  <tbody>
+    <tr><td>24시간 개인 비서</td><td>cron 28개 + 커스텀 스킬 30개 운영, 새벽 3시 "Dreaming" 잡이 하루 대화를 복기. 에이전트에게 별도 Gmail 계정을 주고 아파트 매물 탐색</td><td>영속 메모리 + cron + 메신저 접근이 한 프로세스에 묶여 있음</td></tr>
+    <tr><td>메신저 그룹 요약</td><td>건설 현장 관리자가 WhatsApp 그룹 11개를 물려 "82개 메시지를 3줄로" 받음</td><td>게이트웨이가 여러 플랫폼을 한 세션으로 라우팅</td></tr>
+    <tr><td>자율 개발 파이프라인</td><td>에이전트가 스스로 이슈를 만들고 코드 작성·QA·배포. Hermes 자체 개발에 인스턴스 12개를 매일 돌리는 기여자</td><td>Kanban + 서브에이전트 + 프로필 분리로 전문 봇 팀 구성</td></tr>
+    <tr><td>홈랩·IoT</td><td>스모커 API를 리버스 엔지니어링해 밤새 브리스킷 감시. Home Assistant 어댑터</td><td>터미널·SSH 백엔드로 로컬 네트워크 장비 접근</td></tr>
+    <tr><td>프라이버시 우선</td><td>Mac mini에 이메일 게이트키퍼를 둬 에이전트가 2FA 코드를 못 보게 구성. Android Termux로 VPS 없이 폰에서 상시 가동</td><td>완전 셀프호스팅, 로컬 모델, 툴셋 게이팅</td></tr>
+    <tr><td>리서치 브리핑</td><td>AI 뉴스 감시 후 Discord·Slack·Obsidian에 동시에 브리프 작성</td><td>cron monitor 모드 + 멀티플랫폼 전달</td></tr>
+    <tr><td>소규모 비즈니스 자동화</td><td>프랑스 사업자가 중소기업에 설치·운영 대행으로 월 2,700유로 수익. Gumroad는 전용 Mac에서 지원 티켓·X 멘션·엔지니어링 작업 처리</td><td>MIT 라이선스, 상용 종속 없음</td></tr>
+    <tr><td>트레이딩 실험</td><td>날씨 기반 예측시장 봇이 48시간에 100달러를 216달러로. 전략 노트를 스스로 작성·복기</td><td>학습 루프가 전략 개선에 그대로 적용됨 (사례 5건으로 적음, 과신 금물)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s5">유사 오픈소스 에이전트 비교</h2>
+
+<p>가장 직접적인 경쟁자는 OpenClaw다. 둘 다 "메신저로 접근하는 셀프호스팅 개인 에이전트"이며 Hermes는 <code>hermes claw migrate</code>로 OpenClaw 스킬·메모리 이전 명령까지 제공한다. 2026년 6월 기준 일일 토큰 처리량은 Hermes 2,240억 vs OpenClaw 1,860억으로 역전됐다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>항목</th><th>Hermes Agent</th><th>OpenClaw</th><th>OpenHands</th><th>AutoGPT</th></tr></thead>
+  <tbody>
+    <tr><td>성격</td><td>자기개선형 개인 에이전트</td><td>운영자 통제형 개인 에이전트</td><td>소프트웨어 개발 에이전트 플랫폼</td><td>노코드 에이전트 빌더</td></tr>
+    <tr><td>언어 / 라이선스</td><td>Python / MIT</td><td>TypeScript / MIT</td><td>Python / MIT</td><td>Python·TS / Polyform Shield(상용 재판매 제한)</td></tr>
+    <tr><td>아키텍처</td><td>CLI 우선, 에이전트 루프 중심. 게이트웨이는 선택적 확장, 컨테이너 백엔드가 1급</td><td>허브-앤-스포크. 게이트웨이 데몬(ws://127.0.0.1:18789)에 모든 어댑터가 붙는 중앙 제어면</td><td>샌드박스 런타임 + 웹 UI. 코드 저장소 작업 최적화</td><td>시각적 블록 빌더(AutoPilot) + 서버</td></tr>
+    <tr><td>메모리</td><td>플러그블 프로바이더(파일·SQL·Honcho), FTS5 세션 검색</td><td>MEMORY.md 파일 + 시맨틱 검색(v4.1)</td><td>세션 단위, 영속 메모리 없음</td><td>워크플로 상태</td></tr>
+    <tr><td>스킬</td><td>에이전트가 자동 생성·개선, Curator가 정리</td><td>사람이 작성한 지시문, ClawHub 마켓(6개 레지스트리 인덱싱), 핫리로드</td><td>마이크로에이전트/툴</td><td>45+ 통합 블록</td></tr>
+    <tr><td>메신저</td><td>25+ 어댑터</td><td>15+ (iMessage·Zalo 등 폭이 넓음)</td><td>없음(웹/CLI)</td><td>없음</td></tr>
+    <tr><td>보안 이력</td><td>7단계 선제 방어, 공개 CVE 없음(5월 기준)</td><td>CVE 6건(CVSS 7.5~9.1), ClawHavoc 공급망 공격(악성 패키지 1,184개)</td><td>샌드박스 기본</td><td>—</td></tr>
+    <tr><td>상용 옵션</td><td>없음(셀프호스팅 전용, Nous Portal 모델 구독만)</td><td>SaaS(openclawai.io) 있음</td><td>클라우드 유료</td><td>클라우드 유료</td></tr>
+    <tr><td>고르는 기준</td><td>보안·컨테이너·자기개선이 중요할 때</td><td>메신저 커버리지·SaaS 지원·플러그인 마켓이 중요할 때</td><td>코드베이스 작업이 주목적일 때</td><td>코딩 없이 워크플로를 짜고 싶을 때</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>상용 코딩 에이전트(Claude Code·Codex CLI)와 비교하면 Hermes는 코드 품질보다 "모델 무관·멀티플랫폼·영속 메모리"에서 차별화된다. 반대로 Claude Code는 단일 벤더 락인 대신 코드 생성 품질이 최고 수준이고, 두 가지를 같이 쓰는 사용자도 많다(Hermes가 Claude Code의 OAuth 자격증명을 재사용한다).
+프레임워크급 도구(LangGraph·CrewAI)는 에이전트를 "만드는" 라이브러리이고 Hermes는 "이미 만들어진" 에이전트라는 점에서 층위가 다르다.</p>
+
+<h2 id="s6">개발자 관점: 아키텍처</h2>
+
+<p>세 개의 진입점이 하나의 <code>AIAgent</code>로 수렴하는 구조다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">구조 개요</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-plaintext">cli.py ──────────┐
+gateway/run.py ──┼──&gt; AIAgent (run_agent.py)
+ACP adapter ─────┘        │
+                          ├─ prompt_builder.py   시스템 프롬프트 조립 (SOUL.md → 메모리 → 스킬 → 컨텍스트 파일)
+                          ├─ runtime_provider.py 프로바이더 → (api_mode, credentials, base_url)
+                          ├─ model_tools.py      툴 탐색·디스패치
+                          │    └─ tools/registry.py  (tools/*.py 가 import 시 self-register)
+                          ├─ context_compressor.py 중간 턴 요약 (lean-tail 기본)
+                          ├─ agent/memory_manager.py + plugins/memory/*
+                          ├─ delegate_tool.py    서브에이전트 스폰
+                          └─ hermes_state.py     SQLite + FTS5 세션 저장
+
+agent/  gateway/  skills/  tools/  providers/  plugins/  apps/  evals/  docker/  nix/</code></pre>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>구성 요소</th><th>설계 포인트</th></tr></thead>
+  <tbody>
+    <tr><td>에이전트 루프</td><td>동기식 단일 오케스트레이션: 프롬프트 구성 → 프로바이더 선택 → API 호출 → 툴 처리 → 반복/종료. 재시도·폴백·콜백·압축·세션 저장이 한 루프 안에 있다. Chat Completions / Codex Responses / Anthropic Messages 3가지 API 모드를 지원</td></tr>
+    <tr><td>툴 레지스트리</td><td><code>tools/*.py</code>에 최상위 <code>registry.register()</code> 호출만 있으면 자동 발견. 수동 import 목록이 없다. 레지스트리가 스키마 수집·디스패치·가용성 체크·에러 래핑을 담당. 툴셋 단위로 플랫폼별 프리셋 게이팅</td></tr>
+    <tr><td>게이트웨이</td><td>장기 실행 프로세스. 어댑터별 이벤트 정규화 → 세션 라우팅 → 인가(allowlist/DM 페어링) → 슬래시 명령 → 훅 라이프사이클 → cron 틱 → 세션 간 메시지 미러링</td></tr>
+    <tr><td>세션 저장</td><td>SQLite + FTS5. 압축을 거친 세션의 부모/자식 계보 추적, 플랫폼별 격리, 경합 대응 원자적 쓰기</td></tr>
+    <tr><td>메모리·컨텍스트 엔진</td><td>둘 다 추상 클래스 기반 single-select 플러그인. 한 번에 하나만 활성. Honcho 같은 외부 사용자 모델링도 이 인터페이스로 붙음</td></tr>
+    <tr><td>보안</td><td><code>tools/approval.py</code> 위험 명령 탐지, <code>env_passthrough.py</code>/<code>credential_files.py</code>로 자격증명 전달, 백엔드 샌드박싱. 코드 규약에 <code>shlex.quote()</code>와 <code>os.path.realpath()</code> 강제</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s7">개발자가 손댈 수 있는 여지</h2>
+
+<h3>1. 플러그인 — 코어를 건드리지 않는 정식 확장 경로</h3>
+<p>플러그인은 <code>~/.hermes/plugins/</code>(사용자), <code>.hermes/plugins/</code>(프로젝트), pip entry point 세 곳에서 발견된다. <code>register(ctx)</code> 하나로 툴·훅·슬래시 명령·CLI 서브커맨드·플랫폼 어댑터·메모리 프로바이더까지 등록한다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">~/.hermes/plugins/myplugin/__init__.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">import json
+
+SCHEMA = {
+    "name": "device_send_file",
+    "description": "Send a file from this PC to a paired mobile device over the local network.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "device_id": {"type": "string", "description": "Paired device identifier"},
+            "path": {"type": "string", "description": "Absolute file path on the PC"},
+        },
+        "required": ["device_id", "path"],
+    },
+}
+
+def send_file(args: dict, **kwargs) -&gt; str:
+    # 예외를 던지지 말고 항상 JSON 문자열을 반환한다 (플러그인 계약)
+    try:
+        result = my_grpc_client.send(args["device_id"], args["path"])   # 미검증 의사코드
+        return json.dumps({"ok": True, "bytes": result.bytes_sent})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+def audit(tool_name, args, result, task_id, duration_ms, **kwargs):
+    if tool_name.startswith("device_"):
+        print(f"[audit] {tool_name} {duration_ms}ms")
+
+def register(ctx):
+    ctx.register_tool(name="device_send_file", schema=SCHEMA,
+                      handler=send_file, toolset="device")
+    ctx.register_hook("post_tool_call", audit)
+    ctx.register_command("devices", handler=lambda raw: "paired: ...",
+                         description="List paired devices")</code></pre>
+</div>
+
+<div class="code">
+  <div class="code-head"><span class="fname">plugin.yaml</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-yaml">name: myplugin
+version: 1.0.0
+description: PC-to-mobile device bridge tools
+provides_tools: [device_send_file]
+provides_hooks: [post_tool_call]
+# v2 선택 필드: manifest_version, api_version, requires_plugins,
+#               python_dependencies, config_schema, capabilities</code></pre>
+</div>
+
+<p>훅 이벤트는 15종이다. <code>pre_tool_call</code>(차단/승인 가능), <code>post_tool_call</code>, <code>pre_llm_call</code>(컨텍스트 주입 가능), <code>post_llm_call</code>, 세션 start/end/finalize/reset, <code>pre/post_api_request</code>, <code>api_request_error</code>, <code>gateway_platform_event</code>, kanban task claimed/completed/blocked.
+미들웨어는 <code>tool_request</code>·<code>llm_request</code>(요청 재작성)와 <code>tool_execution</code>·<code>llm_execution</code>(<code>next_call()</code> 래핑) 4종이다.
+호환성 계약이 명시돼 있다는 점이 좋다. 문서화된 메서드는 제거·개명하지 않고, 새 파라미터는 keyword-only 기본값, 폐기는 2개 마이너 릴리즈 이상 예고.</p>
+
+<h3>2. 메모리 프로바이더 / 컨텍스트 엔진 교체</h3>
+<div class="code">
+  <div class="code-head"><span class="fname">인터페이스</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">class MemoryProvider(ABC):
+    name: str
+    def is_available(self) -&gt; bool: ...
+    def initialize(self, session_id: str, **kwargs) -&gt; None: ...
+    def sync_turn(self, user_content, assistant_content, **kwargs) -&gt; None: ...
+    def prefetch(self, query, **kwargs) -&gt; str: ...       # 턴 시작 전 컨텍스트 주입
+    def get_tool_schemas(self) -&gt; list[dict]: ...         # 메모리 전용 툴 노출
+
+class ContextEngine(ABC):
+    name: str
+    def update_from_response(self, usage) -&gt; None: ...
+    def should_compress(self, prompt_tokens=None) -&gt; bool: ...
+    def compress(self, messages, current_tokens=None, focus_topic=None,
+                 force=False, memory_context="") -&gt; list: ...</code></pre>
+</div>
+<p>메모리 한계(2,200자)가 불만이면 이 인터페이스로 벡터 DB나 그래프 메모리를 직접 붙일 수 있다. 컨텍스트 엔진을 갈아끼우면 압축 전략(요약 vs 검색 기반 재구성)을 실험할 수 있다. 둘 다 single-select라 A/B 비교는 프로필을 나눠서 한다.</p>
+
+<h3>3. 플랫폼 어댑터 추가</h3>
+<p><code>ctx.register_platform(name, label, adapter_factory)</code>로 게이트웨이에 새 채널을 붙인다. 카카오톡, LINE, 사내 메신저, 또는 <strong>자기 앱의 gRPC 채널</strong>이 여기에 들어갈 수 있다. 어댑터는 플랫폼 이벤트를 정규화해 넘기기만 하면 인가·세션·cron·훅은 게이트웨이가 처리한다.</p>
+
+<h3>4. 커스텀 프로바이더·로컬 모델</h3>
+<p><code>custom_providers</code>에 OpenAI 호환 <code>base_url</code>만 적으면 된다. 로컬 모델 사용 시 함정은 컨텍스트 길이다. Ollama는 기본 4,096이라 <code>OLLAMA_CONTEXT_LENGTH=32768</code>이 필수이고, vLLM은 <code>--enable-auto-tool-choice --tool-call-parser hermes</code>를 붙여야 툴 호출이 동작한다. <code>auxiliary</code> 섹션으로 비전·압축·승인 판단 같은 보조 작업만 싸고 빠른 모델에 분리 배정할 수 있다.</p>
+
+<h3>5. 스킬 작성과 배포</h3>
+<p>SKILL.md는 목적·트리거·단계·예시 구조의 마크다운이다. agentskills.io 표준이라 Claude Code 등 다른 에이전트 스킬과 상호 호환된다. <code>hub_taps</code>에 자기 GitHub 저장소를 등록하면 팀 스킬 저장소가 된다. v0.21부터 생성 시 린터가 돈다.</p>
+
+<h3>6. 연구·평가 파이프라인</h3>
+<p><code>evals/</code>와 trajectory export, Atropos 연동은 "에이전트가 남긴 궤적으로 모델을 파인튜닝"하는 루프를 열어 둔다. 자체 도메인 데이터로 소형 모델을 특화하려는 팀에게 드문 진입점이다.</p>
+
+<h2 id="s8">PC-모바일 연동 앱과의 접점 아이디어</h2>
+
+<p>PC와 모바일을 WiFi/BLE/gRPC로 묶는 앱을 만드는 입장에서 Hermes를 보면, 에이전트 자체보다 "에이전트가 기기를 다루게 하는 층"이 비어 있다는 점이 눈에 띈다. Hermes는 PC 쪽 터미널·브라우저·파일은 잘 다루지만 옆에 있는 폰은 모른다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>아이디어</th><th>Hermes 확장 포인트</th><th>메모</th></tr></thead>
+  <tbody>
+    <tr><td>기기 브릿지 툴셋</td><td>플러그인 <code>register_tool</code>, toolset="device"</td><td>파일 전송, 화면 미러링 시작/중지, 클립보드 동기화, 폰 알림 읽기, 폰 카메라로 사진 찍어 비전 툴에 넘기기. 기존 gRPC 서비스를 그대로 노출하면 됨</td></tr>
+    <tr><td>앱 자체를 메신저 채널로</td><td><code>register_platform</code> 어댑터</td><td>Telegram 봇 대신 자기 앱의 채팅 화면이 Hermes 프론트엔드가 됨. 폰에서 "PC에 있는 발표자료 찾아서 TV로 띄워줘" 같은 요청이 앱 → gRPC → 게이트웨이로 흐름</td></tr>
+    <tr><td>Android Termux 상시 에이전트</td><td>Termux 설치 경로 공식 지원</td><td>VPS 없이 폰이 호스트. PC는 SSH 백엔드로 등록. 폰이 항상 켜져 있다는 특성이 24시간 가동 요구와 맞음</td></tr>
+    <tr><td>로컬 AI PC 구성</td><td><code>custom_providers</code> + Ollama/vLLM</td><td>DGX Spark·Mac Studio급 로컬 머신에서 모델과 에이전트를 같이 돌리고 폰은 얇은 클라이언트. 데이터가 집 밖으로 안 나감</td></tr>
+    <tr><td>승인 UI를 폰으로</td><td><code>pre_tool_call</code> 훅</td><td>위험 명령 승인 요청을 폰 푸시로 보내고 응답을 받아 차단/허용. 30일 후기의 "다운타임에 승인 워크플로 끊김" 문제의 해법</td></tr>
+    <tr><td>기기 상태 모니터 cron</td><td>cron monitor 모드 + <code>continuity</code></td><td>BLE 신호·배터리·연결 상태를 감시하다 변화가 있을 때만 LLM 호출. 토큰 비용이 거의 안 듦</td></tr>
+    <tr><td>gRPC 관측 미들웨어</td><td><code>tool_execution</code> 미들웨어</td><td>기기 툴 호출의 지연·실패율을 수집해 연결 품질 진단에 재활용</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout">
+<strong>현실적인 시작점</strong> — 툴 3개(파일 보내기, 미러링 토글, 알림 읽기)짜리 플러그인 하나를 만들어 Telegram으로 시험해 보는 것이 가장 싸다. 어댑터와 로컬 모델은 그 다음이다. 플러그인 계약이 안정적이라 Hermes 버전이 올라가도 유지보수 부담이 작다.
+</div>
+
+<h2 id="s9">정리</h2>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>관점</th><th>결론</th></tr></thead>
+  <tbody>
+    <tr><td>정체</td><td>MIT 라이선스 Python 셀프호스팅 에이전트. 6개월 만에 240k 스타, 2주 간격 릴리즈로 개인 에이전트 분야 사실상 1위 오픈소스</td></tr>
+    <tr><td>강점</td><td>모델 무관, 25+ 메신저 통합, 영속 메모리·자동 스킬 생성, 7종 실행 백엔드, 선제적 보안 설계, 잘 정의된 플러그인 API</td></tr>
+    <tr><td>약점</td><td>상시 가동·백업·샌드박스 규율이 없으면 가치가 안 나옴. 실질 운영비는 0이 아님. 메모리 용량 작음. 표절 논란 미해결</td></tr>
+    <tr><td>맞는 사람</td><td>홈랩·서버 운영이 익숙한 개발자, 자동화 파이프라인을 직접 소유하고 싶은 팀, 로컬 모델로 프라이버시를 지키려는 사용자</td></tr>
+    <tr><td>안 맞는 사람</td><td>설치·운영 없이 바로 쓰고 싶은 사람(Claude Code·OpenClaw SaaS), 고객 대면 자동화(전용 헬프데스크 AI)</td></tr>
+    <tr><td>개발자에게</td><td>플러그인(툴·훅·미들웨어·어댑터), 메모리/컨텍스트 엔진 교체, 커스텀 프로바이더, 스킬 허브, RL 궤적 export까지 확장 층이 넓다. 기기 연동 앱은 "에이전트의 손발" 툴셋으로 자연스럽게 붙는다</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>출처</h3>
+<ul>
+  <li><a href="https://hermes-agent.nousresearch.com/docs/">Hermes Agent 공식 문서</a> · <a href="https://hermes-agent.nousresearch.com/docs/developer-guide/architecture">아키텍처</a> · <a href="https://hermes-agent.nousresearch.com/docs/developer-guide/plugins">플러그인 가이드</a> · <a href="https://hermes-agent.nousresearch.com/docs/developer-guide/contributing">기여 가이드</a> · <a href="https://hermes-agent.nousresearch.com/docs/user-stories">User Stories</a></li>
+  <li><a href="https://github.com/NousResearch/hermes-agent">GitHub 저장소</a> · <a href="https://github.com/NousResearch/hermes-agent/releases">릴리즈</a></li>
+  <li><a href="https://blakecrosley.com/guides/hermes">Hermes Agent: The Practitioner's Reference</a></li>
+  <li><a href="https://www.eesel.ai/blog/hermes-agent-review">eesel AI 리뷰</a> · <a href="https://www.eesel.ai/blog/hermes-agent-alternatives">대안 8종</a></li>
+  <li><a href="https://maccome.com/en/blog/2026-05-28-hermes-agent-30-days-mac-mini-m4-rental-experience.html">Mac mini M4 30일 운영 후기</a></li>
+  <li><a href="https://innfactory.ai/en/blog/openclaw-vs-hermes-agent-comparison/">innfactory: OpenClaw vs Hermes</a> · <a href="https://www.turingpost.com/p/hermes">Turing Post</a> · <a href="https://gudz.ai/posts/hermes-agent-vs-competitors-2026">7 AI Coding Agents Compared</a> · <a href="https://www.dedimax.com/en/blog/hermes-agent-a-new-self-hosted-ai-agent-from-nous-research">Dedimax</a></li>
+  <li><a href="https://eu.36kr.com/en/p/3767967755371011">36Kr: 표절 논란</a> · <a href="https://phemex.com/news/article/evomap-accuses-hermes-agent-of-architectural-copying-nous-research-rebuts-73500">Phemex: Nous 반박</a> · <a href="https://github.com/NousResearch/hermes-agent/issues/17688">GitHub Issue #17688</a> · <a href="https://news.ycombinator.com/item?id=48187581">Hacker News 토론</a></li>
+</ul>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

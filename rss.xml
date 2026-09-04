@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html</guid>
+      <description>Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지</description>
+      <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>WWDC 2026 핵심 30선: 개발자·사용자·AI 생산성 관점과 개발자 반응</title>
       <link>https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</guid>
