@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한국어 북스캔 PDF OCR 앱 만들기 전 기술 조사 — Apple Vision·로컬 VLM·클라우드 5개 대안 비교 · 블루오라 개발노트</title>
+<meta name="description" content="M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성">
+<meta property="og:type" content="article">
+<meta property="og:title" content="한국어 북스캔 PDF OCR 앱 만들기 전 기술 조사 — Apple Vision·로컬 VLM·클라우드 5개 대안 비교">
+<meta property="og:description" content="M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-04-korean-bookscan-ocr-research.html">
+<meta property="article:published_time" content="2026-09-04">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-09-04-korean-bookscan-ocr-research.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>한국어 북스캔 PDF OCR 앱 만들기 전 기술 조사 — Apple Vision·로컬 VLM·클라우드 5개 대안 비교</h1>
+    <p class="sub"><span class="tag">AI</span><span class="tag">튜토리얼</span><span class="tag">macOS</span><span class="tag">OCR</span><span class="tag">Swift</span><span class="tag">Python</span> &nbsp;2026-09-04</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat">
+    <div class="label">1순위 엔진</div>
+    <div class="value">Apple Vision</div>
+    <div class="delta">로컬·무료·NPU</div>
+  </div>
+  <div class="stat">
+    <div class="label">10만 페이지 처리</div>
+    <div class="value">8~15h</div>
+    <div class="delta">Vision, M5 Pro 추정</div>
+  </div>
+  <div class="stat">
+    <div class="label">클라우드 최저가</div>
+    <div class="value">$150</div>
+    <div class="delta">Google/Upstage OCR, 10만p</div>
+  </div>
+  <div class="stat">
+    <div class="label">구조화 보조</div>
+    <div class="value">GLM-OCR</div>
+    <div class="delta">0.9B, MIT, 한국어 지원</div>
+  </div>
+</div>
+
+<blockquote>
+집에 쌓인 북스캔 PDF(이미지 전용)를 텍스트 검색 가능하게 만드는 개인용 OCR 앱을 만들기 전에, 한국어 인쇄체 기준으로 로컬 엔진·로컬 VLM·클라우드 API·멀티모달 LLM을 조사했다.
+결론은 <strong>Apple Vision을 1차 엔진으로 전량 처리하고, 코드·표·수식이 있는 기술서 페이지만 GLM-OCR 같은 로컬 VLM으로 2차 처리</strong>하는 구성이다. 전부 로컬·무료로 가능하며, 예산이 있으면 2차 엔진을 Upstage Document Parse로 바꾸면 된다.
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">요구사항</a></li>
+    <li><a href="#s2">5개 대안 한눈에 비교</a></li>
+    <li><a href="#s3">Apple Vision — 로컬 한글 OCR의 기준</a></li>
+    <li><a href="#s4">로컬 VLM OCR — 마크다운 구조화</a></li>
+    <li><a href="#s5">클라우드 OCR API 비용 비교</a></li>
+    <li><a href="#s6">멀티모달 LLM(Gemini·Claude·GPT) OCR</a></li>
+    <li><a href="#s7">탈락한 후보와 이유</a></li>
+    <li><a href="#s8">처리시간 추정과 검색가능 PDF 생성</a></li>
+    <li><a href="#s9">권장 아키텍처</a></li>
+    <li><a href="#s10">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">요구사항</h2>
+<ul>
+  <li>대상: 북스캔 PDF(이미지 전용), 한국어 위주 + 영어 혼용 단행본, 코드·수식·표가 있는 기술서 포함. 손글씨 없음.</li>
+  <li>분량: 50~300권, 약 2만~10만 페이지.</li>
+  <li>우선순위: 정확도 최우선. 처리시간은 며칠 걸려도 무방.</li>
+  <li>결과물: 검색가능 PDF(투명 텍스트 레이어) + 페이지별 텍스트/마크다운 파일.</li>
+  <li>환경: MacBook Pro M5 Pro. 로컬(NPU 포함)과 클라우드 모두 검토. 개인용, 비상용.</li>
+</ul>
+
+<h2 id="s2">5개 대안 한눈에 비교</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>대안</th><th>한국어 정확도</th><th>10만p 소요</th><th>비용</th><th>강점</th><th>약점</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>1. Apple Vision</strong> (macOS 26 <code>RecognizeDocumentsRequest</code>)</td><td>로컬 최상위</td><td>8~15시간</td><td>무료</td><td>Neural Engine, 좌표 출력으로 PDF 텍스트 레이어에 최적, 설치 없음</td><td>한글+한자 혼용 약함, 구 API는 다단 줄 병합 오류</td></tr>
+    <tr><td><strong>2. 로컬 VLM</strong> — GLM-OCR 0.9B / Qwen3-VL-8B</td><td>우수 (GLM-OCR 한국어 공식 지원, OmniDocBench 1위)</td><td>3.5일~3주</td><td>무료</td><td>코드블록·표·수식을 마크다운으로 출력</td><td>좌표 없음, 느림</td></tr>
+    <tr><td><strong>3. Google Document AI / Cloud Vision</strong></td><td>안정적</td><td>수 시간(배치)</td><td>약 $150</td><td>저렴, 대량 배치 처리</td><td>레이아웃·표 약함</td></tr>
+    <tr><td><strong>4. Upstage Document Parse</strong></td><td>한국어 특화</td><td>수 시간</td><td>약 $1,000</td><td>한글·한자·저화질 스캔 명시, HTML/MD, 표·수식 강점</td><td>Google 대비 10배 비용</td></tr>
+    <tr><td><strong>5. Gemini Flash 배치 API</strong></td><td>문맥 이해 최상</td><td>24시간 이내</td><td>약 $250~350</td><td>한국어 벤치에서 오픈 VLM을 크게 앞섬</td><td>환각(코드·숫자를 조용히 수정) 위험, 단독 사용 부적합</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s3">Apple Vision — 로컬 한글 OCR의 기준</h2>
+<p>
+macOS 13부터 <code>VNRecognizeTextRequest</code>가 한국어를 지원했고, macOS 26에서 추가된 <code>RecognizeDocumentsRequest</code>는 문단·줄·단어·표·리스트·읽기 순서를 계층 구조로 돌려준다. 완전 온디바이스이며 26개 언어를 지원한다.
+국내 사용자 보고 기준으로 로컬 엔진 중 한글 인쇄체 정확도가 가장 높다. EasyOCR 대비 약 10배 빠르고, M3 Max에서 이미지당 0.13~0.2초가 측정되었다.
+</p>
+<p>
+알려진 약점은 한글과 한자가 섞인 페이지다. 우선 언어를 <code>ko-KR</code>로 두면 한자가 빠지고, 반대로 두면 한글이 흔들린다. 한자 비중이 높은 페이지는 <code>zh-Hant</code> 우선으로 한 번 더 돌려 병합하는 후처리가 필요하다.
+</p>
+<h3>Python에서 바로 쓰는 방법</h3>
+<p><code>ocrmypdf-appleocr</code> 플러그인(v0.4.0, 2026-07)을 설치하면 OCRmyPDF가 Tesseract 대신 Vision을 호출한다. accurate/livetext 모드에서 한국어를 지원하고, CJK용 sandwich 렌더러가 기본이다.</p>
+<div class="code">
+  <div class="code-head"><span class="fname">terminal</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-bash">pip install ocrmypdf ocrmypdf-appleocr
+ocrmypdf -l kor --sidecar out.txt --output-type pdfa in.pdf out.pdf</code></pre>
+</div>
+<p>
+<code>--sidecar</code>로 텍스트 파일이 함께 생성되므로 "검색가능 PDF + 텍스트" 요구사항을 한 줄로 충족한다. 좌표·confidence까지 필요하면 <code>ocrmac</code>(pyobjc 래퍼)을 쓴다.
+</p>
+<div class="code">
+  <div class="code-head"><span class="fname">vision_ocr.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">from ocrmac import ocrmac
+
+# framework="livetext" 가 최신 API, 세로쓰기 CJK도 처리
+ann = ocrmac.OCR("page_0001.png",
+                 language_preference=["ko-KR", "en-US"],
+                 framework="livetext").recognize()
+for text, confidence, bbox in ann:
+    print(confidence, bbox, text)</code></pre>
+</div>
+<div class="callout">
+<strong>참고</strong> — <code>RecognizeDocumentsRequest</code>(표·읽기순서 반환)는 아직 Python 래퍼가 없어 Swift에서 직접 호출해야 한다. 앱을 제대로 만든다면 Swift CLI 또는 macOS 앱이 가장 자연스럽다.
+</div>
+
+<h2 id="s4">로컬 VLM OCR — 마크다운 구조화</h2>
+<p>
+M5 Pro의 통합 메모리로 아래 모델 모두 구동 가능하다. 코드블록·표·LaTeX를 마크다운으로 뽑는 데 강하지만, 대부분 <strong>좌표를 출력하지 않아 PDF 텍스트 레이어는 만들 수 없다</strong>. Vision과 병용이 전제다.
+</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>모델</th><th>크기 / 라이선스</th><th>한국어 근거</th><th>Apple Silicon 실행</th><th>메모리 · 속도(추정)</th><th>출력</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>GLM-OCR</strong> (Z.ai)</td><td>0.9B / MIT</td><td>공식 문서에 한국어 명시, OmniDocBench v1.5 94.62(1위)</td><td><code>ollama run glm-ocr</code>, MLX</td><td>약 2GB, 수 초/페이지</td><td>MD/JSON, HTML 표</td></tr>
+    <tr><td><strong>PaddleOCR-VL-1.5</strong></td><td>0.9B / Apache-2.0</td><td>109개 언어(한국어 포함), OmniDocBench 94.5</td><td>공식 MLX-VLM 가이드(설치 까다로움)</td><td>약 4GB, 2~3초/페이지(M4 Max)</td><td>MD/JSON, 표·수식·차트</td></tr>
+    <tr><td><strong>Qwen3-VL-8B</strong> (범용 VLM)</td><td>Apache-2.0</td><td>국내 커뮤니티 다국어 OCR·수식 호평</td><td>공식 MLX / LM Studio / Ollama</td><td>4bit 5~6GB, 10~20초/페이지</td><td>자유형 MD, 코드, LaTeX</td></tr>
+    <tr><td>Surya 2 / Marker</td><td>OpenRAIL-M</td><td>한국어 86.7% (91개 언어 벤치)</td><td>llama-server Metal</td><td>약 59초/페이지</td><td>HTML/JSON → MD</td></tr>
+    <tr><td>Chandra 2</td><td>5B / OpenRAIL-M</td><td>한국어 81.5%</td><td>커뮤니티 MLX 8bit</td><td>10~30초/페이지</td><td>MD/HTML/JSON</td></tr>
+    <tr><td>MinerU 2.7.6</td><td>AGPL-3.0</td><td>PP-OCRv5 한국어 / VLM 109개 언어</td><td><code>vlm-mlx-engine</code></td><td>6~10GB</td><td>MD/JSON</td></tr>
+    <tr><td>olmOCR-2 7B</td><td>Apache-2.0</td><td>영어 위주 학습</td><td>MLX 8bit 8.4GB</td><td>수십 초/페이지</td><td>MD</td></tr>
+  </tbody>
+</table>
+</div>
+<p>
+1순위는 GLM-OCR이다. 가볍고, 한국어를 공식 지원하며, 문서 벤치마크 최상위다. 코드·수식 페이지에서 더 유연한 출력이 필요하면 Qwen3-VL-8B를 2순위로 둔다.
+10만 페이지 전체를 VLM으로 돌리면 GLM-OCR 기준 3.5~6일 연속 실행이 필요하므로, 기술서 페이지만 선별 처리하는 편이 현실적이다.
+</p>
+<div class="code">
+  <div class="code-head"><span class="fname">terminal</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-bash">ollama pull glm-ocr
+ollama run glm-ocr "이 페이지를 마크다운으로 변환해줘. 코드블록과 표는 보존." ./page_0042.png</code></pre>
+</div>
+
+<h2 id="s5">클라우드 OCR API 비용 비교</h2>
+<p>2만~10만 페이지 구간에는 볼륨 할인이 없어 전부 정가 기준이다. 환율 약 1,390원/USD.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>서비스</th><th>출력</th><th class="num">$/1,000p</th><th class="num">2만p</th><th class="num">5만p</th><th class="num">10만p</th><th>한국어 비고</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Google Cloud Vision (DOCUMENT_TEXT_DETECTION)</td><td>텍스트+좌표</td><td class="num">1.50</td><td class="num">$30</td><td class="num">$75</td><td class="num">$150</td><td>한글 문자 인식 안정, GCS 비동기 배치</td></tr>
+    <tr><td>Google Document AI (Enterprise OCR)</td><td>텍스트+레이아웃 JSON</td><td class="num">1.50</td><td class="num">$30</td><td class="num">$75</td><td class="num">$150</td><td>표·읽기순서 약함</td></tr>
+    <tr><td>Azure Document Intelligence Read / Layout</td><td>텍스트 / MD·표</td><td class="num">1.50 / 10</td><td class="num">$30 / $200</td><td class="num">$75 / $500</td><td class="num">$150 / $1,000</td><td>한국어 인쇄체 지원, 표 품질 약함</td></tr>
+    <tr><td>Upstage Document OCR / Document Parse</td><td>텍스트 / HTML·MD</td><td class="num">1.50 / 10</td><td class="num">$30 / $200</td><td class="num">$75 / $500</td><td class="num">$150 / $1,000</td><td>국내사, 한글·한자·저화질 스캔 명시, 0.6초/페이지</td></tr>
+    <tr><td>Naver CLOVA General OCR</td><td>텍스트+좌표</td><td class="num">약 18 (₩25/건)</td><td class="num">₩50만</td><td class="num">₩125만</td><td class="num">₩250만</td><td>한글 평판 최상, 1 TPS 권장 제한</td></tr>
+    <tr><td>Mistral OCR 4.1 (배치)</td><td>MD+좌표</td><td class="num">4 (2)</td><td class="num">$80 ($40)</td><td class="num">$200 ($100)</td><td class="num">$400 ($200)</td><td>170개 언어, 한국어 안정성 검증 부족</td></tr>
+    <tr><td>AWS Textract</td><td>—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td>한국어 미지원</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s6">멀티모달 LLM(Gemini·Claude·GPT) OCR</h2>
+<p>
+페이지당 입력 토큰은 Gemini PDF 입력 258토큰(다운샘플링되어 작은 한글·코드에 불리, 기술서는 이미지 입력 약 1,500토큰 권장), Claude 약 1,568(표준)/4,784(고해상도), GPT 약 1,000~1,600이다. 출력은 밀도 높은 한국어+코드 페이지 기준 약 2,000토큰. 배치 API는 50% 할인된다.
+</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>모델(배치 기준)</th><th class="num">10만p 추정 비용</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>GPT-5.6 Luna</td><td class="num">약 $135</td></tr>
+    <tr><td>Gemini 2.5 Flash</td><td class="num">약 $255</td></tr>
+    <tr><td>Gemini 3 Flash</td><td class="num">약 $340</td></tr>
+    <tr><td>Claude Haiku 4.5</td><td class="num">약 $580</td></tr>
+    <tr><td>Claude Sonnet 5</td><td class="num">약 $1,300</td></tr>
+    <tr><td>Gemini 3.1 Pro</td><td class="num">약 $1,350</td></tr>
+  </tbody>
+</table>
+</div>
+<p>실제 비용은 텍스트 밀도에 따라 ±40% 변동한다.</p>
+<p>
+한국어 근거로는 KO-VLM-Benchmark(실제 한국어 문서)에서 Gemini 2.5 Pro 91.8% vs Qwen3-VL-8B 56.3%로 프론티어 폐쇄 모델이 오픈 VLM을 크게 앞선다. 반면 OmniDocBench(중·영)에서는 GLM-OCR 94.6 &gt; Gemini 3 Pro 90.3 &gt; GPT-4o 75.0으로 전용 OCR 모델이 LLM을 앞선다.
+</p>
+<div class="callout warn">
+<strong>주의</strong> — LLM OCR의 핵심 리스크는 환각이다. 코드·수식·숫자를 그럴듯하게 고치거나 줄을 건너뛰어도 형식 검사로는 잡히지 않는다. 고전 OCR(Vision) 결과와 문자열 diff로 검증하는 QA 단계 없이 단독 사용하면 안 된다. 신규 계정의 동기 API는 레이트리밋에 걸리므로 배치 API를 쓴다.
+</div>
+
+<h2 id="s7">탈락한 후보와 이유</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>후보</th><th>탈락 이유</th></tr></thead>
+  <tbody>
+    <tr><td>Tesseract 5 (<code>kor</code>)</td><td>진지한 후보 중 한글 정확도 최하. 코드·수식·레이아웃 미지원. 검색가능 PDF 파이프라인(OCRmyPDF)은 훌륭하나 엔진만 Vision으로 교체하는 편이 낫다.</td></tr>
+    <tr><td>EasyOCR</td><td>국내 비교에서 한글 "매우 떨어짐" 평가, 2024-09 이후 릴리즈 없음. Vision 대비 6배 느림.</td></tr>
+    <tr><td>PaddleOCR PP-OCRv5 (고전 파이프라인)</td><td>한국어 모델은 mobile만 존재(라인 정확도 88.0%), macOS는 CPU 전용, 설치 마찰 큼. Vision 대비 우위 근거 없음. 보조 후보로만 유지.</td></tr>
+    <tr><td>Naver CLOVA OCR</td><td>정확도는 최상이지만 ₩25/페이지로 10만 페이지 ₩250만. 1 TPS 권장 제한.</td></tr>
+    <tr><td>AWS Textract</td><td>한국어 미지원 확인.</td></tr>
+    <tr><td>olmOCR</td><td>학습 데이터 대부분 영어. 비영어는 "기본 수준".</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s8">처리시간 추정과 검색가능 PDF 생성</h2>
+<h3>10만 페이지 기준 처리시간 (M5 Pro)</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>엔진</th><th class="num">페이지당</th><th class="num">10만 페이지</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td>Apple Vision</td><td class="num">0.3~0.5초</td><td class="num">8~15시간</td><td>Neural Engine, 밤샘 1~2회</td></tr>
+    <tr><td>Tesseract (12코어 병렬)</td><td class="num">약 0.2초 실효</td><td class="num">약 6시간</td><td>정확도 낮음</td></tr>
+    <tr><td>PaddleOCR v5 (CPU)</td><td class="num">0.5~1초</td><td class="num">14~28시간</td><td></td></tr>
+    <tr><td>GLM-OCR (MLX/Ollama)</td><td class="num">3~5초</td><td class="num">3.5~6일</td><td>선별 처리 권장</td></tr>
+    <tr><td>Qwen3-VL-8B (MLX 4bit)</td><td class="num">10~20초</td><td class="num">12~23일</td><td>선별 처리 전용</td></tr>
+    <tr><td>CLOVA (1 TPS)</td><td class="num">1초</td><td class="num">28시간 이상</td><td></td></tr>
+    <tr><td>Google / Upstage 배치</td><td class="num">—</td><td class="num">수 시간</td><td>API 배치 한도 내</td></tr>
+  </tbody>
+</table>
+</div>
+<p>M5 Pro 전용 벤치마크는 아직 없어 M3/M4 실측치 기반 추정이다.</p>
+
+<h3>검색가능 PDF 텍스트 레이어 만드는 4가지 방법</h3>
+<ol class="steps">
+  <li><strong>OCRmyPDF + Apple 플러그인</strong> — 가장 간단. <code>--sidecar</code>로 텍스트 파일도 함께 생성.</li>
+  <li><strong>mac-ocr</strong>(npm) — Vision 결과를 CoreText로 단어 단위 투명 텍스트 삽입. <code>-l ko-KR -l en-US</code> 다중 언어 지원.</li>
+  <li><strong>PyMuPDF 직접 구현</strong> — 좌표 있는 엔진(ocrmac, PaddleOCR, Surya) 결과를 투명 텍스트로 삽입. PyMuPDF 내장 CJK 폰트로 한글 검색 가능.</li>
+  <li><strong>VLM 마크다운은 사이드카로</strong> — 좌표가 없으므로 <code>.md</code>로 따로 저장하고 SQLite FTS5 인덱스에 Vision 텍스트와 함께 색인.</li>
+</ol>
+<div class="code">
+  <div class="code-head"><span class="fname">add_text_layer.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">import fitz  # PyMuPDF
+
+doc = fitz.open("scan.pdf")
+page = doc[0]
+# lines: [(text, x0, y0, x1, y1), ...] — Vision/ocrmac 결과를 페이지 좌표로 변환한 것
+for text, x0, y0, x1, y1 in lines:
+    fontsize = max(4, (y1 - y0) * 0.8)
+    page.insert_text((x0, y1), text, fontsize=fontsize,
+                     fontname="korea",   # PyMuPDF 내장 CJK 폰트
+                     render_mode=3)      # 3 = 투명(보이지 않지만 검색·선택 가능)
+doc.save("scan_searchable.pdf")</code></pre>
+</div>
+<p>위 코드는 개념 확인용 의사코드에 가깝다. 실제로는 bbox 정규화 좌표를 페이지 픽셀 좌표로 변환하고, 세로쓰기·회전 페이지를 별도 처리해야 한다.</p>
+
+<h2 id="s9">권장 아키텍처</h2>
+<ol class="steps">
+  <li><strong>Phase 1 (전량, 로컬·무료)</strong> — Swift CLI 또는 Python(ocrmac / ocrmypdf-appleocr)으로 전 PDF를 Apple Vision(<code>ko-KR</code> 우선, livetext 모드, 300dpi 렌더링) 처리. 검색가능 PDF + 페이지별 JSON(텍스트·bbox·confidence) 생성. 한자 다수 페이지는 <code>zh-Hant</code> 우선으로 재실행 후 병합.</li>
+  <li><strong>Phase 2 (선별, 로컬·무료)</strong> — 기술서 페이지, Phase 1에서 confidence가 낮은 페이지, 표·코드가 감지된 페이지만 GLM-OCR(Ollama) 또는 Qwen3-VL-8B(MLX)로 마크다운 생성.</li>
+  <li><strong>Phase 3 (QA)</strong> — Vision 텍스트와 VLM 텍스트의 문자열 유사도를 비교해 불일치율 높은 페이지를 목록화. 필요하면 그 소수 페이지만 Upstage Document Parse 또는 Gemini Flash 배치로 3차 판정(수백~수천 페이지면 $10 미만).</li>
+  <li><strong>검색</strong> — SQLite FTS5(trigram 토크나이저로 한글 부분일치) 또는 검색가능 PDF만으로 Spotlight/Finder 검색.</li>
+</ol>
+<div class="callout">
+<strong>예산 $150~1,000이 허용된다면</strong> — Phase 1을 Google Document AI OCR($150/10만p), Phase 2를 Upstage Document Parse로 대체하면 설치·튜닝 없이 수 시간 내 끝난다. 다만 Vision의 한글 품질이 Google과 동급 이상이라 로컬 우선이 합리적이다.
+</div>
+
+<h2 id="s10">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>역할</th><th>선택</th><th>이유</th></tr></thead>
+  <tbody>
+    <tr><td>1차 텍스트 레이어</td><td>Apple Vision</td><td>로컬 한글 최상위 정확도, 0.5초/페이지, 무료, 좌표 출력</td></tr>
+    <tr><td>2차 구조화(코드·표·수식)</td><td>GLM-OCR → Qwen3-VL-8B</td><td>한국어 공식 지원, 0.9B로 가벼움, 마크다운 출력</td></tr>
+    <tr><td>3차 판정(소수 페이지)</td><td>Upstage Document Parse 또는 Gemini Flash 배치</td><td>불일치 페이지만 처리하면 비용 미미</td></tr>
+    <tr><td>클라우드 전면 전환 시</td><td>Google Document AI OCR + Upstage Parse</td><td>10만p 기준 $150 + $1,000</td></tr>
+    <tr><td>쓰지 않을 것</td><td>Tesseract, EasyOCR, Textract, LLM 단독</td><td>정확도 부족 / 한국어 미지원 / 환각</td></tr>
+  </tbody>
+</table>
+</div>
+<p>다음 단계는 Phase 1 파이프라인 프로토타입(Swift CLI 또는 Python)을 만들고, 샘플 페이지로 Vision과 GLM-OCR을 실측 비교하는 것이다. 결과는 후속 글로 정리할 예정이다.</p>
+
+<h3>주요 출처</h3>
+<ul>
+  <li>Apple: <a href="https://developer.apple.com/documentation/vision/recognizedocumentsrequest">RecognizeDocumentsRequest</a> · <a href="https://developer.apple.com/videos/play/wwdc2025/272/">WWDC25 세션 272</a> · <a href="https://github.com/straussmaximilian/ocrmac">ocrmac</a> · <a href="https://pypi.org/project/ocrmypdf-appleocr/">ocrmypdf-appleocr</a> · <a href="https://github.com/privatenumber/mac-ocr">mac-ocr</a> · <a href="https://pyx.kr/en/post/151">Vision 한국어 후기</a></li>
+  <li>로컬 VLM: <a href="https://github.com/zai-org/GLM-OCR">GLM-OCR</a> · <a href="https://docs.z.ai/guides/vlm/glm-ocr">GLM-OCR 지원 언어</a> · <a href="https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.5">PaddleOCR-VL-1.5</a> · <a href="https://www.paddleocr.ai/main/en/version3.x/pipeline_usage/PaddleOCR-VL-Apple-Silicon.html">PaddleOCR Apple Silicon 가이드</a> · <a href="https://github.com/datalab-to/surya">Surya</a> · <a href="https://github.com/datalab-to/chandra">Chandra</a> · <a href="https://github.com/qwenlm/qwen3-vl">Qwen3-VL</a></li>
+  <li>한국어 비교·벤치: <a href="https://devocean.sk.com/blog/techBoardDetail.do?ID=165524&amp;boardType=techBlog">SK Devocean OCR 비교</a> · <a href="https://github.com/Marker-Inc-Korea/KO-VLM-Benchmark">KO-VLM-Benchmark</a> · <a href="https://www.codesota.com/ocr/benchmark/omnidocbench">OmniDocBench 리더보드</a></li>
+  <li>클라우드: <a href="https://cloud.google.com/document-ai/pricing">Google Document AI 가격</a> · <a href="https://cloud.google.com/vision/pricing">Cloud Vision 가격</a> · <a href="https://www.upstage.ai/pricing/api">Upstage 가격</a> · <a href="https://www.ncloud.com/product/aiService/ocr">Naver CLOVA OCR</a> · <a href="https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/language-support-ocr">Azure DI 언어 지원</a> · <a href="https://aws.amazon.com/textract/faqs/">Textract FAQ</a> · <a href="https://mistral.ai/news/ocr-4/">Mistral OCR 4</a></li>
+  <li>LLM: <a href="https://ai.google.dev/gemini-api/docs/pricing">Gemini 가격</a> · <a href="https://platform.claude.com/docs/en/about-claude/pricing">Claude 가격</a> · <a href="https://openai.com/api/pricing/">OpenAI 가격</a></li>
+</ul>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

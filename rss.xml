@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>한국어 북스캔 PDF OCR 앱 만들기 전 기술 조사 — Apple Vision·로컬 VLM·클라우드 5개 대안 비교</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-09-04-korean-bookscan-ocr-research.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-korean-bookscan-ocr-research.html</guid>
+      <description>M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성</description>
+      <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점</title>
       <link>https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html</guid>
