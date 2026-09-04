@@ -18,6 +18,17 @@
   },
   "posts": [
     {
+      "slug": "2026-09-04-claude-prompt-harness",
+      "title": "Claude 모델별 프롬프트 상세도와 구현 하네스 요청법",
+      "date": "2026-09-04",
+      "tags": [
+        "AI",
+        "회고",
+        "Claude Code"
+      ],
+      "summary": "Opus 4.5+/Fable 5.1은 지시를 줄이고 Sonnet은 절차를 늘리는 이유, 그리고 PRD 외에 초기화·구현·리뷰 3세션 하네스가 필요한 근거를 Anthropic 공식 문서 기준으로 정리"
+    },
+    {
       "slug": "2026-09-04-hermes-agent-deep-dive",
       "title": "Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점",
       "date": "2026-09-04",

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude 모델별 프롬프트 상세도와 구현 하네스 요청법 · 블루오라 개발노트</title>
+<meta name="description" content="Opus 4.5+/Fable 5.1은 지시를 줄이고 Sonnet은 절차를 늘리는 이유, 그리고 PRD 외에 초기화·구현·리뷰 3세션 하네스가 필요한 근거를 Anthropic 공식 문서 기준으로 정리">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude 모델별 프롬프트 상세도와 구현 하네스 요청법">
+<meta property="og:description" content="Opus 4.5+/Fable 5.1은 지시를 줄이고 Sonnet은 절차를 늘리는 이유, 그리고 PRD 외에 초기화·구현·리뷰 3세션 하네스가 필요한 근거를 Anthropic 공식 문서 기준으로 정리">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-04-claude-prompt-harness.html">
+<meta property="article:published_time" content="2026-09-04">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-09-04-claude-prompt-harness.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>Claude 모델별 프롬프트 상세도와 구현 하네스 요청법</h1>
+    <p class="sub"><span class="tag">AI</span><span class="tag">회고</span><span class="tag">Claude Code</span> &nbsp;2026-09-04</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat">
+    <div class="label">모델 세대 구분</div>
+    <div class="value">2단계</div>
+    <div class="delta">Opus 4.5+ / Fable 5.1 vs 그 이전</div>
+  </div>
+  <div class="stat">
+    <div class="label">few-shot 예시</div>
+    <div class="value">3~5개</div>
+    <div class="delta">공식 권장</div>
+  </div>
+  <div class="stat">
+    <div class="label">긴 컨텍스트 질문 위치</div>
+    <div class="value">맨 끝</div>
+    <div class="delta">품질 최대 30% 차이</div>
+  </div>
+  <div class="stat">
+    <div class="label">구현 세션 구성</div>
+    <div class="value">3종</div>
+    <div class="delta">초기화 / 구현 / 리뷰</div>
+  </div>
+</div>
+
+<blockquote>
+PRD와 구현계획을 AI로 만들고 Claude Code로 구현하는 워크플로우에서 두 가지가 궁금했다.
+프롬프트는 어느 정도로 상세해야 하고 모델(Fable·Opus·Sonnet)마다 달라야 하는가,
+그리고 PRD·계획 외에 하네스(검증 루프·상태 관리) 요청이 따로 필요한가.
+Anthropic 공식 문서를 기준으로 정리하면 결론은 이렇다.
+<strong>요구사항의 명확성은 모델과 무관하게 항상 필요하고, 지시의 강도는 모델 세대에 따라 반대로 조절한다.
+하네스는 필요하며, 하네스가 결정적일수록 모델 차이에 덜 흔들린다.</strong>
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">모델 세대별 프롬프트 차이</a></li>
+    <li><a href="#s2">모델과 무관하게 항상 써야 하는 것</a></li>
+    <li><a href="#s3">Sonnet용과 Opus·Fable용을 다르게 쓰는 부분</a></li>
+    <li><a href="#s4">하네스가 왜 따로 필요한가</a></li>
+    <li><a href="#s5">하네스에 들어가야 하는 것</a></li>
+    <li><a href="#s6">요청 프롬프트 3종</a></li>
+    <li><a href="#s7">Fable과 Opus의 차이</a></li>
+    <li><a href="#s8">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">모델 세대별 프롬프트 차이</h2>
+
+<p>Anthropic 프롬프팅 가이드는 Opus 4.5 이후, Sonnet 4.5, Fable 5.1을 "새 세대"로 묶고, 그 이전 모델과 프롬프트 방식을 구분한다. 핵심은 새 모델일수록 <strong>덜 강하게, 덜 절차적으로</strong> 지시하라는 것이다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>항목</th><th>Sonnet / 이전 세대에 유효</th><th>Opus 4.5+ / Fable 5.1</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>"반드시 ~해라", "빠짐없이 조사해라"</td><td>도움됨</td><td>과잉 트리거·과잉 탐색 유발. 빼는 것이 낫다</td></tr>
+    <tr><td>단계별 절차 상세 지정</td><td>도움됨</td><td>일반 지시가 더 낫다. 문서 표현으로 "모델의 추론이 사람이 쓴 계획을 자주 능가한다"</td></tr>
+    <tr><td>"검증해라" 명시</td><td>필요</td><td>Opus 5는 알아서 검증한다. 반복 지시는 과잉 검증으로 토큰 낭비</td></tr>
+    <tr><td>예시(few-shot)</td><td>3~5개 권장</td><td>여전히 유효하되 의존도 낮음</td></tr>
+    <tr><td>지시 준수 방식</td><td>느슨함</td><td>문자 그대로 정밀하게 따름. 애매한 표현이 그대로 결과에 반영됨</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout warn">
+<strong>주의</strong> — Sonnet용 프롬프트를 Fable에 그대로 쓰면 "지나치게 많이 하고, 지나치게 확인하는" 문제가 생기고,
+반대로 Fable용 짧은 프롬프트를 Sonnet에 쓰면 "빠뜨리고 얕게 하는" 문제가 생긴다.
+</div>
+
+<h2 id="s2">모델과 무관하게 항상 써야 하는 것</h2>
+
+<p>문서의 기준은 하나다. "맥락 없는 동료에게 이 프롬프트를 보여줬을 때 그 사람이 헷갈리면 Claude도 헷갈린다." 그래서 아래 항목은 어느 모델이든 빠지면 결과가 어긋난다.</p>
+
+<ul>
+  <li><strong>목표와 이유.</strong> "NEVER X"보다 "TTS로 읽히니까 X 금지"처럼 동기를 주면 모델이 일반화한다.</li>
+  <li><strong>대상 사용자·플랫폼·기술 제약.</strong> 예: Android/iOS/Windows, gRPC, BLE, 기존 아키텍처.</li>
+  <li><strong>범위와 비범위(non-goals), 완료 기준.</strong></li>
+  <li><strong>출력 형식과 분량.</strong> 섹션 구성, md 파일명, 표인지 산문인지.</li>
+  <li><strong>참조 자료는 프롬프트 앞에, 질문·지시는 끝에.</strong> 긴 컨텍스트에서 품질이 최대 30% 차이 난다.</li>
+</ul>
+
+<p>대화형 조사 질문은 미흡해도 왕복 한 번으로 끝나므로 크게 신경 쓸 필요가 없다. 프롬프트 품질이 진짜 중요한 것은 PRD·구현계획처럼 <strong>결과물이 다음 단계의 입력이 되는 문서</strong>다. 거기서 빠진 제약은 코드로 굳어진다.</p>
+
+<h2 id="s3">Sonnet용과 Opus·Fable용을 다르게 쓰는 부분</h2>
+
+<p><strong>Sonnet</strong>일 때는 작업을 작게 쪼개고, 순서 있는 단계와 체크리스트를 주고, 예시를 붙이고, "테스트를 통과시키기 위해 하드코딩하지 마라" 같은 가드를 명시하는 것이 맞다.</p>
+
+<p><strong>Opus·Fable</strong>일 때는 목표·맥락·제약·완료 기준만 주고 계획은 맡기되, 대신 <strong>과잉 엔지니어링 금지</strong> 가드를 넣는 것이 효과적이다. 새 모델의 실패 모드는 부족함이 아니라 과함이기 때문이다. 공식 문서가 제시하는 가드 문구는 다음과 같다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">과잉 엔지니어링 방지 가드</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-plaintext">Avoid over-engineering. Only make changes that are directly requested or clearly necessary.
+- Scope: Don't add features, refactor code, or make "improvements" beyond what was asked
+- Documentation: Don't add docstrings, comments, or type annotations to code you didn't change
+- Defensive coding: Don't add error handling for scenarios that can't happen
+- Abstractions: Don't create helpers/utilities for one-time operations</code></pre>
+</div>
+
+<h3>Claude Code에서의 실무 팁</h3>
+
+<ul>
+  <li>매번 프롬프트에 쓰는 반복 맥락(스택, 코딩 규칙, 테스트 명령)은 <code>CLAUDE.md</code>로 옮기고, 프롬프트에는 이번 작업 고유 내용만 쓴다.</li>
+  <li>구현 전 plan mode로 계획을 먼저 받고 승인하는 흐름이 "상세 프롬프트"보다 비용 대비 효과가 크다. 단, 한 문장으로 diff를 설명할 수 있는 작은 수정은 plan mode를 건너뛴다.</li>
+  <li>사고 깊이는 문장이 아니라 effort 설정으로 조절하는 것이 새 모델의 권장 방식이다.</li>
+</ul>
+
+<h2 id="s4">하네스가 왜 따로 필요한가</h2>
+
+<p>PRD·구현계획은 "무엇을 만들지"이고, 하네스는 "에이전트가 스스로 맞았는지 확인하고 상태를 잃지 않는 장치"라서 역할이 다르다. Claude Code 공식 문서의 표현은 이렇다.</p>
+
+<blockquote>
+Claude는 끝난 것처럼 보이면 멈춘다. 스스로 돌릴 검사가 없으면 "끝난 것처럼 보인다"가 유일한 신호이고, 당신이 검증 루프가 된다.
+</blockquote>
+
+<p>같은 문서는 가장 흔한 실패 패턴으로 <strong>trust-then-verify gap</strong>, 즉 그럴듯해 보이지만 엣지케이스를 다루지 않는 구현을 꼽는다. 처방은 단순하다. 테스트, 빌드 exit code, 린터, 스크린샷 비교처럼 <strong>pass/fail을 돌려주는 검사</strong>를 주면 루프가 스스로 닫힌다.</p>
+
+<p>Anthropic의 장기 실행 에이전트 하네스 글(2025년 11월)은 이를 두 단계로 나눈다. <strong>초기화 에이전트</strong>가 feature list JSON, <code>init.sh</code>, <code>progress.txt</code>, 초기 커밋을 만들고, 이후 <strong>코딩 에이전트</strong> 세션은 progress와 git log를 읽고 "한 번에 한 기능만" 구현하며, 테스트 통과 후에만 완료 처리하고, 커밋 후 종료한다. 핵심 규칙 하나는 "테스트를 삭제하거나 수정해서 통과시키는 것은 허용되지 않는다"이다.</p>
+
+<h2 id="s5">하네스에 들어가야 하는 것</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>구성 요소</th><th>역할</th><th>모바일·데스크톱 앱 프로젝트 예</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>CLAUDE.md</code></td><td>세션마다 로드되는 짧은 규칙·명령</td><td>플랫폼별 빌드/테스트 명령, gRPC proto 규칙, 브랜치 규칙</td></tr>
+    <tr><td>검증 신호</td><td>pass/fail을 돌려주는 것</td><td>단위 테스트, 빌드 exit code, lint. BLE/gRPC는 mock·loopback 통합 테스트, UI는 스크린샷 비교</td></tr>
+    <tr><td>상태 파일</td><td>컨텍스트 창을 넘어도 진행 상황 유지</td><td><code>features.json</code>(계획의 마일스톤을 항목화, 테스트 통과 전까지 failing), <code>progress.md</code>, 기능 단위 git 커밋</td></tr>
+    <tr><td>게이트</td><td>검증 통과 전 종료 차단</td><td>Stop hook 또는 <code>/goal</code> (무인 실행용)</td></tr>
+    <tr><td>독립 리뷰</td><td>작성자와 다른 컨텍스트가 채점</td><td>서브에이전트가 diff를 PLAN.md와 대조</td></tr>
+    <tr><td>과잉 방지</td><td>새 모델의 실패 모드는 "과함"</td><td>"요청 외 리팩토링·주석·방어 코드 금지"</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout">
+<strong>참고</strong> — <code>CLAUDE.md</code>는 짧아야 한다. 공식 문서 기준은 "이 줄을 지우면 Claude가 실수하는가?"이며,
+아니면 지운다. 너무 길면 중요한 규칙이 묻혀서 오히려 무시된다. 항상 지켜야 하는 것은 CLAUDE.md(권고)가 아니라 hook(강제)으로 옮긴다.
+</div>
+
+<h2 id="s6">요청 프롬프트 3종</h2>
+
+<p>하네스 초기화, 기능 구현, 리뷰를 별도 세션으로 분리한다. 구현 세션은 매번 <code>/clear</code> 후 새로 시작해 컨텍스트를 깨끗하게 유지한다.</p>
+
+<h3>1. 하네스 초기화 세션 (한 번)</h3>
+
+<div class="code">
+  <div class="code-head"><span class="fname">harness-init 프롬프트</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-plaintext">docs/prd.md와 docs/plan.md를 읽어라.
+1. plan의 마일스톤을 features.json으로 옮겨라 (각 항목: id, 설명, 검증 방법, status=failing).
+2. CLAUDE.md를 만들어라: Android/iOS/Windows 빌드·테스트 명령, 코드 규칙 중 코드만 봐서는 알 수 없는 것만. 20줄 이내.
+3. 각 마일스톤에 대한 테스트 스켈레톤(실패 상태)을 만들어라.
+4. 편집 후 lint/format을 실행하는 hook, 테스트 미통과 시 종료를 막는 Stop hook을 .claude/settings.json에 작성해라.
+5. 위 명령들이 실제로 실행되는지 확인하고 결과를 보여준 뒤 초기 커밋해라.</code></pre>
+</div>
+
+<h3>2. 기능 구현 세션 (반복)</h3>
+
+<div class="code">
+  <div class="code-head"><span class="fname">feature 프롬프트</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-plaintext">progress.md와 git log를 읽고 features.json에서 failing인 다음 한 항목만 구현해라.
+테스트를 먼저 통과시키고, 테스트 출력과 실행한 명령을 증거로 보여라.
+요청 범위 밖의 리팩토링·주석·방어 코드는 추가하지 마라.
+완료되면 status를 passing으로 바꾸고 progress.md 갱신 후 커밋해라.</code></pre>
+</div>
+
+<h3>3. 리뷰 세션 (서브에이전트)</h3>
+
+<div class="code">
+  <div class="code-head"><span class="fname">review 프롬프트</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-plaintext">서브에이전트로 이번 diff를 docs/plan.md와 대조해라.
+요구사항 누락, 엣지케이스 테스트 부재, 범위 밖 변경만 보고해라. 스타일 의견은 제외.</code></pre>
+</div>
+
+<p>리뷰어는 "빈틈을 찾아라"라고 하면 멀쩡한 코드에서도 무언가를 보고한다. 모든 지적을 따라가면 과잉 엔지니어링이 되므로, 정확성과 명시된 요구사항에 영향을 주는 것만 보고하게 하고 나머지는 선택 사항으로 취급한다.</p>
+
+<p>큰 기능이면 구현 전에 "AskUserQuestion으로 나를 인터뷰하고 SPEC.md를 써라" 프롬프트를 먼저 쓰는 것도 공식 권장이다. 이미 PRD가 있어도 구현 관점의 빈틈(파일·인터페이스·비범위·E2E 검증 단계)이 채워진다. 스펙이 완성되면 새 세션에서 구현을 시작한다.</p>
+
+<h2 id="s7">Fable과 Opus의 차이</h2>
+
+<p>문서에 명시된 차이는 크지 않다. 둘 다 "새 세대"로 같은 원칙(과잉 지시 제거, 목표 지시 선호)이 적용된다. 문서화된 구체적인 차이는 두 가지다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>모델</th><th>문서화된 특성</th><th>프롬프트에서의 대응</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Opus 5</td><td>지시 없이도 스스로 검증한다. 사용자 응답이 장황한 편이다</td><td>"검증해라"를 반복하지 않는다. 검증은 hook/goal 같은 결정적 게이트에 맡기고 프롬프트에서는 한 번만 언급. 간결한 답을 원하면 명시</td></tr>
+    <tr><td>Fable 5.1</td><td>도구 호출 후 요약을 건너뛰고 다음 행동으로 넘어가는 경향</td><td>"실행한 명령과 출력을 증거로 보여라", "progress.md에 기록해라"를 명시적으로 요청</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>정리하면 하네스 자체(테스트·hook·상태 파일·커밋 규칙)는 모델과 무관하게 동일하게 두고, 프롬프트에서 Opus는 "검증 지시를 덜", Fable은 "보고 지시를 더" 하는 정도다. 하네스를 결정적으로 만들수록 모델 차이에 덜 흔들리는 것이 이 구조의 목적이다.</p>
+
+<h2 id="s8">정리</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>질문</th><th>답</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>프롬프트는 얼마나 상세해야 하나</td><td>요구사항(목표·제약·비범위·완료 기준·출력 형식)은 항상 상세하게. 절차와 강조는 모델 세대에 따라 조절</td></tr>
+    <tr><td>Sonnet은 다르게 써야 하나</td><td>그렇다. 작게 쪼개고, 단계·체크리스트·예시·가드를 명시</td></tr>
+    <tr><td>Opus·Fable은</td><td>목표와 맥락만 주고 계획은 맡기되 과잉 엔지니어링 가드를 넣는다</td></tr>
+    <tr><td>하네스 요청이 필요한가</td><td>필요하다. PRD는 "무엇", 하네스는 "스스로 확인하는 방법"</td></tr>
+    <tr><td>어떻게 요청하나</td><td>초기화 / 구현 / 리뷰 세션 3종으로 분리. features.json·progress.md·hook·커밋 규칙</td></tr>
+    <tr><td>Fable vs Opus</td><td>Opus는 검증 지시를 덜, Fable은 보고 지시를 더. 하네스는 동일</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>참고</h3>
+
+<ul>
+  <li><a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">Claude prompting best practices (Anthropic 공식)</a></li>
+  <li><a href="https://code.claude.com/docs/en/best-practices">Best practices for Claude Code (공식)</a></li>
+  <li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Effective harnesses for long-running agents (Anthropic Engineering)</a></li>
+</ul>
+
+<p>문서 내용은 2026년 9월 작성 시점 기준이며, 모델별 권장 사항은 이후 업데이트될 수 있다.</p>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

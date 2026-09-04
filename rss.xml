@@ -19,6 +19,13 @@
       <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
     </item>
     <item>
+      <title>Claude 모델별 프롬프트 상세도와 구현 하네스 요청법</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-09-04-claude-prompt-harness.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-claude-prompt-harness.html</guid>
+      <description>Opus 4.5+/Fable 5.1은 지시를 줄이고 Sonnet은 절차를 늘리는 이유, 그리고 PRD 외에 초기화·구현·리뷰 3세션 하네스가 필요한 근거를 Anthropic 공식 문서 기준으로 정리</description>
+      <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>WWDC 2026 핵심 30선: 개발자·사용자·AI 생산성 관점과 개발자 반응</title>
       <link>https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</guid>
