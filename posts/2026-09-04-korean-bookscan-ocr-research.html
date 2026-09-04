@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>한국어 북스캔 PDF OCR 앱 만들기 전 기술 조사 — Apple Vision·로컬 VLM·클라우드 5개 대안 비교 · 블루오라 개발노트</title>
-<meta name="description" content="M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성">
+<meta name="description" content="M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성. 새 PDF 생성 vs 기존 PDF 텍스트 추가 비교 포함">
 <meta property="og:type" content="article">
 <meta property="og:title" content="한국어 북스캔 PDF OCR 앱 만들기 전 기술 조사 — Apple Vision·로컬 VLM·클라우드 5개 대안 비교">
-<meta property="og:description" content="M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성">
+<meta property="og:description" content="M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성. 새 PDF 생성 vs 기존 PDF 텍스트 추가 비교 포함">
 <meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-04-korean-bookscan-ocr-research.html">
 <meta property="article:published_time" content="2026-09-04">
 <meta name="twitter:card" content="summary">
@@ -79,8 +79,9 @@ document.documentElement.setAttribute('data-theme',t);})();
     <li><a href="#s6">멀티모달 LLM(Gemini·Claude·GPT) OCR</a></li>
     <li><a href="#s7">탈락한 후보와 이유</a></li>
     <li><a href="#s8">처리시간 추정과 검색가능 PDF 생성</a></li>
-    <li><a href="#s9">권장 아키텍처</a></li>
-    <li><a href="#s10">정리</a></li>
+    <li><a href="#s9">새 PDF 생성 vs 기존 PDF에 텍스트 추가</a></li>
+    <li><a href="#s10">권장 아키텍처</a></li>
+    <li><a href="#s11">정리</a></li>
   </ol>
 </div>
 
@@ -274,7 +275,49 @@ doc.save("scan_searchable.pdf")</code></pre>
 </div>
 <p>위 코드는 개념 확인용 의사코드에 가깝다. 실제로는 bbox 정규화 좌표를 페이지 픽셀 좌표로 변환하고, 세로쓰기·회전 페이지를 별도 처리해야 한다.</p>
 
-<h2 id="s9">권장 아키텍처</h2>
+<h2 id="s9">새 PDF 생성 vs 기존 PDF에 텍스트 추가</h2>
+<p>
+조사하면서 든 의문 하나. 북스캔 PDF에서 OCR된 새 PDF를 만드는 게 나을까, 아니면 기존 PDF에 텍스트만 추가할 수 있을까. 결론부터 말하면 <strong>둘은 같은 작업</strong>이고, 차이는 저장 방식뿐이다.
+</p>
+<p>
+검색가능 PDF는 원본 스캔 이미지를 그대로 두고 그 위에 투명 텍스트 레이어(render mode 3)를 얹은 구조다. OCRmyPDF, mac-ocr, PyMuPDF <code>insert_text</code> 모두 이 방식이며, 이미지 스트림은 재인코딩 없이 원본을 보존한다. 화질 손실은 없고 파일 크기는 페이지당 텍스트 수 KB만 늘어난다. 즉 "기존 PDF에 텍스트 추가"가 표준 방식이다.
+</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>저장 방식</th><th>장점</th><th>단점</th></tr></thead>
+  <tbody>
+    <tr><td>새 파일로 저장 (<code>in.pdf → out.pdf</code>)</td><td>원본 보존, OCR 엔진을 바꿔 재처리 가능, 실패 시 복구 용이</td><td>처리 중 디스크 2배 필요</td></tr>
+    <tr><td>원본 in-place 수정 (PyMuPDF <code>saveIncr()</code>)</td><td>파일 하나로 유지, 증분 저장이라 빠름</td><td>실패 시 원본 손상 위험, 증분 저장이 누적되면 파일 비대</td></tr>
+  </tbody>
+</table>
+</div>
+<p>
+<strong>권장은 새 파일로 생성한 뒤 검증되면 원본을 교체하는 방식</strong>이다. 이유는 OCR 엔진 교체 가능성이다. 지금 Vision으로 처리하고 나중에 더 나은 모델이 나오면 원본이 있어야 재처리가 깔끔하다. 텍스트 레이어가 이미 있는 PDF에 다시 OCR을 얹으면 레이어가 중복되어 검색 결과가 두 번 나온다. OCRmyPDF는 텍스트가 있는 페이지를 기본적으로 건너뛰므로 <code>--force-ocr</code>(래스터화 후 재OCR) 또는 <code>--redo-ocr</code>(기존 레이어만 교체)로 처리해야 한다.
+</p>
+<div class="code">
+  <div class="code-head"><span class="fname">check_text_layer.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">import fitz  # PyMuPDF
+
+def has_text_layer(path: str, sample_pages: int = 5) -&gt; bool:
+    """앞쪽 몇 페이지에 추출 가능한 텍스트가 있는지 확인"""
+    doc = fitz.open(path)
+    for page in doc.pages(0, min(sample_pages, len(doc))):
+        if page.get_text("text").strip():
+            return True
+    return False
+
+# 처리 전 분기: 레이어가 있으면 --redo-ocr, 없으면 일반 OCR
+mode = "--redo-ocr" if has_text_layer("scan.pdf") else ""
+print(f"ocrmypdf -l kor {mode} --sidecar scan.txt scan.pdf ocr/scan.pdf")</code></pre>
+</div>
+<div class="callout warn">
+<strong>주의</strong> — 스캔 PDF 중 일부는 스캐너 소프트웨어가 조악한 OCR 레이어를 이미 넣어둔 경우가 있다. 처리 전에 위처럼 텍스트 존재 여부를 확인하고, 있으면 <code>--redo-ocr</code>로 기존 레이어를 교체하는 분기를 파이프라인에 넣어야 한다. 그냥 돌리면 OCRmyPDF가 "이미 텍스트 있음"으로 건너뛰어 품질 낮은 레이어가 그대로 남는다.
+</div>
+<p>
+실무 구성은 <code>원본/</code> 폴더를 읽기 전용으로 두고 <code>ocr/</code> 폴더에 결과를 생성, 페이지 수와 해시로 검증한 뒤 원본은 외장 디스크나 NAS에 아카이브하는 형태가 안전하다. 검색 인덱스(SQLite FTS5)는 어느 쪽이든 텍스트만 뽑아 쓰므로 영향이 없다.
+</p>
+
+<h2 id="s10">권장 아키텍처</h2>
 <ol class="steps">
   <li><strong>Phase 1 (전량, 로컬·무료)</strong> — Swift CLI 또는 Python(ocrmac / ocrmypdf-appleocr)으로 전 PDF를 Apple Vision(<code>ko-KR</code> 우선, livetext 모드, 300dpi 렌더링) 처리. 검색가능 PDF + 페이지별 JSON(텍스트·bbox·confidence) 생성. 한자 다수 페이지는 <code>zh-Hant</code> 우선으로 재실행 후 병합.</li>
   <li><strong>Phase 2 (선별, 로컬·무료)</strong> — 기술서 페이지, Phase 1에서 confidence가 낮은 페이지, 표·코드가 감지된 페이지만 GLM-OCR(Ollama) 또는 Qwen3-VL-8B(MLX)로 마크다운 생성.</li>
@@ -285,7 +328,7 @@ doc.save("scan_searchable.pdf")</code></pre>
 <strong>예산 $150~1,000이 허용된다면</strong> — Phase 1을 Google Document AI OCR($150/10만p), Phase 2를 Upstage Document Parse로 대체하면 설치·튜닝 없이 수 시간 내 끝난다. 다만 Vision의 한글 품질이 Google과 동급 이상이라 로컬 우선이 합리적이다.
 </div>
 
-<h2 id="s10">정리</h2>
+<h2 id="s11">정리</h2>
 <div class="table-wrap">
 <table>
   <thead><tr><th>역할</th><th>선택</th><th>이유</th></tr></thead>
@@ -294,6 +337,7 @@ doc.save("scan_searchable.pdf")</code></pre>
     <tr><td>2차 구조화(코드·표·수식)</td><td>GLM-OCR → Qwen3-VL-8B</td><td>한국어 공식 지원, 0.9B로 가벼움, 마크다운 출력</td></tr>
     <tr><td>3차 판정(소수 페이지)</td><td>Upstage Document Parse 또는 Gemini Flash 배치</td><td>불일치 페이지만 처리하면 비용 미미</td></tr>
     <tr><td>클라우드 전면 전환 시</td><td>Google Document AI OCR + Upstage Parse</td><td>10만p 기준 $150 + $1,000</td></tr>
+    <tr><td>파일 처리 방식</td><td>새 파일 생성 후 검증, 원본은 아카이브</td><td>원본 이미지는 그대로 보존됨, 엔진 교체 시 재처리 가능, 기존 레이어는 <code>--redo-ocr</code></td></tr>
     <tr><td>쓰지 않을 것</td><td>Tesseract, EasyOCR, Textract, LLM 단독</td><td>정확도 부족 / 한국어 미지원 / 환각</td></tr>
   </tbody>
 </table>

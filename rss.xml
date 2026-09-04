@@ -8,7 +8,7 @@
       <title>한국어 북스캔 PDF OCR 앱 만들기 전 기술 조사 — Apple Vision·로컬 VLM·클라우드 5개 대안 비교</title>
       <link>https://bluaura.github.io/devblog/posts/2026-09-04-korean-bookscan-ocr-research.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-korean-bookscan-ocr-research.html</guid>
-      <description>M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성</description>
+      <description>M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성. 새 PDF 생성 vs 기존 PDF 텍스트 추가 비교 포함</description>
       <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
     </item>
     <item>
