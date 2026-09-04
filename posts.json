@@ -18,6 +18,21 @@
   },
   "posts": [
     {
+      "slug": "2026-09-04-ios27-apple-intelligence-developer-guide",
+      "title": "iOS 27·macOS 27 Apple Intelligence 개발자 관점 총정리 — Foundation Models, App Schemas, 그리고 기기 제어 에이전트의 한계",
+      "date": "2026-09-04",
+      "tags": [
+        "iOS",
+        "AI",
+        "Apple Intelligence",
+        "Swift",
+        "App Intents",
+        "Foundation Models",
+        "에이전트"
+      ],
+      "summary": "WWDC26 기준 Foundation Models(LanguageModel 프로토콜·이미지 입력·PCC 32K)와 App Schema 13개 도메인 정리, Apple 공식 유저 시나리오 30여 개, Hermes·Claude·Android AppFunctions·Windows MCP와 비교해 iOS에서 기기 제어 에이전트가 불가능한 구조적 이유, PC↔모바일 연동 앱 아이디어 10개"
+    },
+    {
       "slug": "2026-09-04-claude-prompt-harness",
       "title": "Claude 모델별 프롬프트 상세도와 구현 하네스 요청법",
       "date": "2026-09-04",
