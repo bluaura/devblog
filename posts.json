@@ -18,6 +18,17 @@
   },
   "posts": [
     {
+      "slug": "2026-09-10-meta-muse-agent-comparison",
+      "title": "Meta Muse 에이전트 정리 — Grok Bot, OpenClaw, Gemini Spark와 비교",
+      "date": "2026-09-10",
+      "tags": [
+        "AI",
+        "개발뉴스",
+        "에이전트"
+      ],
+      "summary": "9/8 공개된 메타 개인 AI 에이전트 Muse의 구조(전용 VM+Sentinel)·가격(/bin/bash/20/100)·미국 전용 제약을 정리하고, Grok Bot·OpenClaw·Gemini Spark·Claude Cowork·ChatGPT와 6종 비교"
+    },
+    {
       "slug": "2026-09-04-gpt-6-astra-review",
       "title": "GPT-6 Astra 조사: Sol 대비 개선점, 벤치마크, Computer Use, 사용 후기",
       "date": "2026-09-04",
