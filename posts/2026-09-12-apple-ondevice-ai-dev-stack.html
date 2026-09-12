@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>애플 온디바이스 AI 개발 스택 정리 — Core AI · Foundation Models · Intelligent Personal Hub (iOS 27) · 블루오라 개발노트</title>
+<meta name="description" content="Core AI(Core ML 후속, OS 27+) Swift API·PyTorch 변환 파이프라인·모델 카탈로그, Foundation Models(3B 온디바이스·4K/8K 컨텍스트·PCC 200만 DL 무료·Claude/Gemini 동일 API)의 기능과 개발자 평가, Siri AI 허브에 앱을 노출하는 App Schemas 12개 도메인과 5가지 역할을 WWDC26·9/9 키노트 기준으로 정리.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="애플 온디바이스 AI 개발 스택 정리 — Core AI · Foundation Models · Intelligent Personal Hub (iOS 27)">
+<meta property="og:description" content="Core AI(Core ML 후속, OS 27+) Swift API·PyTorch 변환 파이프라인·모델 카탈로그, Foundation Models(3B 온디바이스·4K/8K 컨텍스트·PCC 200만 DL 무료·Claude/Gemini 동일 API)의 기능과 개발자 평가, Siri AI 허브에 앱을 노출하는 App Schemas 12개 도메인과 5가지 역할을 WWDC26·9/9 키노트 기준으로 정리.">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-12-apple-ondevice-ai-dev-stack.html">
+<meta property="article:published_time" content="2026-09-12">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-09-12-apple-ondevice-ai-dev-stack.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>애플 온디바이스 AI 개발 스택 정리 — Core AI · Foundation Models · Intelligent Personal Hub (iOS 27)</h1>
+    <p class="sub"><span class="tag">iOS</span><span class="tag">AI</span><span class="tag">Core AI</span><span class="tag">Foundation Models</span><span class="tag">App Intents</span><span class="tag">Swift</span> &nbsp;2026-09-12</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">Core AI 지원 OS</div><div class="value">27+</div><div class="delta">Apple silicon 전용 · 정식 출시 9/14</div></div>
+  <div class="stat"><div class="label">Foundation Models 온디바이스</div><div class="value">3B</div><div class="delta">컨텍스트 4K (iOS 27 최신 기기 8K)</div></div>
+  <div class="stat"><div class="label">PCC 모델 무료 조건</div><div class="value">200만 DL</div><div class="delta">첫 다운로드 기준 · 32K 컨텍스트</div></div>
+  <div class="stat"><div class="label">Siri 대상 App Schema 도메인</div><div class="value">12개</div><div class="delta">Siri AI가 "300,000개 앱"과 동작</div></div>
+</div>
+
+<blockquote>
+  애플의 온디바이스 AI 개발 스택은 "누가 모델을 가져오느냐"로 네 층으로 나뉜다. Foundation Models 프레임워크는 애플 모델(온디바이스 3B / PCC)을 무료로 쓰는 세션 API이고, Core AI는 개발자가 PyTorch에서 변환한 자체 모델을 CPU·GPU·Neural Engine에서 돌리는 Core ML 후속 런타임이다. App Intents / App Schemas는 앱의 액션·콘텐츠를 Siri AI에 노출해 "인텔리전트 허브"에 참여하는 유일한 통로이며, MLX는 Mac 중심의 연구·실험용이다. 애플의 역할은 오케스트레이터·프라이버시 관리자·모델 공급자 겸 애그리게이터이고, 서드파티 앱은 툴과 콘텐츠를 제공하는 공급자가 된다. WWDC26 세션·개발자 문서·9월 9일 키노트 기준(2026-09-12)이며, 검증하지 못한 항목은 <span class="tag">미확인</span>으로 표기했다.
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">네 층의 역할 분담</a></li>
+    <li><a href="#s2">Core AI — Core ML의 후속 런타임</a></li>
+    <li><a href="#s3">Foundation Models — 애플 모델을 무료로 쓰는 API</a></li>
+    <li><a href="#s4">Intelligent Personal Hub — 애플이 말하는 것</a></li>
+    <li><a href="#s5">서드파티 앱에 기대하는 5가지 역할과 API</a></li>
+    <li><a href="#s6">애플의 역할, 1st party 잠식, 반응</a></li>
+    <li><a href="#s7">기기 연동 앱 관점의 시사점</a></li>
+    <li><a href="#s8">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. 네 층의 역할 분담</h2>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>레이어</th><th>모델은 누가?</th><th>무엇을 하는가</th><th>OS</th><th>개발자에게의 의미</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Foundation Models</strong></td><td>애플(온디바이스 3B / PCC) + iOS 27부터 Claude·Gemini·Core AI·MLX 모델도 같은 API</td><td>Swift 세션 API. 구조화 출력(@Generable), 툴 호출, 스트리밍, 이미지 입력</td><td>26+ (PCC·프로바이더는 27+)</td><td>무료·오프라인·프라이버시. 요약·추출·분류·짧은 생성에 적합, 지식·추론엔 부적합</td></tr>
+    <tr><td><strong>Core AI</strong></td><td>개발자(PyTorch에서 변환한 자체 모델)</td><td>Core ML 후속 런타임. LLM·VLM·확산·음성 모델 실행, KV 캐시 상태 유지, AOT 컴파일</td><td>27+ (Apple silicon)</td><td>Qwen3·Gemma·Whisper·SAM3·FLUX 등 오픈 모델 내장. iPhone은 ~6GB 메모리 한계</td></tr>
+    <tr><td><strong>App Intents / App Schemas</strong></td><td>애플의 Siri AI가 모델</td><td>앱의 액션·콘텐츠·화면 상태를 Siri에 노출. 앱은 툴 제공자, Siri가 오케스트레이터</td><td>18+ → 27에서 대폭 확장</td><td>허브 참여의 유일한 통로. 미채택 시 Siri AI에서 앱이 보이지 않음</td></tr>
+    <tr><td><strong>MLX</strong></td><td>개발자·연구자</td><td>오픈소스 배열 프레임워크. 학습·파인튜닝·Mac 로컬 서버·클러스터(RDMA)</td><td>Mac 중심</td><td>실험·연구용. iOS 27부터 MLXLanguageModel로 Foundation Models 세션에 연결 가능</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s2">2. Core AI — Core ML의 후속 런타임</h2>
+
+<h3>무엇이고, Core ML과는 어떤 관계인가</h3>
+
+<p>애플 공식 정의는 "Run AI models in your app on Apple silicon"이다. 최신 모델 아키텍처와 추론 기법을 CPU·GPU·Neural Engine에서 실행하는 프레임워크이며, 시스템의 Siri와 Apple Intelligence 자체가 이 위에서 돈다(Platforms State of the Union).</p>
+
+<ul>
+  <li><strong>Core ML은 폐기되지 않았다.</strong> 문서가 서로를 교차 참조한다 — 결정 트리·테이블 피처 등 신경망 외 모델은 Core ML, 최신 아키텍처의 AI 모델은 Core AI. WWDC26에 "What's new in Core ML" 세션은 없었다. WWDC 랩에서 애플 엔지니어가 "신경망은 앞으로 Core AI로"라고 안내했다는 보고가 있다(Blake Crosley). "후속(successor)"이라는 표현은 Bloomberg·InfoQ 등 언론의 것이다.</li>
+  <li><strong>마이그레이션 변환기는 없다.</strong> .mlpackage에서 .aimodel로의 자동 변환은 없고 PyTorch에서 <code>coreai-torch</code>로 다시 export해야 한다. 새 파일 포맷·새 Swift 타입·새 Python 패키지로 완전히 새로운 스택이다.</li>
+  <li><strong>지원 OS:</strong> iOS·iPadOS·macOS·tvOS·visionOS·watchOS 27.0+, Apple silicon 전용. AOT 컴파일은 Apple Intelligence 지원 기기(A17 Pro+, M1+)만, tvOS·watchOS 미지원.</li>
+  <li><strong>연산 유닛:</strong> <code>ComputeUnitKind</code>는 .cpu / .gpu / .neuralEngine. A19·M5의 GPU Neural Accelerator는 별도 열거값 없이 GPU 경로에서 투명하게 사용된다. 백그라운드에서 Neural Engine을 쓰려면 새 entitlement <code>com.apple.developer.background-tasks.continued-processing.inference</code>가 필요하다.</li>
+</ul>
+
+<h3>Swift API 표면</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>타입 / 함수</th><th>용도</th></tr></thead>
+  <tbody>
+    <tr><td><code>AIModel(contentsOf:options:)</code></td><td>.aimodel/.aimodelc 로드 + 기기별 specialization(첫 실행은 수 초 이상, 캐시됨)</td></tr>
+    <tr><td><code>AIModel.loadFunction(named:)</code> → <code>InferenceFunction</code></td><td>모델 진입점 로드. 한 모델에 여러 함수 가능(SAM3의 image_encode / text_encode / detect)</td></tr>
+    <tr><td><code>InferenceFunction.run(inputs:states:)</code></td><td>비동기 추론. 여러 Task에서 동시 호출 안전</td></tr>
+    <tr><td><code>InferenceFunction.MutableViews</code> (states)</td><td>Stateful 입력 = KV 캐시. 토큰별 상태 유지</td></tr>
+    <tr><td><code>NDArray</code>, <code>NDArray.View / MutableView</code>, <code>NDArrayDescriptor</code></td><td>제로카피·메모리 안전 텐서 접근. 최적 메모리 레이아웃 제공</td></tr>
+    <tr><td><code>InferenceValue</code> (.ndArray / .pixelBuffer), <code>ImageDescriptor</code></td><td>텐서 또는 CVPixelBuffer 이미지 I/O. -1은 동적 차원</td></tr>
+    <tr><td><code>ComputeStream</code></td><td>여러 함수를 파이프라이닝하는 비동기 작업 스트림</td></tr>
+    <tr><td><code>SpecializationOptions</code></td><td>연산 유닛 지정. LLM처럼 토큰마다 shape가 바뀌면 <code>expectFrequentReshapes = true</code></td></tr>
+    <tr><td><code>AIModelCache</code></td><td>specialization 캐시 관리. App Group으로 앱 간 공유. OS 업데이트 시 무효화</td></tr>
+    <tr><td><code>AIModel.deviceArchitectureName</code>, <code>bookmarkData</code></td><td>기기 아키텍처에 맞는 .aimodelc 다운로드 선택 / 원본 삭제 후 캐시로 로드</td></tr>
+    <tr><td><code>CoreAILanguageModel(resourcesAt:)</code> → <code>LanguageModelSession(model:)</code></td><td>Foundation Models와 연결. 자체 LLM에 @Generable·스트리밍·툴 호출을 그대로 사용</td></tr>
+    <tr><td><code>ImageSegmenter(resourcesAt:)</code></td><td>SAM3 래퍼 패키지</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>공개 API에서 찾지 못한 것: 독립 토크나이저 타입, LoRA/어댑터 API(coreai-opt는 양자화·팔레타이제이션·프루닝만), 전용 파이프라인 타입. <span class="tag">미확인</span></p>
+
+<h3>Python 변환 파이프라인</h3>
+
+<div class="code">
+  <div class="code-head"><span class="fname">export_qwen3.py (WWDC26-324/325 흐름 재구성, 미검증)</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">import torch, coreai_torch
+
+# 1. torch.export 로 그래프 추출 (KV 캐시는 state 로 분리)
+exported = torch.export.export(model, example_inputs)
+exported = exported.run_decompositions(coreai_torch.get_decomp_table())
+
+# 2. Core AI 프로그램으로 변환
+conv = coreai_torch.TorchConverter()
+conv.add_exported_program(
+    exported,
+    input_names=["tokens", "position"],
+    state_names=["keyCache", "valueCache"],
+    output_names=["logits"],
+)
+ai_program = conv.to_coreai()
+ai_program.optimize()
+
+# 3. 압축 (coreai-opt) 후 저장
+from coreai_opt import Quantizer, presets
+ai_program = Quantizer(presets.w4).apply(ai_program)
+ai_program.save_asset("Qwen3.aimodel")</code></pre>
+</div>
+
+<div class="code">
+  <div class="code-head"><span class="fname">terminal</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-bash"># 공식 레시피 원클릭 export (apple/coreai-models)
+uv run coreai.llm.export Qwen/Qwen3-0.6B --platform iOS --compression 4bit_weights_8bit_kv_cache
+
+# AOT 컴파일 → 아키텍처별 .aimodelc (서버에 호스팅, 기기에서 deviceArchitectureName 으로 선택)
+xcrun coreai-build compile Qwen3.aimodel --platform iOS --min-deployment-version 27.0 --output compiled/</code></pre>
+</div>
+
+<p>퓨즈드 연산(SDPA 어텐션, RoPE, RMSNorm, gather-matmul)이 기본 제공되고 커스텀 Metal 4 커널(<code>TorchMetalKernel</code>)을 .aimodel에 내장할 수 있다. 압축은 int4/int8/FP4/FP8 가중치와 팔레타이제이션(LUT)을 지원하며, SAM3 850M이 3GB에서 430MB(int4)로 줄어든 예가 세션 325에 나온다. Xcode 27 모델 뷰어, Core AI 게이지, Instruments 템플릿, 독립형 Core AI Debugger 앱이 디버그·프로파일 도구다. 특이하게 coreai-models 저장소에 Claude Code·Codex·Gemini CLI용 에이전트 스킬(<code>working-with-coreai</code>, <code>model-authoring</code>)도 들어 있다.</p>
+
+<p><strong>공식 카탈로그(apple/coreai-models):</strong> LLM — Gemma 3, GPT-OSS, Mistral, Mixtral, Phi, Qwen2.5, Qwen3(0.6B/1.7B/4B/8B), Qwen3 MoE. 확산 — Stable Diffusion 1.5/2.1/3.5 Medium, FLUX.2. VLM — Qwen3-VL. 비전 — CLIP, Depth Anything v3, EfficientSAM, SAM 3, YOLOS. 오디오 — Whisper, Parakeet TDT, Wav2Vec 2.0, CLAP. <strong>Llama는 없다</strong>(라이선스가 App Store 재배포를 막는다는 커뮤니티 해석). 세션 324의 "70B LLM 에이전틱 어시스턴트"(Mac) 시연은 모델명·양자화·tok/s가 미공개다. <span class="tag">미확인</span></p>
+
+<h3>어떤 앱을 만들 수 있나</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>앱 유형</th><th>애플 시연·카탈로그</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td>카메라 Q&amp;A / 비전-언어</td><td>세션 324, Qwen3-VL</td><td>커뮤니티 Qwen3-VL-8B int8: M4 Max 54 tok/s, 콜드 specialization 약 16.5초</td></tr>
+    <tr><td>세그멘테이션 + 언어 학습</td><td>세션 326 데모: SAM3 + Qwen3 0.6B(iOS)/8B(macOS)로 어휘 카드 생성</td><td>온디바이스 1GB 미만 목표</td></tr>
+    <tr><td>에이전틱 어시스턴트(Mac)</td><td>세션 324 "70B LLM"</td><td>수치 미공개</td></tr>
+    <tr><td>회의 전사·화자 분리</td><td>Whisper·Parakeet TDT, speaker diarization</td><td>—</td></tr>
+    <tr><td>이미지 생성</td><td>SD 1.5/2.1/3.5 Medium, FLUX.2</td><td>Mac 지향</td></tr>
+    <tr><td>깊이·검출·분류·임베딩</td><td>Depth Anything v3, YOLOS, CLIP, RoBERTa, T5</td><td>—</td></tr>
+    <tr><td>비디오 편집(실제 앱)</td><td><strong>Detail</strong> — 9/9 키노트·보도자료 "uses the new Core AI framework and runs its AI models on device"</td><td>확인된 첫 서드파티 사례</td></tr>
+    <tr><td>식물 인식(실제 앱)</td><td>iOSDC Japan 2026: ResNet50 98MB 로드 518~705ms(콜드)/5~6ms(웜)</td><td>—</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>벤치마크와 개발자 반응</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>기기</th><th>모델</th><th class="num">Core AI</th><th class="num">MLX-Swift</th><th class="num">LiteRT-LM</th></tr></thead>
+  <tbody>
+    <tr><td>iPhone 17 Pro (iOS 27)</td><td>Gemma 4 E2B 디코딩</td><td class="num">47.1 tok/s · 755MB</td><td class="num">49.1 tok/s · 3,010MB</td><td class="num">61.1 tok/s · 497MB</td></tr>
+    <tr><td>M4 Max</td><td>Qwen3-0.6B</td><td class="num">약 500 tok/s</td><td class="num">455</td><td class="num">—</td></tr>
+    <tr><td>M4 Max</td><td>Qwen3-8B</td><td class="num">94 tok/s</td><td class="num">90</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>출처는 <a href="https://github.com/john-rocky/apple-silicon-llm-bench">john-rocky/apple-silicon-llm-bench</a>. 저자 결론은 "소형 모델에서 Core AI GPU 우위가 크지만 8B급에서는 둘 다 메모리 대역폭에 묶여 사실상 동률"이며, iPhone 지속 부하 시 GPU 런타임 처리량이 50~60% 떨어진다. A20 Pro·M5 수치는 아직 없다.</p>
+
+<p><strong>긍정:</strong> "시스템 전역 온디바이스 모델이 OS API의 핵심이 된다는 아이디어는 매우 매력적"(HN), Foundation Models와의 합성성은 "big deal"(The Swift Dev), Gemma 4 E2B를 755MB로 실행하는 메모리 효율. <strong>불만:</strong> MLX·coremltools와의 관계 혼란(HN), OS 27 전용이라 하위 호환 없음, 첫 실행 specialization 지연, 변환 비결정성, 베타 KV 캐시 크래시(FB23024751), iPhone 메모리 상한 약 6.4GB로 8B 디코더는 Mac 전용, Python 전용 저작, Linux 런타임 없음. HN 스레드는 367pt / 108댓글이었다.</p>
+
+<div class="callout">
+  <strong>배포 실무</strong> — 모델을 앱 번들에 넣지 말고 Background Assets(Apple-Hosted, 앱당 200GB 무료)로 아키텍처별 .aimodelc를 내려받는 것이 애플의 명시적 권고다. On-Demand Resources는 OS 27에서 폐기됐다. iOS의 Qwen3 export는 increased-memory-limit entitlement가 필요할 수 있다. 변환 모델은 업스트림 라이선스를 상속한다(Qwen Apache-2.0, Gemma·Llama 자체 약관).
+</div>
+
+<h2 id="s3">3. Foundation Models — 애플 모델을 무료로 쓰는 API</h2>
+
+<h3>모델 팩트 — "좋지 않다"는 평가의 실체</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>항목</th><th>값</th></tr></thead>
+  <tbody>
+    <tr><td>온디바이스 모델(iOS 26)</td><td>약 3B 파라미터, 가중치 2bit QAT, 임베딩 4bit, KV 캐시 8bit. 2블록 구조로 KV 캐시 메모리 37.5% 절감</td></tr>
+    <tr><td>iOS 27 라인업(AFM 3)</td><td><strong>Core</strong> 3B dense · <strong>Core Advanced</strong> 20B sparse(활성 1~4B, 전체는 NAND에 두고 전문가만 DRAM 페이징) · <strong>Cloud</strong>(PT-MoE) · <strong>Cloud Pro</strong>(Google Cloud NVIDIA GPU) · <strong>ADM 3 Cloud</strong>(이미지)</td></tr>
+    <tr><td>Core Advanced 서드파티 접근</td><td>애플 문서에 명시 없음 <span class="tag">미확인</span></td></tr>
+    <tr><td>컨텍스트 윈도우</td><td>iOS 26: <strong>4,096 토큰</strong>(입력+출력+instructions+툴 스키마 합산). iOS 27: 세션 241 샘플이 <code>contextSize // 8192</code>, 세션 319 "4K (up to 8K on newer devices)". 문서는 아직 4096 → 런타임에 <code>contextSize</code>를 읽을 것</td></tr>
+    <tr><td>PCC 모델</td><td>32,000 토큰, 추론 레벨 .light / .moderate / .deep</td></tr>
+    <tr><td>토큰 길이</td><td>라틴어 3~4자/토큰, <strong>CJK는 약 1자/토큰</strong> → 한국어는 컨텍스트가 3배 빨리 소진</td></tr>
+    <tr><td>속도(3rd)</td><td>iPhone 15 Pro 약 30~50 tok/s, 첫 청크 약 200ms, 세션 초기화 200~500ms. M4 Max 85 tok/s, 0.11 J/token(MLX 대비 절반 속도, 2배 전력 효율). 애플 공식 수치 없음</td></tr>
+    <tr><td>잘하는 것(애플 가이드)</td><td>요약, 엔티티 추출, 텍스트 이해·다듬기, 짧은 대화, 분류, 태깅, 창작 텍스트</td></tr>
+    <tr><td>못하는 것(애플 가이드)</td><td>세계 지식, 고급 추론, 수학("계산기로 쓰지 말 것"), 코드 생성, 최신 사건. 환각 있음</td></tr>
+    <tr><td>공개 평가</td><td>2025 모델: MMLU 67.9%(양자화 후 64.4%), IFEval 85.1%. Qwen-2.5-3B를 전 언어에서 상회, Qwen-3-4B·Gemma-3-4B와 영어에서 경쟁. <strong>AFM 3는 자체 2025 모델 대비 선호도만 공개</strong>(Core 45.6% vs 23.3%) — 외부 벤치마크 없음</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>"좋지 않다"는 평가는 절반만 맞다. 동급(3~4B) 오픈 모델과는 대등하지만 프론티어와 비교하면 지식·추론·긴 컨텍스트에서 확실히 부족하다. 애플 자신도 이 모델을 "앱 안의 작은 작업" 용도로 규정하고, 큰 작업은 iOS 27부터 같은 API로 PCC·Claude·Gemini에 넘기는 하이브리드 구조를 공식화했다.</p>
+
+<h3>기능·API</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>기능</th><th>API</th><th>OS</th><th>비고</th></tr></thead>
+  <tbody>
+    <tr><td>세션</td><td><code>LanguageModelSession(model:tools:instructions:transcript:)</code>, <code>respond(to:)</code>, <code>streamResponse(to:generating:)</code>, <code>prewarm()</code></td><td>26</td><td>컨텍스트 초과 시 transcript 요약해 새 세션 시드</td></tr>
+    <tr><td>Instructions vs Prompt</td><td><code>Instructions</code>(개발자, 정적, 우선) / <code>Prompt</code>(턴별)</td><td>26</td><td>모델이 instructions를 우선하도록 학습 → 프롬프트 인젝션 완화</td></tr>
+    <tr><td><strong>Guided Generation</strong></td><td><code>@Generable</code> struct/enum, <code>@Guide(description:)</code>, .count/.range/.anyOf/Regex, <code>DynamicGenerationSchema</code></td><td>26</td><td>제약 디코딩으로 유효하지 않은 토큰 마스킹. JSON 파싱 불필요. 가장 호평받는 부분</td></tr>
+    <tr><td>스트리밍</td><td><code>PartiallyGenerated</code> 스냅샷 AsyncSequence</td><td>26</td><td>델타가 아닌 전체-옵셔널 스냅샷</td></tr>
+    <tr><td>툴 호출</td><td><code>Tool</code> 프로토콜(name, description, @Generable Arguments, call → ToolOutput), <code>toolCallingMode</code></td><td>26</td><td>병렬 호출 가능. 툴 정의가 컨텍스트를 소모하므로 3~5개 권장</td></tr>
+    <tr><td>생성 옵션</td><td><code>GenerationOptions</code>: sampling, temperature, maximumResponseTokens</td><td>26</td><td>greedy도 모델 버전 내에서만 결정적</td></tr>
+    <tr><td>유스케이스</td><td><code>SystemLanguageModel(useCase: .general / .contentTagging)</code></td><td>26</td><td>contentTagging = 태그·엔티티·주제 추출 어댑터</td></tr>
+    <tr><td>가용성</td><td><code>availability</code> → .deviceNotEligible / .appleIntelligenceNotEnabled / .modelNotReady</td><td>26</td><td>Apple Intelligence 기기·지역만</td></tr>
+    <tr><td>컨텍스트 도구</td><td><code>contextSize</code>, <code>tokenCount(for:)</code>, <code>contextSizeExceeded</code>, Instruments 템플릿</td><td>26.4</td><td>—</td></tr>
+    <tr><td>커스텀 어댑터</td><td>Adapter Training Toolkit(rank-32 LoRA, 약 160MB, .fmadapter), entitlement 필요</td><td>26</td><td>어댑터는 모델 버전 1개에 고정 → OS마다 재학습. 툴킷 26.0.0이 "마지막 릴리스, OS 27 비호환" <span class="tag">미확인</span></td></tr>
+    <tr><td><strong>이미지 입력</strong></td><td><code>Attachment(UIImage/CGImage/CVPixelBuffer/URL)</code></td><td>27</td><td>큰 이미지 = 더 많은 토큰</td></tr>
+    <tr><td><strong>LanguageModel 프로토콜</strong></td><td><code>LanguageModel</code>(capabilities) + <code>LanguageModelExecutor</code>, <code>usage</code> 토큰 카운트</td><td>27</td><td>어떤 프로바이더든 세션 뒤에 연결</td></tr>
+    <tr><td><strong>PCC 모델</strong></td><td><code>PrivateCloudComputeLanguageModel()</code>, <code>ContextOptions(reasoningLevel:)</code>, <code>quotaUsage</code></td><td>27 (watchOS 포함)</td><td>API 키 없음. Small Business Program + 첫 다운로드 200만 미만이면 무료. 사용자별 일일 쿼터, iCloud+ 가입자 상향. 초과 가격 미공개 <span class="tag">미확인</span></td></tr>
+    <tr><td><strong>서드파티 서버 모델</strong></td><td>Anthropic <code>ClaudeForFoundationModels</code>(<code>ClaudeLanguageModel(name: .sonnet4_6, auth:)</code>), Google Firebase AI Logic <code>geminiLanguageModel</code></td><td>27</td><td>표준 API 요금. 키는 프록시/App Attest로</td></tr>
+    <tr><td><strong>Dynamic Profiles</strong></td><td><code>LanguageModelSession.DynamicProfile</code> — 상태별 instructions·tools·model·reasoningLevel 전환, transcript 유지</td><td>27</td><td>선언적 멀티모드/에이전트</td></tr>
+    <tr><td>시스템 툴</td><td><code>OCRTool</code>, <code>BarcodeReaderTool</code>, Spotlight <code>SearchTool</code>(로컬 RAG)</td><td>27</td><td>—</td></tr>
+    <tr><td>Core AI / MLX 연동</td><td><code>CoreAILanguageModel</code>, <code>MLXLanguageModel</code></td><td>27</td><td>오픈소스</td></tr>
+    <tr><td>도구</td><td><code>fm</code> CLI(<code>fm serve</code> OpenAI 호환), Python SDK <code>apple-fm-sdk</code>, Evaluations 프레임워크, Xcode <code>#Playground</code></td><td>27</td><td>프레임워크 코드 오픈소스 예고, <code>FoundationModelsUtilities</code>(Apache-2.0)는 공개됨</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="code">
+  <div class="code-head"><span class="fname">HybridSession.swift (WWDC26-241/339 패턴 재구성, 미검증)</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-swift">import FoundationModels
+
+@Generable
+struct TaskItem {
+    @Guide(description: "할 일 제목, 20자 이내") var title: String
+    @Guide(description: "ISO 8601 날짜, 없으면 nil") var due: String?
+    @Guide(.anyOf(["work", "home", "errand"])) var tag: String
+}
+
+func parseTasks(_ text: String) async throws -&gt; [TaskItem] {
+    let onDevice = SystemLanguageModel.default
+    // 컨텍스트가 부족하면 같은 API 로 PCC 모델에 승격
+    let needsCloud = try onDevice.tokenCount(for: Prompt(text)) &gt; onDevice.contextSize / 2
+    let model: any LanguageModel = needsCloud
+        ? PrivateCloudComputeLanguageModel()
+        : onDevice
+
+    let session = LanguageModelSession(
+        model: model,
+        instructions: Instructions("문장에서 할 일 항목을 추출한다. 새 정보를 지어내지 않는다.")
+    )
+    return try await session.respond(to: text, generating: [TaskItem].self).content
+}</code></pre>
+</div>
+
+<h3>실제 앱 사례(애플 보도자료 2025.9)</h3>
+
+<p>SmartGym(텍스트 → 세트/반복/휴식 구조화 루틴), Stoic(일기 기반 개인화 프롬프트), SwingVision(영상 분석 피드백), 7 Minute Workout(자연어 → 운동 구성), CellWalk(수준별 과학 용어 설명), Platzi(강의 영상 Q&amp;A), Lil Artist(아이용 스토리 생성), Stuff(자연어 날짜·태그 파싱, 음성·필기 → 태스크), VLLO(장면별 음악·스티커 추천), Signeasy(문서 요약·질의), Agenda("Ask Agenda"), Detail(개요 → 텔레프롬프터 대본), OmniFocus 4(프로젝트·다음 단계 생성). 공통점은 모두 "앱 데이터 위의 작은 구조화 작업"이지 범용 챗봇이 아니라는 것이다. 애플이 공개한 채택 앱 수 통계는 없다.</p>
+
+<h3>개발자 평가 — 칭찬과 비판</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>주제</th><th>칭찬</th><th>비판</th></tr></thead>
+  <tbody>
+    <tr><td>비용·프라이버시·오프라인</td><td>"API 키도, 추론 요금도, 네트워크도 없다"(byteiota). 토큰 비용이 모바일 AI 기능을 죽여왔는데 "올해가 플랫폼이 착지한 해"(ninetwothree)</td><td>PCC 무료는 200만 다운로드까지. 이후 가격 미공개</td></tr>
+    <tr><td>API 설계</td><td>@Generable이 "JSON/Codable 없이 모델 응답을 타입 Swift 객체로"(Natasha). 프로바이더 교체가 "모델 설정만 바꾸면 끝"(Peter Friese)</td><td>제네릭 오류 메시지, 디버그 모드 없음. 26.4 전엔 토크나이저 미노출</td></tr>
+    <tr><td>모델 능력</td><td>Core Advanced는 "가장 흥미로운 온디바이스 모델 중 하나"(Viticci)</td><td>"숫자를 지어낸다"(Drobinin), 2023.10 지식 컷오프, "quality of life 기능용"(Engadget)</td></tr>
+    <tr><td>컨텍스트</td><td>26.4에서 contextSize·tokenCount·Instruments 추가</td><td>"입력 AND 출력 합쳐 4096"(Natasha). 툴 정의가 토큰을 크게 소모(Novichkov)</td></tr>
+    <tr><td>가드레일</td><td>계층적 안전 설계 문서화</td><td>베타에서 "프랑스 수도가 어디?"까지 거부, 오탐 50%+ "프로덕션 불가"(포럼 787736). 26.4 이후에도 가끔 무해한 요청 거부</td></tr>
+    <tr><td>기기·지역</td><td>—</td><td>iPhone 15 Pro+ 전용 → "사용자 기반을 크게 제한"(HN). 중국 본토 미지원, EU는 프레임워크는 되나 Siri 레이어 제한</td></tr>
+    <tr><td>버전 관리</td><td>3개 모델 버전과 프롬프트 버저닝 전략 문서화</td><td>"모델 업데이트 예측 불가"(Natasha). 어댑터는 OS마다 재학습</td></tr>
+    <tr><td>툴 호출</td><td>병렬 호출, 타입 안전 인자</td><td>"조용한 툴 선택 실패" — 등록했는데 호출 안 됨, Instruments로만 확인(Drobinin)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>대안과의 비교</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>옵션</th><th>비용</th><th>오프라인·지연</th><th>모델 품질·통제</th><th>기기 범위</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Apple FM 온디바이스</strong></td><td>무료</td><td>오프라인, 30~50 tok/s(15 Pro)</td><td>3B, 4K/8K, 모델 선택·고정 불가</td><td>iPhone 15 Pro+/M1+, AI 지원 지역만</td></tr>
+    <tr><td><strong>Apple PCC(27)</strong></td><td>200만 DL 미만 무료</td><td>네트워크, 32K, 추론 레벨</td><td>사용자별 쿼터</td><td>watchOS 포함</td></tr>
+    <tr><td><strong>Claude/Gemini via 같은 API(27)</strong></td><td>표준 API 요금</td><td>네트워크, 60K+ 토큰 시연</td><td>프론티어, 서버 툴</td><td>네트워크 있는 모든 기기</td></tr>
+    <tr><td><strong>Core AI / MLX 자체 모델</strong></td><td>추론 무료, 모델 다운로드 GB 단위</td><td>디코딩 더 빠를 수 있으나 전력 2배. 8GB 기기 3~7B, 12GB 7~13B</td><td>모든 오픈 모델, 버전 직접 통제</td><td>OS 27+(Core AI) / 구형 OS도 가능(MLX·llama.cpp)</td></tr>
+    <tr><td>Gemini Nano(Android ML Kit GenAI)</td><td>무료</td><td>온디바이스, 포그라운드만, 앱별 쿼터</td><td>Task API + Prompt API, @Generable 상당 구조화 출력 없음</td><td>Pixel·일부 플래그십</td></tr>
+    <tr><td>Phi Silica(Windows AI APIs)</td><td>무료</td><td>NPU, 약 3.5K 컨텍스트</td><td>텍스트 생성·요약·재작성 스킬, 실험적 LoRA</td><td>Copilot+ PC만</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>커뮤니티 권장 패턴은 하이브리드 라우팅이다 — <code>tokenCount</code>와 <code>contextSize</code>를 비교해 구조화된 소형 작업은 온디바이스, 초과·고난도 작업은 Dynamic Profiles로 PCC 또는 Claude/Gemini에 승격하고, 프로바이더를 seam 뒤에 숨긴다.</p>
+
+<h2 id="s4">4. Intelligent Personal Hub — 애플이 말하는 것</h2>
+
+<blockquote>
+  "AI can become even more useful when it brings together your life with the apps, services, and products you use every day. And this means the product at the center of your experiences becomes even more essential, what I like to think of as an intelligent personal hub." — John Ternus, 2026.9.9 키노트
+</blockquote>
+
+<p>Ternus가 "이상적인 허브를 처음부터 설계한다면"으로 제시한 요구사항은 항상 곁에 있고 깊이 개인적일 것, 온디바이스 모델을 돌리는 프로세서와 클라우드 모델에 접근하는 네트워킹, 큰 디스플레이, 보고 듣고 추론할 카메라·마이크, 하루 종일 가는 배터리, 다른 기기·앱·서비스와의 매끄러운 연결이다. 결론은 "iPhone보다 이 허브에 더 잘 맞게 설계된 제품은 없다". 이 표현은 Ternus의 9월 이벤트 신조어로, WWDC26 보도자료와 Cook의 7월 어닝콜에는 등장하지 않는다. Federighi의 WWDC 프레임은 "별도의 챗봇이 아니라 그 순간에 쓰는 통합된 대화형 도구"였고, 언론(Six Colors·Spyglass·TechCrunch)은 Jobs의 2001년 "digital hub" 전략의 재현으로 해석한다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>구성 레이어</th><th>애플의 설명</th></tr></thead>
+  <tbody>
+    <tr><td>온디바이스 모델</td><td>"runs on device whenever it can" — AFM 3 Core / Core Advanced. Siri AI의 expressive voice·받아쓰기·Smart Take는 온디바이스</td></tr>
+    <tr><td>개인 컨텍스트</td><td>메시지·메일·사진·파일·노트를 Spotlight 시맨틱 인덱스로. 캘린더·관계·루틴·화면 위 내용</td></tr>
+    <tr><td>오케스트레이터</td><td>"System Orchestrator"가 시맨틱 인덱스와 App Toolbox(앱들이 노출한 App Intents 집합)를 조합해 요청을 계획·실행</td></tr>
+    <tr><td>Private Cloud Compute</td><td>더 큰 모델이 필요할 때. "nobody, not even Apple, can access what's yours". 일일 한도, iCloud+로 상향</td></tr>
+    <tr><td>Gemini</td><td>Federighi: "Gemini 모델 뒤의 기술을 써서 차세대 Apple Foundation Models를 개발했다. Google Assistant를 쓰는 양은 0." 9/9 무대에서는 언급 없음</td></tr>
+    <tr><td>크로스 디바이스</td><td>Siri 앱 대화가 iCloud로 iPhone·iPad·Mac·Watch·Vision Pro 동기화. Watch의 Audio Intelligence, AirPods 5 Live Translation, Duo 내부 화면 Siri</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s5">5. 서드파티 앱에 기대하는 5가지 역할과 API</h2>
+
+<blockquote>
+  "Siri AI already works seamlessly with over 300,000 apps… and it's easy for developers to adopt new capabilities too. So you can ask Siri AI to draft an email in Outlook, search for a homework assignment in Notability, or add a restaurant recommendation to Tripsy." — Lilian Rincon, VP Siri &amp; Apple Intelligence Product, 2026.9.9
+</blockquote>
+
+<p>애플 개발자 문서의 공식 체크리스트는 다섯 단계다: 엔티티를 Spotlight에 인덱싱, 앱 간 전달 가능한(Transferable) 타입 선택, 스키마 채택("앱과 시스템 사이의 계약"), 엔티티를 뷰에 연결(onscreen context), 액션·콘텐츠 도네이션. 이를 역할별로 풀면 다음과 같다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>역할</th><th>Siri가 하는 것</th><th>핵심 API(iOS 27)</th><th>예시</th></tr></thead>
+  <tbody>
+    <tr><td><strong>(a) 액션 제공자</strong></td><td>앱 안에서 행동 실행</td><td><code>@AppIntent(schema: .domain.action)</code> — App Schemas. Siri 대상 12개 도메인: Audio, Calendar, Camera, Clock, Mail, Maps, Messages, Notes, Phone, Photos, Reminders, System/in-app search. Mail·Clock·Messages는 그룹 내 모든 스키마 채택 필수. <code>OwnershipProvidingEntity</code>, <code>ProvidesDialog</code>, <code>requestValue()</code>, <code>ShowsSnippetView</code></td><td>Outlook 메일 초안, WhatsApp 문자, Audible 재생</td></tr>
+    <tr><td><strong>(b) 콘텐츠 제공자</strong></td><td>앱 데이터를 찾고 추론</td><td><code>@AppEntity(schema:)</code> + <code>IndexedEntity</code> + <code>CSSearchableIndex.indexAppEntities()</code> → 시맨틱 인덱스. <code>IntentValueQuery</code>(서버 측·대용량 검색), <code>.system.searchInApp</code>, <code>RelevantEntities</code></td><td>Notability 숙제 검색, 베타 3의 EV 앱 데이터 접근(사용자 허가 후)</td></tr>
+    <tr><td><strong>(c) 화면 상태 제공자</strong></td><td>"이 사진", "세 번째 것" 이해</td><td><code>NSUserActivity.appEntityIdentifier</code>, <code>.appEntityIdentifier()</code> 뷰 모디파이어, <code>forSelectionType:</code>, <code>UICollectionViewAppIntentsDataSource</code>, <code>AppEntityAnnotatable</code>. 알림·Now Playing·AlarmKit에도 엔티티 부착</td><td>"이 알림에 답장해", "이거 스누즈"</td></tr>
+    <tr><td><strong>(d) 인텔리전스 소비자</strong></td><td>앱이 애플 모델 사용</td><td>Foundation Models, Core AI, Visual Intelligence(<code>SemanticContentDescriptor</code>, iPad/macOS 스크린샷), Image Playground API, Writing Tools·Genmoji</td><td>Detail(Core AI), SmartGym(FM)</td></tr>
+    <tr><td><strong>(e) 에이전트 참여자</strong></td><td>여러 앱을 잇는 다단계 작업</td><td><code>Transferable</code> + <code>IntentValueRepresentation(exporting:importing:)</code>, <code>SyncableEntity</code>(기기 간 대화 지속), <code>LongRunningIntent</code>(30초+ 작업을 Live Activity로), <code>EntityCollection</code>, Dynamic Profiles</td><td>"이 대화를 아내에게 문자로", 랜드마크를 Maps에 PlaceDescriptor로</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="code">
+  <div class="code-head"><span class="fname">NoteIntents.swift (WWDC26-240 App Schemas 패턴 재구성, 미검증)</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-swift">import AppIntents
+import CoreSpotlight
+
+@AppEntity(schema: .notes.note)
+struct NoteEntity: IndexedEntity {
+    let id: UUID
+    var title: String
+    var content: String?
+    var creationDate: Date?
+    var defaultQuery = NoteQuery()
+}
+
+@AppIntent(schema: .notes.createNote)
+struct CreateNoteIntent {
+    var title: String
+    var content: String?
+    func perform() async throws -&gt; some ReturnsValue&lt;NoteEntity&gt; {
+        let note = try await NoteStore.shared.create(title: title, content: content)
+        // "donation amnesia" 방지: 선언만 하지 말고 실제로 인덱싱한다
+        try await CSSearchableIndex.default().indexAppEntities([note])
+        return .result(value: note)
+    }
+}</code></pre>
+</div>
+
+<h3>그 밖의 iOS 27 개발자 API</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>API</th><th>용도</th><th>세션·문서</th></tr></thead>
+  <tbody>
+    <tr><td><code>AppIntentsTesting</code> 프레임워크</td><td>실제 시스템 경로로 인텐트 테스트</td><td>WWDC26-295</td></tr>
+    <tr><td>Shortcuts: Use Model, Storage, 자연어로 단축어 생성</td><td>사용자 측 자동화가 앱 엔티티를 소비</td><td>WWDC26-310</td></tr>
+    <tr><td>iPhone Duo: 사이즈 클래스, 비대칭 safe area, <code>ReservedRegion</code>(27.1), Split View, Xcode 27.1 Device Hub 포즈</td><td>이중 화면·폴드 상태 대응</td><td>Tech Talk 111461</td></tr>
+    <tr><td>Camera 조리개 제어 API, Apple Reference Image 조회 API</td><td>18 Pro 가변 조리개·인증 이미지</td><td>iPhone 18 Pro 보도자료</td></tr>
+    <tr><td>Xcode 27: MCP + Agent Client Protocol</td><td><strong>코딩 도구용.</strong> Siri 런타임과 무관</td><td>WWDC26 개발자 도구 보도자료</td></tr>
+    <tr><td>Audio Intelligence(Siri Recap, Live Rewind)</td><td>Watch 1st party 기능. 서드파티 API 없음</td><td><span class="tag">미확인/없음</span></td></tr>
+    <tr><td><code>.assistant.activate</code> 스키마</td><td>일본 한정 사이드 버튼으로 서드파티 음성 앱 실행</td><td>App Schema Domain Assistant 문서</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout warn">
+  <strong>MCP는 어떻게 되었나</strong> — Xcode 27에 MCP·ACP 지원이 들어갔지만 코딩 에이전트용이다. Siri AI/App Intents 수준의 OS MCP 지원은 WWDC26 어느 세션·문서에도 없다. 2025년 9월 macOS 26.1 베타의 "MCP via App Intents" 흔적은 Siri용으로 출하되지 않았다. Crosley: "Apple Intelligence는 MCP 툴을 호출하지 않고, 외부 LLM 에이전트는 App Intents를 직접 호출할 수 없다." Gurman이 보도한 Claude/Gemini/ChatGPT "Extensions"도 WWDC에서 발표되지 않았다(Gruber). Siri가 App Intents를 호출하는 데 대한 수수료·커미션 정책도 발표된 바 없다. <span class="tag">미확인</span>
+</div>
+
+<h2 id="s6">6. 애플의 역할, 1st party 잠식, 반응</h2>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>애플이 맡은 역할</th><th>근거</th></tr></thead>
+  <tbody>
+    <tr><td><strong>프라이버시 관리자</strong></td><td>온디바이스 우선, PCC. Federighi: "AI에서 프라이버시는 협상 불가. 데이터는 요청 실행에만 쓰인다."</td></tr>
+    <tr><td><strong>오케스트레이터</strong></td><td>언어 이해·엔티티 해석·모호성 해소·확인 UI는 Siri가 하고, 앱은 <code>perform()</code>만 실행. 대화 소유권은 Siri 앱에</td></tr>
+    <tr><td><strong>모델 공급자</strong></td><td>온디바이스·PCC 모델을 개발자에게 무료 제공(조건부), 사용자 과금은 iCloud+</td></tr>
+    <tr><td><strong>모델 애그리게이터</strong></td><td><code>LanguageModel</code> 프로토콜로 Claude·Gemini·Core AI·MLX를 같은 API 뒤에 배치</td></tr>
+    <tr><td><strong>하드웨어·배포</strong></td><td>A20 Pro·S11 Secure Exclave·Duo·Watch·AirPods. 온디바이스 실리콘이 개발자를 클라우드 비용에서 애플 제공 기능으로 유도(Six Colors)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Ben Thompson(Stratechery, 2024)의 프레임이 여전히 정확하다: "당신의 폰은 다른 어떤 기기보다 당신을 많이 안다"는 이유로 애플은 AI 애그리게이터가 되고, 공급자(개발자·모델 벤더)는 애플의 조건으로 서비스하게 된다. 1st party가 잠식할 수 있는 영역은 Siri 앱(대화 기록), Siri Recap·Live Rewind(녹음 앱), Safari Notify Me, 자연어 단축어 생성, Mail → Calendar 추출, Health 앱 AI 인사이트, Image Playground, Photos Reframe/Extend/Clean Up이다. robinsanah의 관찰: 서드파티에 대한 애플의 언어는 "if / some / when"이고 자사 앱은 "it will just work".</p>
+
+<p><strong>긍정·현실적:</strong> Gruber — Siri AI는 "기기 위 앱의 개인 데이터를 끌어오고 App Intents로 행동까지 하는 유일한 시스템", 단 "실행·확장·서드파티 온보딩"이 조건. Viticci — "Foundation 모델이 경쟁사보다 덜 똑똑해도 Siri는 대부분의 사람에게 더 많은 걸 해줄 수 있다". Crosley — 스키마 채택은 "struct 세 개와 코드 스니펫 몇 개", 함정은 IndexedEntity 선언만 하고 indexAppEntities를 안 부르는 "donation amnesia". Dracode — App Intents 없는 앱은 "Siri의 가장 강력한 표면에서 보이지 않는다".</p>
+
+<p><strong>비판·우려:</strong> Viticci — 서드파티 지원 "일관성 없음", 애플 자체 앱도 없는 기능을 환각. Engadget — Crunchyroll은 되고 Gmail은 안 됨. Manton Reece — 애플의 "거의 광신적인 프라이버시 집착"이 데이터 사일로를 만든다. EU/DMA — 애플은 "다른 가상 비서에게 사용자 개인 데이터와 다른 앱 제어 권한을 줘야 한다"는 해석 때문에 iOS 27 Siri AI를 EU에서 보류했고, <strong>EU 개발자는 iOS에서 Siri AI를 테스트할 수 없다.</strong> 이 싸움의 본질은 "애플 외 에이전트가 App Intents·개인 컨텍스트에 접근할 수 있는가"다.</p>
+
+<h2 id="s7">7. 기기 연동 앱 관점의 시사점</h2>
+
+<p>파일 전송·미러링·화면 확장처럼 PC와 모바일을 잇는 앱이라면 이 스택에서 열리는 지점은 세 곳이다.</p>
+
+<ol class="steps">
+  <li><strong>액션·엔티티 노출로 허브의 손발이 되기.</strong> "이 파일을 내 PC로 보내" 같은 요청이 Siri AI에서 동작하려면 앱이 <code>@AppEntity</code>(기기, 세션, 전송 항목)와 <code>@AppIntent</code>를 노출해야 한다. 다만 공식 Siri 도메인 12개에 "기기 연결/전송" 도메인은 없다 — 현재는 <code>.system.searchInApp</code>과 비스키마 App Intents(Shortcuts·Spotlight 경로), <code>Transferable</code> + <code>IntentValueRepresentation</code>으로 다른 앱의 콘텐츠를 받아 전송하는 형태가 현실적 경로다. <code>LongRunningIntent</code>로 30초 이상 걸리는 전송을 Live Activity로 표시할 수 있다.</li>
+  <li><strong>Mac 쪽 대형 모델 + iPhone 쪽 소형 모델의 분업.</strong> Core AI는 같은 .aimodel을 iOS(0.6B~4B)와 macOS(8B~70B)에 배포할 수 있고, <code>LanguageModel</code> 프로토콜 덕에 iPhone 앱이 Mac 앱의 <code>fm serve</code>(OpenAI 호환 엔드포인트)나 자체 gRPC 서버 위의 모델을 또 하나의 프로바이더로 세션 뒤에 꽂을 수 있다. LM Studio가 WWDC26에서 시연한 "Mac Studio 클러스터 모델을 iPhone에서 LM Link로 원격 접속"이 정확히 이 패턴이다.</li>
+  <li><strong>에이전트 툴 노출 경로는 아직 애플 폐쇄형.</strong> 외부 에이전트(OpenClaw·Claude·MCP 클라이언트)가 iOS 앱의 App Intents를 직접 호출하는 경로는 없다. Mac에서는 앱이 자체 MCP 서버를 띄우는 방식이 가능하지만 iOS에서는 Shortcuts·App Intents만이 공식 통로다. EU DMA 결과에 따라 이 경계가 바뀔 수 있다.</li>
+</ol>
+
+<h2 id="s8">8. 정리</h2>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>질문</th><th>답</th></tr></thead>
+  <tbody>
+    <tr><td>Core AI로 무엇을 만들 수 있나</td><td>자체 오픈 모델(Qwen3·Gemma·Whisper·SAM3·FLUX)을 내장한 카메라 VLM, 전사, 세그멘테이션, 이미지 생성(Mac), 에이전틱 어시스턴트(Mac). iPhone은 약 6GB 메모리 한계로 4B 이하가 현실적</td></tr>
+    <tr><td>Foundation Models는 쓸 만한가</td><td>동급 3~4B 오픈 모델과 대등, 프론티어와는 비교 불가. 무료·오프라인·@Generable이 강점, 4K 컨텍스트(한국어는 더 짧음)·환각·기기 제한이 약점. iOS 27부터 같은 API로 PCC·Claude·Gemini 승격이 가능해 하이브리드 설계가 정답</td></tr>
+    <tr><td>Intelligent hub에서 앱의 역할</td><td>Siri라는 에이전트에게 툴(App Schemas)과 콘텐츠(IndexedEntity)를 제공하는 공급자. 대화·확인·오케스트레이션·과금은 애플이 쥠</td></tr>
+    <tr><td>애플의 역할</td><td>프라이버시 관리자 · 오케스트레이터 · 모델 공급자 · 모델 애그리게이터 · 하드웨어. 외부 에이전트에는 아직 문을 열지 않음(MCP 없음, EU DMA 분쟁 중)</td></tr>
+    <tr><td>지금 해야 할 것</td><td>App Schemas + IndexedEntity 채택(허브 밖에 있지 않기 위해), Foundation Models로 앱 데이터 위 소형 작업부터, 큰 모델이 필요하면 Core AI(Mac) 또는 PCC/외부 프로바이더</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>미확인 항목:</strong> 70B 시연 모델의 정체·tok/s, iOS 27 온디바이스 컨텍스트 기기별 정확값, AFM 3 Core Advanced의 서드파티 접근 가능 여부, PCC 200만 DL 초과 시 가격, OS 27용 어댑터 툴킷, Siri용 OS 레벨 MCP·챗봇 Extensions, 개발자 수수료 정책. 본문의 코드는 WWDC 세션 패턴을 재구성한 것으로 실기기에서 검증하지 않았으며, iOS 27 정식 출시(9월 14일) 이후 API가 바뀔 수 있다.</p>
+
+<h3>주요 출처</h3>
+<ul>
+  <li>Core AI: <a href="https://developer.apple.com/videos/play/wwdc2026/324/">WWDC26-324 Meet Core AI</a> · <a href="https://developer.apple.com/videos/play/wwdc2026/325/">325</a> · <a href="https://developer.apple.com/videos/play/wwdc2026/326/">326</a> · <a href="https://developer.apple.com/videos/play/wwdc2026/339/">339</a> · <a href="https://developer.apple.com/documentation/coreai">Core AI 문서</a> · <a href="https://github.com/apple/coreai-models">apple/coreai-models</a> · <a href="https://www.infoq.com/news/2026/06/apple-core-ai-wwdc/">InfoQ</a> · <a href="https://news.ycombinator.com/item?id=48449665">HN</a> · <a href="https://github.com/john-rocky/apple-silicon-llm-bench">apple-silicon-llm-bench</a></li>
+  <li>Foundation Models: <a href="https://developer.apple.com/videos/play/wwdc2026/241/">WWDC26-241</a> · <a href="https://developer.apple.com/videos/play/wwdc2026/242/">242</a> · <a href="https://developer.apple.com/videos/play/wwdc2026/319/">319</a> · <a href="https://developer.apple.com/documentation/foundationmodels/managing-the-context-window">컨텍스트 윈도우 문서</a> · <a href="https://machinelearning.apple.com/research/introducing-third-generation-of-apple-foundation-models">AFM 3</a> · <a href="https://www.apple.com/newsroom/2025/09/apples-foundation-models-framework-unlocks-new-intelligent-app-experiences/">Apple Newsroom 앱 사례</a> · <a href="https://www.natashatherobot.com/p/apple-foundation-models">Natasha the Robot</a> · <a href="https://drobinin.com/consulting/foundation-models-apple-intelligence/putting-apple-foundation-models-in-a-real-app/">Vadim Drobinin</a> · <a href="https://peterfriese.dev/blog/2026/hybrid-ai-apple-foundation-models-gemini">Peter Friese</a></li>
+  <li>Hub · App Intents: <a href="https://webflow.rev.com/transcripts/apple-event-september-9th-2026">9/9 키노트 트랜스크립트</a> · <a href="https://developer.apple.com/documentation/appintents/apple-intelligence-and-siri-ai">Apple Intelligence and Siri AI</a> · <a href="https://developer.apple.com/documentation/appintents/app-schema-domains">App schema domains</a> · <a href="https://developer.apple.com/videos/play/wwdc2026/240/">WWDC26-240</a> · <a href="https://developer.apple.com/videos/play/wwdc2026/343/">343</a> · <a href="https://developer.apple.com/videos/play/wwdc2026/345/">345</a> · <a href="https://www.apple.com/newsroom/2026/06/due-to-dma-siri-ai-delayed-in-eu-for-ios-27-and-ipados-27/">DMA·EU 보류</a> · <a href="https://daringfireball.net/linked/2026/06/09/apple-introduces-siri-ai">Daring Fireball</a> · <a href="https://www.macstories.net/stories/siri-ai-and-apples-trickle-up-strategy/">MacStories</a> · <a href="https://blakecrosley.com/blog/app-intents-vs-mcp-tools-frontier">Crosley — App Intents vs MCP</a> · <a href="https://stratechery.com/2024/wwdc-apple-intelligence-apple-aggregates-ai/">Stratechery</a></li>
+</ul>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

@@ -18,6 +18,20 @@
   },
   "posts": [
     {
+      "slug": "2026-09-12-apple-ondevice-ai-dev-stack",
+      "title": "애플 온디바이스 AI 개발 스택 정리 — Core AI · Foundation Models · Intelligent Personal Hub (iOS 27)",
+      "date": "2026-09-12",
+      "tags": [
+        "iOS",
+        "AI",
+        "Core AI",
+        "Foundation Models",
+        "App Intents",
+        "Swift"
+      ],
+      "summary": "Core AI(Core ML 후속, OS 27+) Swift API·PyTorch 변환 파이프라인·모델 카탈로그, Foundation Models(3B 온디바이스·4K/8K 컨텍스트·PCC 200만 DL 무료·Claude/Gemini 동일 API)의 기능과 개발자 평가, Siri AI 허브에 앱을 노출하는 App Schemas 12개 도메인과 5가지 역할을 WWDC26·9/9 키노트 기준으로 정리."
+    },
+    {
       "slug": "2026-09-10-meta-muse-agent-comparison",
       "title": "Meta Muse 에이전트 정리 — Grok Bot, OpenClaw, Gemini Spark와 비교",
       "date": "2026-09-10",
