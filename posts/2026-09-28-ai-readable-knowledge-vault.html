@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI가 읽기 좋은 개인 지식 저장소 만들기: md 템플릿 5종과 클라우드·로컬 LLM 분담 · 블루오라 개발노트</title>
+<meta name="description" content="책·메모·웹 자료를 AI로 재가공하기 위한 4단계(텍스트화·구조화·정제·검색), Google Drive+Obsidian 폴더 구조, 클라우드 vs 로컬 LLM 비교, 복사해 쓰는 md 템플릿 5종과 AI 작업 가이드">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI가 읽기 좋은 개인 지식 저장소 만들기: md 템플릿 5종과 클라우드·로컬 LLM 분담">
+<meta property="og:description" content="책·메모·웹 자료를 AI로 재가공하기 위한 4단계(텍스트화·구조화·정제·검색), Google Drive+Obsidian 폴더 구조, 클라우드 vs 로컬 LLM 비교, 복사해 쓰는 md 템플릿 5종과 AI 작업 가이드">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-28-ai-readable-knowledge-vault.html">
+<meta property="article:published_time" content="2026-09-28">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-09-28-ai-readable-knowledge-vault.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>AI가 읽기 좋은 개인 지식 저장소 만들기: md 템플릿 5종과 클라우드·로컬 LLM 분담</h1>
+    <p class="sub"><span class="tag">튜토리얼</span><span class="tag">AI</span><span class="tag">Markdown</span><span class="tag">Obsidian</span><span class="tag">LLM</span> &nbsp;2026-09-28</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">기본 포맷</div><div class="value">Markdown</div><div class="delta">+ YAML frontmatter</div></div>
+  <div class="stat"><div class="label">준비 단계</div><div class="value">4단계</div><div class="delta">텍스트화·구조화·정제·검색</div></div>
+  <div class="stat"><div class="label">템플릿</div><div class="value">5종</div><div class="delta">책·웹·메모·인사이트·인덱스</div></div>
+  <div class="stat"><div class="label">AI 구성</div><div class="value">하이브리드</div><div class="delta">로컬 가공 + 클라우드 종합</div></div>
+</div>
+
+<blockquote>md 파일로 바꾸는 것은 출발점일 뿐이다. 자료가 많아지면 "AI가 필요한 부분을 찾아 쓰게 만드는 구조"가 더 중요하다. 메타데이터, 원문·요약·인사이트의 분리, 폴더 인덱스, 그리고 AI에게 주는 작업 규칙 파일까지 갖춰야 책·메모·웹 자료를 인사이트로 재가공할 수 있다.</blockquote>
+
+<div class="toc"><div class="toc-title">목차</div><ol>
+<li><a href="#s1">AI가 읽기 좋은 데이터의 4단계</a></li>
+<li><a href="#s2">저장 위치: Google Drive + md 폴더</a></li>
+<li><a href="#s3">클라우드 AI vs 로컬 LLM</a></li>
+<li><a href="#s4">md 템플릿 5종</a></li>
+<li><a href="#s5">AI 작업 가이드 파일</a></li>
+<li><a href="#s6">정리</a></li>
+</ol></div>
+
+<h2 id="s1">AI가 읽기 좋은 데이터의 4단계</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>단계</th><th>할 일</th><th>이유</th></tr></thead>
+<tbody>
+<tr><td>1. 텍스트화</td><td>PDF·스캔본·웹을 md로 변환</td><td>이미지·스캔 PDF는 읽기 어렵고 토큰 낭비</td></tr>
+<tr><td>2. 구조화</td><td>헤딩 계층, 메타데이터, 1파일 1주제</td><td>문맥 파악과 필요한 조각만 잘라 쓰기</td></tr>
+<tr><td>3. 정제</td><td>머리글·바닥글·페이지 번호·광고·OCR 오류 제거</td><td>노이즈가 많으면 답변 품질 하락</td></tr>
+<tr><td>4. 검색 계층</td><td>인덱스, RAG, MCP 연결</td><td>자료가 컨텍스트 창을 넘을 때 필수</td></tr>
+</tbody></table></div>
+
+<p>모든 파일의 맨 위에는 YAML frontmatter를 둔다. AI가 "2025년 이후 반도체 관련 웹 자료만" 같은 조건으로 거를 수 있게 된다.</p>
+<div class="code">
+  <div class="code-head"><span class="fname">frontmatter 예시</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-yaml">---
+title: 반도체 슈퍼사이클
+source: https://example.com/article
+type: web
+published: 2026-09-20
+tags: [반도체, HBM]
+status: inbox
+---</code></pre>
+</div>
+
+<h3>자료 규모별 AI 연결 방법</h3>
+<ul>
+<li><strong>소규모 (수십 개)</strong>: Claude 프로젝트나 폴더 연결로 통째로 넘긴다.</li>
+<li><strong>중규모</strong>: md 폴더를 두고 AI가 grep·파일 탐색으로 직접 찾게 한다 (에이전트 검색). 현재 가장 실용적이다.</li>
+<li><strong>대규모 (책 수백 권)</strong>: 청크 단위 임베딩 + 벡터 DB(RAG). 키워드(BM25)와 의미 검색을 섞은 하이브리드 검색이 정확도가 높다.</li>
+<li><strong>MCP 서버</strong>: 지식 저장소를 AI가 도구로 직접 조회하게 연결한다.</li>
+</ul>
+<div class="callout"><strong>변환 도구</strong> — 문서·PDF: Docling, Marker, MarkItDown / 웹: Obsidian Web Clipper, Jina Reader</div>
+
+<h2 id="s2">저장 위치: Google Drive + md 폴더</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>선택지</th><th>장점</th><th>단점</th></tr></thead>
+<tbody>
+<tr><td><strong>Google Drive + md 폴더</strong></td><td>용량 넉넉, 원본 PDF 동시 보관, PC 동기화</td><td>Google Docs 형식으로 저장하면 AI가 다루기 불편</td></tr>
+<tr><td>Notion</td><td>구조화·DB 기능, MCP 연동</td><td>대용량 원본에 약함, md 추출 시 손실, 종속성</td></tr>
+<tr><td>로컬 폴더만</td><td>가장 빠름</td><td>백업·모바일 접근 약함</td></tr>
+</tbody></table></div>
+<ol class="steps">
+<li>Drive for Desktop으로 <code>Knowledge/</code> 폴더를 로컬에 동기화한다.</li>
+<li>이 폴더를 Obsidian 보관함(vault)으로 열어 편집한다. 위키링크·태그·그래프를 쓸 수 있다.</li>
+<li>Claude(Cowork·Claude Code)나 로컬 LLM에 같은 폴더를 연결한다.</li>
+</ol>
+<div class="code">
+  <div class="code-head"><span class="fname">folder structure</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-plaintext">Knowledge/
+├─ AI_GUIDE.md        AI 작업 규칙 (CLAUDE.md로 복사 가능)
+├─ _templates/        템플릿
+├─ 00_inbox/          새로 수집, 미정리
+├─ 10_sources/
+│  ├─ books/          책 노트
+│  ├─ web/            웹 스크랩
+│  └─ notes/          개인 메모
+├─ 30_insights/       재가공 결과 (핵심 자산)
+└─ 90_raw/            원본 PDF·이미지</code></pre>
+</div>
+<p>재가공이 목적이라면 <code>30_insights</code>가 핵심 자산이다. AI가 만든 인사이트를 다시 자료로 쌓아야 다음 재가공 품질이 올라간다. 요약은 별도 폴더 대신 각 소스 파일 안에 둔다. 원문과 요약이 한 파일에 있어야 AI가 맥락을 잃지 않는다.</p>
+
+<h2 id="s3">클라우드 AI vs 로컬 LLM</h2>
+<p>로컬 기준은 64GB 통합 메모리 Mac (30B급 중형 모델 실사용 수준)이다.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>항목</th><th>클라우드 (Claude 등)</th><th>로컬 (64GB Mac)</th></tr></thead>
+<tbody>
+<tr><td>추론·통찰 품질</td><td>최상위</td><td>중형 모델 수준, 확실히 낮음</td></tr>
+<tr><td>한 번에 읽는 양</td><td>수십만~100만 토큰</td><td>실사용 32K~128K, 길어지면 느려짐</td></tr>
+<tr><td>여러 문서 종합</td><td>강함</td><td>피상적으로 흐르기 쉬움</td></tr>
+<tr><td>한국어 글쓰기</td><td>자연스러움</td><td>모델별 편차 큼</td></tr>
+<tr><td>비용</td><td>구독·API</td><td>사실상 무료</td></tr>
+<tr><td>프라이버시</td><td>외부 전송</td><td>완전 로컬</td></tr>
+<tr><td>대량 반복 작업</td><td>비용·호출 제한 부담</td><td>밤새 돌려도 부담 없음</td></tr>
+</tbody></table></div>
+<p>로컬로 충분한 작업은 요약, 태그·분류, 메타데이터 추출, OCR 텍스트 정제, 임베딩, 단일 문서 질의응답이다. 반면 여러 책과 메모를 엮어 새로운 관점을 도출하거나 모순을 찾는 "인사이트" 작업은 클라우드가 확연히 낫다. 그래서 두 가지를 섞는다.</p>
+<div class="code">
+  <div class="code-head"><span class="fname">hybrid pipeline</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-plaintext">[로컬 LLM]   대량 1차 가공: 요약 · 태깅 · 정제 · 임베딩 (무료, 반복)
+     ↓
+[md 저장소]  정제된 원문 + 요약 + 메타데이터
+     ↓
+[클라우드 AI] 인사이트 도출 · 재가공 → 30_insights 에 다시 저장</code></pre>
+</div>
+
+<h2 id="s4">md 템플릿 5종</h2>
+<p>Obsidian 코어 플러그인 "템플릿"에서 <code>_templates</code> 폴더를 지정하면 <code>{{title}}</code>, <code>{{date}}</code>가 자동 치환된다.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>템플릿</th><th>용도</th><th>설계 포인트</th></tr></thead>
+<tbody>
+<tr><td><code>tpl-book.md</code></td><td>책 1권 = 1파일</td><td>핵심 주장에 번호를 붙여 인용 쉽게, 인용문에 페이지</td></tr>
+<tr><td><code>tpl-web.md</code></td><td>웹 스크랩</td><td>팩트와 의견 분리, 발행일·신뢰도 필드</td></tr>
+<tr><td><code>tpl-note.md</code></td><td>개인 메모</td><td>1메모 1아이디어, "왜 중요한가" 한 줄</td></tr>
+<tr><td><code>tpl-insight.md</code></td><td>재가공 결과</td><td>질문·근거 링크 필수, 반론·리스크, 재검증 날짜</td></tr>
+<tr><td><code>tpl-index.md</code></td><td>폴더 목차</td><td>AI가 전체를 읽지 않고 어디를 볼지 판단</td></tr>
+</tbody></table></div>
+
+<h3>tpl-book.md</h3>
+<div class="code">
+  <div class="code-head"><span class="fname">_templates/tpl-book.md</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-markdown">---
+title: "{{title}}"
+type: book
+author: ""
+publisher: ""
+published: ""            # 출판연도 (YYYY)
+isbn: ""
+source: "[[90_raw/books/파일명.pdf]]"   # 원본 PDF 링크
+language: ko
+tags: []                 # 예: [투자, 반도체, 매크로]
+status: inbox            # inbox → processed → summarized → linked
+rating:                  # 1~5 (내 평가)
+created: {{date:YYYY-MM-DD}}
+updated: {{date:YYYY-MM-DD}}
+related: []              # 예: ["[[다른 책]]", "[[인사이트 노트]]"]
+---
+
+# {{title}}
+
+## TL;DR
+&lt;!-- 이 책을 3줄로. AI 요약 후 내가 검수 --&gt;
+- 
+- 
+- 
+
+## 핵심 주장 (Key Claims)
+&lt;!-- 저자가 말하는 핵심 명제. 번호로 → 다른 노트에서 인용하기 쉬움 --&gt;
+1. 
+2. 
+3. 
+
+## 챕터별 요약
+### Ch.1 
+- 요점:
+- 근거/사례:
+
+### Ch.2 
+- 요점:
+- 근거/사례:
+
+## 인용 (Quotes)
+&lt;!-- 원문 그대로 + 페이지. 재가공 시 근거로 사용 --&gt;
+&gt; 인용문 (p.00)
+
+## 핵심 개념·용어
+| 용어 | 정의 | 페이지 |
+|---|---|---|
+|  |  |  |
+
+## 내 생각 (My Take)
+&lt;!-- AI가 아닌 내 판단. 동의/반박/의문 --&gt;
+- 동의:
+- 반박:
+- 의문:
+
+## 적용·액션
+&lt;!-- 투자·개발·자기계발에 어떻게 쓸지 --&gt;
+- [ ] 
+
+## 연결 (Links)
+&lt;!-- 같은 주제를 다룬 다른 자료, 상충되는 주장 --&gt;
+- 비슷한 주장: 
+- 상충되는 주장: 
+
+## 원문
+&lt;!-- (선택) OCR/변환된 본문 전체. 길면 별도 파일 [[{{title}}-원문]]로 분리 --&gt;</code></pre>
+</div>
+<h3>tpl-web.md</h3>
+<div class="code">
+  <div class="code-head"><span class="fname">_templates/tpl-web.md</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-markdown">---
+title: "{{title}}"
+type: web
+source: ""               # 원본 URL (필수)
+site: ""                 # 예: Bloomberg, 한국경제, 개인 블로그
+author: ""
+published: ""            # 원문 발행일 (YYYY-MM-DD) — 시의성 판단에 중요
+captured: {{date:YYYY-MM-DD}}   # 수집일
+language: ko
+tags: []
+status: inbox            # inbox → processed → summarized → linked
+reliability:             # 1~5 (출처 신뢰도)
+created: {{date:YYYY-MM-DD}}
+updated: {{date:YYYY-MM-DD}}
+related: []
+---
+
+# {{title}}
+
+## TL;DR
+- 
+- 
+- 
+
+## 핵심 팩트
+&lt;!-- 수치·날짜·고유명사 중심. 의견과 분리 --&gt;
+| 항목 | 내용 | 비고 |
+|---|---|---|
+|  |  |  |
+
+## 주장·전망 (Opinion)
+&lt;!-- 작성자/애널리스트의 해석. 팩트와 섞지 않기 --&gt;
+- 
+
+## 내 생각
+- 
+
+## 연결
+- 관련 노트: 
+- 후속 확인 필요: 
+
+---
+## 원문
+&lt;!-- Web Clipper / Jina Reader로 변환한 본문. 광고·메뉴·댓글 제거 --&gt;</code></pre>
+</div>
+<h3>tpl-note.md</h3>
+<div class="code">
+  <div class="code-head"><span class="fname">_templates/tpl-note.md</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-markdown">---
+title: "{{title}}"
+type: note
+context: ""              # 어디서 떠올랐나: 회의, 독서, 산책, 대화 등
+tags: []
+status: inbox            # inbox → processed → linked
+created: {{date:YYYY-MM-DD}}
+updated: {{date:YYYY-MM-DD}}
+related: []
+---
+
+# {{title}}
+
+## 메모
+&lt;!-- 날것 그대로 적어도 됨. 한 메모 = 한 아이디어 --&gt;
+
+
+## 왜 중요한가
+&lt;!-- 한 줄. 나중에 AI가 우선순위 판단에 사용 --&gt;
+- 
+
+## 다음 행동
+- [ ] 
+
+## 연결
+-</code></pre>
+</div>
+<h3>tpl-insight.md</h3>
+<div class="code">
+  <div class="code-head"><span class="fname">_templates/tpl-insight.md</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-markdown">---
+title: "{{title}}"
+type: insight
+question: ""             # 이 인사이트가 답하려는 질문 (필수)
+domain: ""               # 투자 | 개발 | 자기계발 | 경제 | 기타
+tags: []
+sources: []              # 사용한 자료 (필수) 예: ["[[책A]]", "[[웹기사B]]"]
+generated_by: ""         # claude | local-llm | me | mixed
+confidence:              # 1~5 (내가 판단한 확신도)
+status: draft            # draft → reviewed → applied → revisited
+created: {{date:YYYY-MM-DD}}
+updated: {{date:YYYY-MM-DD}}
+review_date: ""          # 다시 검증할 날짜 (투자 thesis 등)
+related: []
+---
+
+# {{title}}
+
+## 질문
+&lt;!-- 무엇을 알고 싶었나. 질문이 명확할수록 재가공 품질↑ --&gt;
+
+
+## 결론 (한 문단)
+
+
+## 핵심 인사이트
+1. **인사이트** — 근거: [[출처]]
+2. **인사이트** — 근거: [[출처]]
+3. **인사이트** — 근거: [[출처]]
+
+## 자료 간 공통점 / 차이점
+| 관점 | 자료 A | 자료 B | 자료 C |
+|---|---|---|---|
+|  |  |  |  |
+
+## 반론·리스크
+&lt;!-- 이 결론이 틀릴 수 있는 이유. AI에게 반드시 요청 --&gt;
+- 
+
+## 빈틈 (추가로 필요한 자료)
+- 
+
+## 적용·액션
+- [ ] 
+
+## 변경 이력
+- {{date:YYYY-MM-DD}}: 최초 작성</code></pre>
+</div>
+<h3>tpl-index.md</h3>
+<div class="code">
+  <div class="code-head"><span class="fname">_templates/tpl-index.md</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-markdown">---
+title: "{{title}} 인덱스"
+type: index
+scope: ""                # 이 인덱스가 다루는 폴더/주제
+updated: {{date:YYYY-MM-DD}}
+---
+
+# {{title}} 인덱스
+
+&gt; AI가 전체를 읽지 않고도 어디를 볼지 판단하게 하는 목차.
+&gt; 파일 추가 시 한 줄씩 갱신 (AI에게 "index.md 갱신해줘"로 자동화 가능).
+
+## 개요
+&lt;!-- 이 폴더/주제에 무엇이 있는지 2~3줄 --&gt;
+
+
+## 목록
+| 파일 | 유형 | 한 줄 설명 | 태그 | 날짜 |
+|---|---|---|---|---|
+| [[파일명]] | book |  |  |  |
+
+## 주요 주제 클러스터
+- **주제 A**: [[파일1]], [[파일2]]
+- **주제 B**: [[파일3]]</code></pre>
+</div>
+
+<div class="callout warn"><code>## 내 생각</code> 섹션은 AI가 쓰지 않도록 규칙으로 막는다. 인사이트 품질을 가장 크게 좌우하는 부분이라 직접 써야 한다.</div>
+
+<h2 id="s5">AI 작업 가이드 파일</h2>
+<p>저장소 루트에 AI가 가장 먼저 읽는 규칙 파일을 둔다. Claude Code·Cowork라면 <code>CLAUDE.md</code>로 복사하면 자동으로 로드된다. 핵심 규칙은 다음과 같다.</p>
+<ul>
+<li>팩트와 의견을 분리하고, 원문에 없는 내용은 "추정"으로 표시한다.</li>
+<li>인사이트에는 반드시 <code>sources</code>에 근거 파일을 링크한다.</li>
+<li>반론·리스크 섹션을 비우지 않는다.</li>
+<li>파일을 수정하면 <code>updated</code>를 갱신하고 폴더 <code>index.md</code>에 한 줄 추가한다.</li>
+<li>원문과 <code>90_raw/</code>는 수정하지 않는다.</li>
+</ul>
+<div class="code">
+  <div class="code-head"><span class="fname">AI_GUIDE.md</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-markdown">---
+title: AI 작업 가이드
+type: guide
+updated: 2026-09-28
+---
+
+# AI 작업 가이드 (Knowledge Vault)
+
+&gt; 이 파일은 AI(Claude, 로컬 LLM)가 이 저장소에서 작업할 때 **가장 먼저 읽는 규칙**이다.
+&gt; Claude Code/Cowork라면 `CLAUDE.md`로 복사해도 된다.
+
+## 1. 저장소 목적
+책·웹 자료·메모를 모아 **재가공해 인사이트를 얻는 것**이 목적이다.
+단순 요약보다 **여러 자료를 엮은 비교·종합·반론**을 우선한다.
+
+## 2. 폴더 구조
+| 폴더 | 내용 | AI 권한 |
+|---|---|---|
+| `00_inbox/` | 새로 수집, 미정리 | 읽기·정리 후 이동 |
+| `10_sources/books/` | 책 노트 (tpl-book) | 읽기, 요약 섹션 채우기 |
+| `10_sources/web/` | 웹 스크랩 (tpl-web) | 읽기, 요약 섹션 채우기 |
+| `10_sources/notes/` | 개인 메모 (tpl-note) | 읽기 전용 |
+| `30_insights/` | 재가공 결과 (tpl-insight) | 생성·수정 |
+| `90_raw/` | 원본 PDF·이미지 | 읽기 전용 |
+| `_templates/` | 템플릿 | 수정 금지 |
+
+각 폴더의 `index.md`를 먼저 읽고 필요한 파일만 연다.
+
+## 3. 메타데이터 규칙
+- 모든 파일은 YAML frontmatter로 시작한다.
+- `type`: `book | web | note | insight | index | guide`
+- `status` 흐름: `inbox → processed → summarized → linked` (insight: `draft → reviewed → applied → revisited`)
+- `tags`: 한글 명사, `#` 없이, 소문자 영문 혼용 가능. 기존 태그를 우선 재사용한다.
+- 날짜: `YYYY-MM-DD`
+- 링크: Obsidian 위키링크 `[[파일명]]`
+- 파일명: `YYYY-MM-DD-제목.md` (web·note·insight), `저자-제목.md` (book)
+
+## 4. 작업 규칙
+1. **팩트와 의견을 분리**한다. 원문에 없는 내용은 "추정"이라고 표시한다.
+2. 인사이트를 쓸 때는 반드시 `sources`에 근거 파일을 링크하고, 본문에 `[[출처]]`를 단다.
+3. **반론·리스크 섹션을 비우지 않는다.**
+4. `## 내 생각` 섹션은 사용자 전용이다. AI는 쓰지 않는다.
+5. 파일을 수정하면 `updated` 날짜를 갱신하고, 해당 폴더 `index.md`에 한 줄 추가한다.
+6. 원문(`## 원문`, `90_raw/`)은 수정하지 않는다.
+7. 투자 관련 인사이트는 `review_date`를 설정한다 (기본 3개월 후).
+
+## 5. 자주 쓰는 요청 (프롬프트 예시)
+- **inbox 정리**: "`00_inbox`의 파일에 frontmatter·태그·TL;DR을 채우고 맞는 폴더로 옮긴 뒤 index.md를 갱신해줘."
+- **책 요약**: "`[[책]]`의 원문을 읽고 TL;DR, 핵심 주장, 챕터별 요약, 핵심 개념을 채워줘. 내 생각 섹션은 비워둬."
+- **종합 인사이트**: "`#반도체` 태그 자료를 모두 읽고 '향후 12개월 HBM 수요 리스크'에 대해 tpl-insight 형식으로 `30_insights`에 작성해줘. 자료 간 상충점을 표로 정리해줘."
+- **연결 찾기**: "이 노트와 관련 있거나 반대 주장을 하는 자료를 찾아 `related`에 추가해줘."
+- **재검증**: "`review_date`가 지난 insight를 찾아 새 자료 기준으로 결론이 유지되는지 점검해줘."
+
+## 6. 로컬 LLM / 클라우드 역할 분담
+- **로컬 LLM**: inbox 정리, 태깅, TL;DR, 챕터 요약, OCR 텍스트 정제 → `generated_by: local-llm`
+- **클라우드 AI**: 여러 자료 종합, 인사이트, 반론 생성 → `generated_by: claude`</code></pre>
+</div>
+<h3>자주 쓰는 요청 예시</h3>
+<div class="code">
+  <div class="code-head"><span class="fname">prompts</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-plaintext"># inbox 정리
+00_inbox의 파일에 frontmatter·태그·TL;DR을 채우고 맞는 폴더로 옮긴 뒤 index.md를 갱신해줘.
+
+# 종합 인사이트
+'반도체' 태그 자료를 모두 읽고 '향후 12개월 HBM 수요 리스크'를 tpl-insight 형식으로
+30_insights에 작성해줘. 자료 간 상충점은 표로 정리해줘.
+
+# 연결 찾기
+이 노트와 관련 있거나 반대 주장을 하는 자료를 찾아 related에 추가해줘.
+
+# 재검증
+review_date가 지난 insight를 찾아 새 자료 기준으로 결론이 유지되는지 점검해줘.</code></pre>
+</div>
+
+<h2 id="s6">정리</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>질문</th><th>결론</th></tr></thead>
+<tbody>
+<tr><td>md만 쓰면 되나?</td><td>출발점. frontmatter·구조·정제·검색 계층까지 갖춰야 한다</td></tr>
+<tr><td>어디에 모으나?</td><td>Google Drive에 동기화되는 md 폴더 + Obsidian</td></tr>
+<tr><td>클라우드 vs 로컬?</td><td>로컬은 1차 가공, 클라우드는 인사이트 종합</td></tr>
+<tr><td>핵심 자산은?</td><td><code>30_insights</code> — 재가공 결과를 다시 쌓는 것</td></tr>
+</tbody></table></div>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

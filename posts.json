@@ -18,6 +18,19 @@
   },
   "posts": [
     {
+      "slug": "2026-09-28-ai-readable-knowledge-vault",
+      "title": "AI가 읽기 좋은 개인 지식 저장소 만들기: md 템플릿 5종과 클라우드·로컬 LLM 분담",
+      "date": "2026-09-28",
+      "tags": [
+        "튜토리얼",
+        "AI",
+        "Markdown",
+        "Obsidian",
+        "LLM"
+      ],
+      "summary": "책·메모·웹 자료를 AI로 재가공하기 위한 4단계(텍스트화·구조화·정제·검색), Google Drive+Obsidian 폴더 구조, 클라우드 vs 로컬 LLM 비교, 복사해 쓰는 md 템플릿 5종과 AI 작업 가이드"
+    },
+    {
       "slug": "2026-09-12-apple-ondevice-ai-dev-stack",
       "title": "애플 온디바이스 AI 개발 스택 정리 — Core AI · Foundation Models · Intelligent Personal Hub (iOS 27)",
       "date": "2026-09-12",
