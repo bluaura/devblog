@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BFS로 격자 최단 경로 구하기 — 코드 해설과 함정 4가지 · 블루오라 개발노트</title>
+<meta name="description" content="0/1 격자 미로를 BFS로 풀어 최소 이동 8회를 구하는 코드 해설, 거리 +2 오프셋 원리, 1×1 격자·map 변수명 등 함정 4가지와 개선 코드">
+<meta property="og:type" content="article">
+<meta property="og:title" content="BFS로 격자 최단 경로 구하기 — 코드 해설과 함정 4가지">
+<meta property="og:description" content="0/1 격자 미로를 BFS로 풀어 최소 이동 8회를 구하는 코드 해설, 거리 +2 오프셋 원리, 1×1 격자·map 변수명 등 함정 4가지와 개선 코드">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html">
+<meta property="article:published_time" content="2026-09-29">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>BFS로 격자 최단 경로 구하기 — 코드 해설과 함정 4가지</h1>
+    <p class="sub"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">BFS</span> &nbsp;2026-09-29</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">알고리즘</div><div class="value">BFS</div><div class="delta">너비 우선 탐색</div></div>
+  <div class="stat"><div class="label">예제 결과</div><div class="value">8</div><div class="delta">최소 이동 횟수</div></div>
+  <div class="stat"><div class="label">시간 복잡도</div><div class="value">O(N·M)</div><div class="delta">칸마다 1회 방문</div></div>
+  <div class="stat"><div class="label">공간 복잡도</div><div class="value">O(N·M)</div><div class="delta">큐 최대 크기</div></div>
+</div>
+
+<blockquote>
+0은 길, 1은 벽인 격자에서 좌상단 (0, 0)에서 우하단 (n-1, m-1)까지 가는 최소 이동 횟수를 구하는 문제다.
+간선 가중치가 모두 1인 그래프의 최단 거리는 BFS로 푼다. 방문한 칸에 "거리"를 직접 기록하는 방식이라 별도 visited 배열이 필요 없다.
+예제 격자의 답은 <strong>8</strong>이다 (Python 3에서 실행 확인).
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">문제와 전체 코드</a></li>
+    <li><a href="#s2">왜 BFS인가</a></li>
+    <li><a href="#s3">코드 한 줄씩 보기</a></li>
+    <li><a href="#s4">예제 격자 추적</a></li>
+    <li><a href="#s5">놓치기 쉬운 함정</a></li>
+    <li><a href="#s6">개선한 코드</a></li>
+    <li><a href="#s7">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">문제와 전체 코드</h2>
+<p><code>n × m</code> 격자가 주어진다. 값이 <code>0</code>이면 지나갈 수 있고 <code>1</code>이면 벽이다.
+상하좌우로 한 칸씩 움직일 때, 시작점 (0, 0)에서 도착점 (n-1, m-1)까지 최소 몇 번 이동해야 하는지 구한다. 도달할 수 없으면 <code>-1</code>.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">shortest_path.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">from collections import deque
+
+def shortest_path(map):
+    ret_value = -1
+
+    n = len(map)
+    m = len(map[0])
+
+    dx = [-1, 1, 0, 0]
+    dy = [0, 0, -1, 1]
+
+    queue = deque([(0, 0)])
+    map[0][0] = 2
+
+    while queue:
+        x, y = queue.popleft()
+
+        for i in range(4):
+            nx = dx[i] + x
+            ny = dy[i] + y
+
+            if nx &lt; 0 or ny &lt; 0 or nx &gt;= n or ny &gt;= m:
+                continue
+
+            if map[nx][ny] == 1:
+                continue
+
+            if map[nx][ny] == 0:
+                queue.append((nx, ny))
+                map[nx][ny] = map[x][y] + 1
+
+            if nx == n - 1 and ny == m - 1:
+                ret_value = map[nx][ny] - 2
+                return ret_value
+
+    return ret_value
+
+map = [[0, 0, 1, 1, 1, 0],
+       [0, 0, 0, 1, 0, 0],
+       [1, 0, 1, 0, 0, 1],
+       [0, 0, 0, 0, 0, 0]]
+
+steps = shortest_path(map)
+print(steps)  # 8</code></pre>
+</div>
+
+<h2 id="s2">왜 BFS인가</h2>
+<p>BFS는 시작점에서 거리 1인 칸을 모두 본 뒤, 거리 2인 칸을 모두 보고, 그다음 거리 3… 순서로 퍼져 나간다.
+큐(FIFO)가 이 순서를 보장한다. 따라서 <strong>어떤 칸에 처음 도착한 순간의 거리가 곧 최단 거리</strong>다.</p>
+<p>DFS는 한 방향으로 끝까지 파고들기 때문에 처음 찾은 경로가 최단이라는 보장이 없다. 모든 경로를 다 탐색해야 해서 격자가 커지면 시간 초과가 난다.</p>
+
+<div class="callout">
+<strong>판별 기준</strong> — "가중치 없는 격자·그래프에서 최소 이동 횟수"가 나오면 BFS를 먼저 떠올린다.
+가중치가 칸마다 다르면 다익스트라, 0과 1만 있으면 0-1 BFS로 넘어간다.
+</div>
+
+<h2 id="s3">코드 한 줄씩 보기</h2>
+
+<h3>1. 방향 벡터</h3>
+<div class="code">
+  <pre><code class="language-python">dx = [-1, 1, 0, 0]   # 상, 하, 좌, 우 (행 변화)
+dy = [0, 0, -1, 1]   # 상, 하, 좌, 우 (열 변화)</code></pre>
+</div>
+<p><code>i</code>를 0~3으로 돌리면 네 방향 이웃 좌표 <code>(x + dx[i], y + dy[i])</code>를 얻는다. 격자 탐색 문제의 기본 템플릿이다.</p>
+
+<h3>2. 시작점을 2로 표시하는 이유</h3>
+<div class="code">
+  <pre><code class="language-python">queue = deque([(0, 0)])
+map[0][0] = 2</code></pre>
+</div>
+<p>격자 값 <code>0</code>(길)과 <code>1</code>(벽)은 이미 의미가 있다. 방문 표시로 <code>1</code>을 쓰면 벽과 구분이 안 되므로 <strong>2부터 거리를 센다</strong>.
+결과적으로 각 칸의 값은 <code>이동 횟수 + 2</code>가 되고, 방문 여부는 "값이 2 이상인가"로 판단된다. 마지막에 <code>- 2</code>를 하는 이유가 이것이다.</p>
+<p><code>deque</code>를 쓰는 이유는 <code>popleft()</code>가 O(1)이기 때문이다. 리스트의 <code>pop(0)</code>은 O(n)이라 큰 입력에서 느려진다.</p>
+
+<h3>3. 이웃 칸 검사 3단계</h3>
+<ol class="steps">
+  <li><strong>범위 검사</strong> — 격자 밖이면 <code>continue</code>. 인덱스 에러를 막기 위해 반드시 가장 먼저 한다.</li>
+  <li><strong>벽 검사</strong> — 값이 <code>1</code>이면 건너뛴다.</li>
+  <li><strong>미방문 검사</strong> — 값이 <code>0</code>일 때만 큐에 넣고 <code>현재 칸 값 + 1</code>을 기록한다. 이미 2 이상이면 더 짧은 경로로 먼저 방문된 칸이므로 무시한다.</li>
+</ol>
+
+<h3>4. 도착 판정</h3>
+<div class="code">
+  <pre><code class="language-python">if nx == n - 1 and ny == m - 1:
+    ret_value = map[nx][ny] - 2
+    return ret_value</code></pre>
+</div>
+<p>도착점을 이웃으로 발견하는 즉시 반환한다. BFS 특성상 처음 발견한 순간의 거리가 최단이므로 큐를 끝까지 비울 필요가 없다(조기 종료).
+큐가 비었는데도 도착하지 못했다면 경로가 없는 것이므로 초기값 <code>-1</code>을 반환한다.</p>
+
+<h2 id="s4">예제 격자 추적</h2>
+<p>함수 실행 후 <code>map</code>에 남은 값이다. 숫자는 <code>이동 횟수 + 2</code>, <code>#</code>은 벽이다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th class="center">행\열</th><th class="center">0</th><th class="center">1</th><th class="center">2</th><th class="center">3</th><th class="center">4</th><th class="center">5</th></tr></thead>
+  <tbody>
+    <tr><td class="center">0</td><td class="center">2</td><td class="center">3</td><td class="center">#</td><td class="center">#</td><td class="center">#</td><td class="center">0</td></tr>
+    <tr><td class="center">1</td><td class="center">3</td><td class="center">4</td><td class="center">5</td><td class="center">#</td><td class="center">0</td><td class="center">0</td></tr>
+    <tr><td class="center">2</td><td class="center">#</td><td class="center">5</td><td class="center">#</td><td class="center">9</td><td class="center">10</td><td class="center">#</td></tr>
+    <tr><td class="center">3</td><td class="center">7</td><td class="center">6</td><td class="center">7</td><td class="center">8</td><td class="center">9</td><td class="center down">10</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>도착점 (3, 5)의 값은 <code>10</code>이므로 답은 <code>10 - 2 = 8</code>이다. 최단 경로 중 하나:</p>
+<pre><code class="language-plaintext">(0,0) → (0,1) → (1,1) → (2,1) → (3,1) → (3,2) → (3,3) → (3,4) → (3,5)</code></pre>
+<p>오른쪽 위 (0,5), (1,4), (1,5)가 <code>0</code>으로 남아 있는 것은 도착점을 찾자마자 조기 종료했기 때문이다. 불필요한 탐색을 하지 않았다는 뜻이다.</p>
+
+<h2 id="s5">놓치기 쉬운 함정</h2>
+<p>예제는 정답을 내지만, 코딩테스트 채점 케이스에서 걸릴 수 있는 지점이 있다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>상황</th><th>원본 결과</th><th>기대값</th><th>원인</th></tr></thead>
+  <tbody>
+    <tr><td>격자가 1×1 (<code>[[0]]</code>)</td><td class="up">-1</td><td>0</td><td>도착 판정이 이웃 칸에서만 일어나 시작점 = 도착점인 경우를 못 잡음</td></tr>
+    <tr><td>시작점이 벽</td><td class="up">탐색 진행</td><td>-1</td><td>시작 칸을 검사 없이 2로 덮어씀</td></tr>
+    <tr><td>함수 호출 후 원본 격자 재사용</td><td class="up">값이 바뀌어 있음</td><td>원본 유지</td><td>입력 리스트를 직접 수정</td></tr>
+    <tr><td>변수명 <code>map</code></td><td>동작은 함</td><td>-</td><td>내장 함수 <code>map()</code>을 가려서 같은 스코프에서 <code>map(int, ...)</code> 사용 시 에러</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout warn">
+<strong>주의</strong> — <code>map = [...]</code>을 전역에 선언한 뒤 입력 파싱에서 <code>list(map(int, input().split()))</code>를 쓰면
+<code>TypeError: 'list' object is not callable</code>이 난다. 코딩테스트에서 실제로 자주 나오는 실수다. <code>grid</code>, <code>board</code> 같은 이름을 쓴다.
+</div>
+
+<h2 id="s6">개선한 코드</h2>
+<p>위 네 가지를 반영한 버전이다. 거리를 별도 <code>dist</code> 배열에 기록해 <code>+2 / -2</code> 오프셋이 사라지고, 입력도 보존된다.
+도착 판정을 큐에서 꺼낼 때 하므로 1×1 격자도 0을 반환한다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">shortest_path_v2.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">from collections import deque
+
+def shortest_path(grid):
+    n, m = len(grid), len(grid[0])
+    if grid[0][0] == 1 or grid[n - 1][m - 1] == 1:
+        return -1
+
+    dist = [[-1] * m for _ in range(n)]   # -1 = 미방문
+    dist[0][0] = 0
+    queue = deque([(0, 0)])
+
+    while queue:
+        x, y = queue.popleft()
+        if (x, y) == (n - 1, m - 1):
+            return dist[x][y]
+
+        for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nx, ny = x + dx, y + dy
+            if 0 &lt;= nx &lt; n and 0 &lt;= ny &lt; m and grid[nx][ny] == 0 and dist[nx][ny] == -1:
+                dist[nx][ny] = dist[x][y] + 1
+                queue.append((nx, ny))
+
+    return -1
+
+grid = [[0, 0, 1, 1, 1, 0],
+        [0, 0, 0, 1, 0, 0],
+        [1, 0, 1, 0, 0, 1],
+        [0, 0, 0, 0, 0, 0]]
+print(shortest_path(grid))              # 8
+print(shortest_path([[0]]))             # 0
+print(shortest_path([[0, 1], [1, 0]]))  # -1</code></pre>
+</div>
+
+<p>세 케이스 모두 Python 3에서 실행해 주석의 값이 나오는 것을 확인했다.</p>
+
+<div class="callout">
+<strong>큐에 넣을 때 방문 표시</strong> — 방문 처리는 꺼낼 때가 아니라 <strong>넣을 때</strong> 해야 한다.
+꺼낼 때 표시하면 같은 칸이 여러 번 큐에 들어가 격자가 크면 메모리·시간 초과가 난다. 원본과 개선 코드 모두 넣을 때 표시한다.
+</div>
+
+<h2 id="s7">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>포인트</th><th>내용</th></tr></thead>
+  <tbody>
+    <tr><td>알고리즘 선택</td><td>가중치 없는 격자 최단 거리 = BFS. 처음 도착한 거리가 최단</td></tr>
+    <tr><td>자료구조</td><td><code>collections.deque</code> — <code>popleft()</code> O(1)</td></tr>
+    <tr><td>방문 + 거리 기록</td><td>격자에 직접 쓰려면 기존 값(0, 1)과 겹치지 않게 2부터 시작, 결과에서 2를 뺌</td></tr>
+    <tr><td>방문 시점</td><td>큐에 넣을 때 표시해 중복 삽입 방지</td></tr>
+    <tr><td>조기 종료</td><td>도착점을 발견하면 즉시 반환</td></tr>
+    <tr><td>엣지 케이스</td><td>1×1 격자, 시작·도착점이 벽, 도달 불가(-1)</td></tr>
+    <tr><td>복잡도</td><td>시간·공간 모두 O(N·M)</td></tr>
+  </tbody>
+</table>
+</div>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

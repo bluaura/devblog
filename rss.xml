@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>BFS로 격자 최단 경로 구하기 — 코드 해설과 함정 4가지</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html</guid>
+      <description>0/1 격자 미로를 BFS로 풀어 최소 이동 8회를 구하는 코드 해설, 거리 +2 오프셋 원리, 1×1 격자·map 변수명 등 함정 4가지와 개선 코드</description>
+      <pubDate>Tue, 29 Sep 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>AI가 읽기 좋은 개인 지식 저장소 만들기: md 템플릿 5종과 클라우드·로컬 LLM 분담</title>
       <link>https://bluaura.github.io/devblog/posts/2026-09-28-ai-readable-knowledge-vault.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-28-ai-readable-knowledge-vault.html</guid>

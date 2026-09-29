@@ -18,6 +18,17 @@
   },
   "posts": [
     {
+      "slug": "2026-09-29-algo-bfs-shortest-path",
+      "title": "BFS로 격자 최단 경로 구하기 — 코드 해설과 함정 4가지",
+      "date": "2026-09-29",
+      "tags": [
+        "코딩테스트",
+        "Python",
+        "BFS"
+      ],
+      "summary": "0/1 격자 미로를 BFS로 풀어 최소 이동 8회를 구하는 코드 해설, 거리 +2 오프셋 원리, 1×1 격자·map 변수명 등 함정 4가지와 개선 코드"
+    },
+    {
       "slug": "2026-09-28-ai-readable-knowledge-vault",
       "title": "AI가 읽기 좋은 개인 지식 저장소 만들기: md 템플릿 5종과 클라우드·로컬 LLM 분담",
       "date": "2026-09-28",
