@@ -12,6 +12,13 @@
       <pubDate>Wed, 30 Sep 2026 00:00:00 +0900</pubDate>
     </item>
     <item>
+      <title>Jev 정리: LLM이 아닌 결정 모델(System One)과 앱 기능 적용 아이디어</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-09-30-jev-decision-model.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-30-jev-decision-model.html</guid>
+      <description>70~500ms, 입력 1M 토큰당 $0.042로 Choice/Score/Noul만 반환하는 Jev의 LLM 대비 차이, 장단점, awesome-jev 유즈케이스, PC-모바일 연동 앱 적용 6가지</description>
+      <pubDate>Wed, 30 Sep 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>BFS로 격자 최단 경로 구하기 — 코드 해설과 함정 4가지</title>
       <link>https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html</guid>

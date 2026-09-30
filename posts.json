@@ -18,6 +18,19 @@
   },
   "posts": [
     {
+      "slug": "2026-09-30-jev-decision-model",
+      "title": "Jev 정리: LLM이 아닌 결정 모델(System One)과 앱 기능 적용 아이디어",
+      "date": "2026-09-30",
+      "tags": [
+        "AI",
+        "Windows",
+        "Android",
+        "LLM",
+        "Agent"
+      ],
+      "summary": "70~500ms, 입력 1M 토큰당 $0.042로 Choice/Score/Noul만 반환하는 Jev의 LLM 대비 차이, 장단점, awesome-jev 유즈케이스, PC-모바일 연동 앱 적용 6가지"
+    },
+    {
       "slug": "2026-09-30-openai-devday-dots-agent",
       "title": "OpenAI DevDay 2026 총정리: Dots 에이전트 분석과 개인용 자비스 가능성",
       "date": "2026-09-30",

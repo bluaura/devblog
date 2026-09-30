@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jev 정리: LLM이 아닌 결정 모델(System One)과 앱 기능 적용 아이디어 · 블루오라 개발노트</title>
+<meta name="description" content="70~500ms, 입력 1M 토큰당 $0.042로 Choice/Score/Noul만 반환하는 Jev의 LLM 대비 차이, 장단점, awesome-jev 유즈케이스, PC-모바일 연동 앱 적용 6가지">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Jev 정리: LLM이 아닌 결정 모델(System One)과 앱 기능 적용 아이디어">
+<meta property="og:description" content="70~500ms, 입력 1M 토큰당 $0.042로 Choice/Score/Noul만 반환하는 Jev의 LLM 대비 차이, 장단점, awesome-jev 유즈케이스, PC-모바일 연동 앱 적용 6가지">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-09-30-jev-decision-model.html">
+<meta property="article:published_time" content="2026-09-30">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-09-30-jev-decision-model.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>Jev 정리: LLM이 아닌 결정 모델(System One)과 앱 기능 적용 아이디어</h1>
+    <p class="sub"><span class="tag">AI</span><span class="tag">Windows</span><span class="tag">Android</span><span class="tag">LLM</span><span class="tag">Agent</span> &nbsp;2026-09-30</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">출시</div><div class="value">2026.09.15</div><div class="delta">TypeSafe AI</div></div>
+  <div class="stat"><div class="label">응답 지연</div><div class="value">70~500ms</div><div class="delta">LLM 대비 40~200배 빠름(자사 주장)</div></div>
+  <div class="stat"><div class="label">입력 가격</div><div class="value">$0.042</div><div class="delta">1M 토큰당, 출력 무료</div></div>
+  <div class="stat"><div class="label">출력 타입</div><div class="value">3종</div><div class="delta">Choice / Score / Noul</div></div>
+</div>
+
+<blockquote>Jev는 텍스트를 생성하지 않는 "결정 모델(System One)"이다. 비정형 입력을 받아 미리 정의한 선택지·척도·예/아니오 중 하나를 확률과 함께 돌려준다. 생성과 추론은 LLM에, 그 사이사이의 빠른 판단은 Jev에 맡기는 구조가 핵심이다. 이 글은 공개 2주 시점의 자료를 바탕으로 LLM과의 차이, 장단점, awesome-jev 유즈케이스, PC-모바일 연동 앱에 적용할 수 있는 기능 아이디어를 정리한다.</blockquote>
+
+<div class="toc"><div class="toc-title">목차</div><ol>
+  <li><a href="#s1">Jev란 무엇인가</a></li>
+  <li><a href="#s2">일반 LLM과의 차이</a></li>
+  <li><a href="#s3">API 구조와 제약</a></li>
+  <li><a href="#s4">장점과 단점</a></li>
+  <li><a href="#s5">awesome-jev로 본 유즈케이스</a></li>
+  <li><a href="#s6">LLM과 시너지를 내는 패턴</a></li>
+  <li><a href="#s7">PC-모바일 연동 앱에 적용한다면</a></li>
+  <li><a href="#s8">정리</a></li>
+</ol></div>
+
+<h2 id="s1">Jev란 무엇인가</h2>
+<ul>
+  <li><strong>개발사</strong>: TypeSafe AI(샌프란시스코, 2024년 설립). 시드 4,000만 달러, 기업가치 2억 달러.</li>
+  <li><strong>공개일</strong>: 2026년 9월 15일</li>
+  <li><strong>정의</strong>: "unstructured state in, typed probabilistic decisions out". 비정형 상태를 넣으면 타입이 정해진 확률적 결정이 나온다.</li>
+  <li><strong>학습</strong>: 트랜스포머 기반이며, 합성 데이터와 RLCD(Reinforcement Learning for Calibrated Decisions)로 학습했다고 밝혔다. 가중치와 상세 구조는 비공개이고 API로만 제공된다.</li>
+  <li><strong>동작 방식</strong>: 토큰을 하나씩 생성하는 autoregressive 방식이 아니라, 한 번의 패스로 결정을 출력하는 non-autoregressive 방식이다.</li>
+</ul>
+
+<h2 id="s2">일반 LLM과의 차이</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>구분</th><th>일반 LLM</th><th>Jev</th></tr></thead>
+<tbody>
+<tr><td>출력</td><td>자유 텍스트(토큰 순차 생성)</td><td>타입 값 + 확률(단일 패스)</td></tr>
+<tr><td>질문 형식</td><td>자유 프롬프트</td><td>Choice(최대 255개 보기) / Score(2~10단계) / Noul(0~1 확률)</td></tr>
+<tr><td>응답 속도</td><td>수 초</td><td>70~500ms, 결정 루프를 초당 약 10회</td></tr>
+<tr><td>비용</td><td>입력·출력 모두 과금</td><td>입력만 과금($0.042/1M), 출력 무료</td></tr>
+<tr><td>신뢰도 신호</td><td>드러나지 않고 과신하기 쉬움</td><td>보정된 probabilities와 confidence 반환</td></tr>
+<tr><td>질문 여러 개</td><td>질문이 늘면 시간도 증가</td><td>한 번의 호출 안에서 병렬로 평가, 지연 증가가 거의 없음</td></tr>
+<tr><td>스키마 오류</td><td>발생 가능</td><td>구조적으로 0%(정의 밖의 값은 반환 불가)</td></tr>
+</tbody></table></div>
+<p>TypeSafe는 "40~200배 빠르고 40~400배 싸다"(최대 193.6배, 444.6배)고 주장한다. 다만 모두 자사 벤치마크 수치이고 독립 검증은 아직 부족하다.</p>
+
+<h2 id="s3">API 구조와 제약</h2>
+<p>엔드포인트는 <code>POST https://api.typesafe.ai/v1/systemone</code> 이다. 요청은 <code>state</code>(문자열·객체·배열)와 이름 붙인 <code>questions</code> 로 구성된다. 아래 코드는 공개 가이드를 바탕으로 작성한 <strong>미검증 예시</strong>다(typesafe-sdk, 2026년 9월 기준).</p>
+<div class="code">
+  <div class="code-head"><span class="fname">jev_example.py (미검증)</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">from typesafe import TypeSafe, Choice, Score, Noul  # pip install typesafe-sdk
+
+client = TypeSafe()  # TYPESAFE_API_KEY 환경변수 사용
+
+res = client.evaluate(
+    model="jev-1.13.0",  # jev-latest 대신 버전 고정 권장
+    state={"message": "PC에 있는 계약서 폴더 전체를 폰으로 보내고 원본은 지워줘"},
+    questions={
+        "intent": Choice(
+            instructions="사용자가 원하는 기기 동작",
+            criteria={
+                "file_transfer": "PC와 폰 사이 파일 송수신",
+                "clipboard": "클립보드 동기화",
+                "media_import": "폰 사진/영상 가져오기",
+                "other": "그 외",
+            },
+        ),
+        "risk": Score(
+            instructions="실행 시 데이터 손실·유출 위험도",
+            criteria=["없음", "낮음", "중간", "높음"],
+        ),
+        "destructive": Noul(instructions="요청에 삭제나 덮어쓰기가 포함되는가"),
+    },
+)
+
+a = res.answers
+print(a["intent"].choice, a["intent"].confidence)
+print(a["risk"].score, a["destructive"].noul)</code></pre>
+</div>
+<div class="table-wrap"><table>
+<thead><tr><th>항목</th><th>값</th></tr></thead>
+<tbody>
+<tr><td>컨텍스트</td><td>64k 토큰(state + 전체 질문), 질문당 32k</td></tr>
+<tr><td>처리량</td><td>분당 1,200 요청, 초당 250k 토큰, 초과 시 429 응답</td></tr>
+<tr><td>공식 SDK</td><td>Python(<code>typesafe-sdk</code>), TypeScript(<code>@typesafe-ai/sdk</code>)</td></tr>
+<tr><td>커뮤니티 SDK</td><td>Kotlin Multiplatform, Swift, Go, Rust, .NET 등</td></tr>
+<tr><td>배포 경로</td><td>TypeSafe API, Cloudflare AI(<code>typesafe/jev</code>)</td></tr>
+</tbody></table></div>
+
+<h2 id="s4">장점과 단점</h2>
+<h3>장점</h3>
+<ul>
+  <li><strong>잘못된 형식의 출력이 없다</strong>: 답의 범위를 미리 정의하므로 스키마 밖의 값은 나오지 않는다.</li>
+  <li><strong>도입이 쉽다</strong>: 학습 데이터나 파인튜닝 없이 프롬프트만으로 분류기를 만들 수 있다.</li>
+  <li><strong>confidence를 제어 흐름에 쓸 수 있다</strong>: 자동 실행할지, 사람에게 넘길지를 코드에서 분기한다.</li>
+  <li><strong>지연과 비용이 낮다</strong>: 실시간 루프나 대량 처리에 넣어도 경제성이 맞는다.</li>
+</ul>
+<h3>단점</h3>
+<ul>
+  <li>텍스트 생성, 코드 작성, 긴 추론이 불가능하다. 파라미터 추출(예: 문장에서 날짜 뽑기)도 할 수 없다.</li>
+  <li><strong>숫자, 날짜, 개수 세기, 적대적 입력에 약하다</strong>. 공식 가이드에서도 인정하는 부분이다.</li>
+  <li>판단 근거를 설명하지 않는다.</li>
+  <li>같은 입력에 대해 결과가 항상 같다는 보장이 없다.</li>
+  <li>"틀린 값"은 나오지 않지만 "그럴듯하게 틀린 선택지"를 높은 확신으로 고를 수는 있다.</li>
+  <li>API 전용이다. 온디바이스와 오프라인 실행은 불가능하다.</li>
+  <li>이미지와 영상을 입력으로 받지 못한다. 화면 판단은 접근성 트리 같은 텍스트로 변환해서 넘겨야 한다.</li>
+</ul>
+<div class="callout warn">공개 초기라 가격과 성능 수치는 출처마다 조금씩 다르다(예: 위키백과는 공개 가격이 없다고 서술). 도입 전에 자체 데이터로 정확도와 보정 수준을 먼저 검증해야 한다.</div>
+
+<h2 id="s5">awesome-jev로 본 유즈케이스</h2>
+<p>여러 awesome-jev 저장소가 400~900여 개 오픈소스 프로젝트를 모아 두었다. 에이전트 툴링과 벤치마크 카테고리가 가장 크다.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>영역</th><th>예시</th></tr></thead>
+<tbody>
+<tr><td>에이전트 감독</td><td>툴 호출 전 위험도 판정과 차단, 스킬 선택, 조기 종료를 막는 stop hook</td></tr>
+<tr><td>모델 라우팅</td><td>요청 난이도에 따라 경량, 고성능, 추론 모델 중 하나로 배정</td></tr>
+<tr><td>브라우저·컴퓨터 제어</td><td>페이지 상태를 보고 다음 조작과 대상 요소를 선택 (Jev Ultrafast)</td></tr>
+<tr><td>코드 리뷰</td><td>PR·diff 위험도, 마이그레이션 안전성 판정</td></tr>
+<tr><td>RAG 품질</td><td>문서 조각별 관련성, 모순, 인젝션 위험 점수로 필터링</td></tr>
+<tr><td>컨텍스트 최적화</td><td>코딩 에이전트의 컨텍스트 압축 (fast-jev-compaction)</td></tr>
+<tr><td>도메인 분류</td><td>CS 티켓 분류, 사기 탐지, 모더레이션, 리드 스코어링</td></tr>
+<tr><td>실시간 제어</td><td>게임 NPC, 센서 판단, 드론 시뮬레이션(시뮬레이터 한정)</td></tr>
+<tr><td>모바일 QA</td><td>접근성 트리 기반 UI 자동화 (jev-android, Callstack agent-device: 테스트 1회 14초, $0.0023)</td></tr>
+</tbody></table></div>
+
+<h2 id="s6">LLM과 시너지를 내는 패턴</h2>
+<p>원칙은 하나다. <strong>생성과 추론은 LLM이 하고, 그 사이의 판단은 Jev가 한다.</strong></p>
+<ol class="steps">
+  <li><strong>Confidence 게이팅</strong>: Jev는 "무엇인지"만 답하고, "실행할지"는 앱 코드의 임계값이 정한다. 되돌릴 수 있는 작업은 임계값을 낮게, 위험한 작업은 높게 두고, 애매하면 사람에게 넘긴다.</li>
+  <li><strong>투기적 팬아웃</strong>: 필요할지도 모르는 질문까지 한 번의 호출에 묶는다. 출력이 무료이고 병렬로 처리되므로 비용과 지연이 거의 늘지 않는다.</li>
+  <li><strong>원자 점수 조합</strong>: 점수 하나 대신 차원별 점수를 받고, 가중치는 앱에서 직접 조합한다.</li>
+  <li><strong>LLM 앞뒤에 배치</strong>: 앞단에서는 의도 분류, 모델 라우팅, RAG 필터링을, 뒷단에서는 출력 검증을 맡긴다.</li>
+  <li><strong>Retrieve, then judge</strong>: 검색과 필터링은 코드로 먼저 하고, 판단에 필요한 필드만 보낸다. 숫자와 날짜 계산도 코드에서 끝낸다.</li>
+</ol>
+
+<h2 id="s7">PC-모바일 연동 앱에 적용한다면</h2>
+<p>Wi-Fi, BT, BLE 기반의 파일 전송, 미러링, 화면 확장 앱을 전제로 적합도순으로 정리했다.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>기능</th><th>Jev 사용 방식</th><th>적합도</th></tr></thead>
+<tbody>
+<tr><td>에이전트 툴 호출 위험도 판정</td><td>툴 호출 내용을 <code>Score(risk)</code>로 판정. low는 자동 허용, mid는 폰 승인, high는 생체인증</td><td>최상</td></tr>
+<tr><td>알림 미러링 우선순위</td><td>알림 텍스트를 <code>Score(urgency)</code>와 <code>Choice(category)</code>로 판정해 긴급한 것만 PC에 표시</td><td>상</td></tr>
+<tr><td>자연어 명령 라우팅</td><td><code>Choice(intent)</code>로 의도를 고르고, 파라미터 추출은 LLM이나 규칙이 담당(2단 구조)</td><td>상</td></tr>
+<tr><td>상황 인식 워크스페이스</td><td>실행 앱, 일정, 연결된 디스플레이 상태를 보고 <code>Choice(scene)</code>로 레이아웃 추천</td><td>중상</td></tr>
+<tr><td>클립보드·파일 민감정보 감지</td><td><code>Noul</code>로 판정. 로컬 정규식이 1차, Jev에는 메타데이터만 전송</td><td>중</td></tr>
+<tr><td>연결 앱 UI 회귀 테스트</td><td>접근성 트리 기반 QA 자동화</td><td>중</td></tr>
+</tbody></table></div>
+<div class="callout"><strong>보안 원칙</strong>: 에이전트나 사용자가 만든 입력은 적대적일 수 있다. Jev 판정은 위험도를 <strong>올리는 용도로만</strong> 쓰고, "셸 명령은 항상 high" 같은 기본 정책은 코드에 고정한다. API 실패나 오프라인일 때는 fail-closed로 처리한다.</div>
+<h3>맞지 않는 영역</h3>
+<ul>
+  <li><strong>미러링·화면 확장의 프레임 단위 제어</strong>: 70~500ms 지연으로는 맞출 수 없다.</li>
+  <li><strong>Wi-Fi/BT/BLE 채널 선택, 재연결 판단</strong>: RSSI나 대역폭 같은 숫자 비교 문제라 결정론적 코드가 더 정확하다.</li>
+  <li><strong>오프라인에서도 동작해야 하는 핵심 경로</strong>: API 전용이라 네트워크가 끊기면 쓸 수 없다.</li>
+</ul>
+<h3>구현 체크리스트</h3>
+<ul>
+  <li>API 키는 클라이언트 앱에 넣지 않는다. PC 측 에이전트 프로세스나 릴레이 서버에서 호출한다.</li>
+  <li>모델 버전을 고정해 임계값이 모델 업데이트로 흔들리지 않게 한다.</li>
+  <li>여러 질문을 한 번의 호출로 묶는다.</li>
+  <li>Kotlin/Swift 앱에서는 커뮤니티 SDK를 쓰거나 REST를 직접 호출한다(비공식이므로 검토 필요).</li>
+</ul>
+
+<h2 id="s8">정리</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>질문</th><th>답</th></tr></thead>
+<tbody>
+<tr><td>Jev가 LLM을 대체하나</td><td>아니다. 텍스트 생성이 불가능하고, LLM 파이프라인 속 판단 단계를 대체하는 역할이다.</td></tr>
+<tr><td>가장 잘 맞는 일</td><td>답의 범위가 유한하고, 결과가 코드 분기로 이어지며, 자주 호출되는 판단</td></tr>
+<tr><td>가장 큰 리스크</td><td>숫자·날짜·적대적 입력에 약함, 설명 불가, 클라우드 의존, 자사 벤치마크 위주의 검증</td></tr>
+<tr><td>연동 앱에서 첫 적용 후보</td><td>에이전트 툴 호출 위험도 판정과 알림 우선순위 필터</td></tr>
+</tbody></table></div>
+
+<h3>참고 자료</h3>
+<ul>
+  <li><a href="https://en.wikipedia.org/wiki/Jev_(AI_model)">Jev (AI model) - Wikipedia</a></li>
+  <li><a href="https://simonwillison.net/2026/Sep/21/jev/">Simon Willison - Jev introduces a new shape of LLM</a></li>
+  <li><a href="https://www.techtarget.com/it-infrastructure/news/366650696/Jev-decision-model-touted-as-quicker-cheaper-LLM-alternative">TechTarget - Jev decision model touted as quicker, cheaper LLM alternative</a></li>
+  <li><a href="https://www.langchain.com/blog/building-a-harness-with-jev">LangChain - Building a harness with Jev</a></li>
+  <li><a href="https://developers.cloudflare.com/ai/models/typesafe/jev/">Cloudflare AI docs - Jev</a></li>
+  <li><a href="https://dev.to/valyuai/how-to-use-jev-a-practical-guide-to-typesafes-system-one-model-g5e">DEV - How to Use Jev</a></li>
+  <li><a href="https://www.mindstudio.ai/blog/jev-system-one-model-launch">MindStudio - Jev Explained</a></li>
+  <li><a href="https://huggingface.co/blog/sora-2/jev-ai-vs-llms-when-should-you-use-a-decision-mode">Hugging Face - Jev AI vs LLMs</a></li>
+  <li><a href="https://www.callstack.com/blog/exploring-jev-for-mobile-qa-with-agent-device">Callstack - Exploring Jev for Mobile QA</a></li>
+  <li><a href="https://github.com/kraayenjon/awesome-jev">kraayenjon/awesome-jev</a>, <a href="https://github.com/heyjunpenn/awesome-jev">heyjunpenn/awesome-jev</a></li>
+  <li><a href="https://github.com/dougsong/jev-android">dougsong/jev-android</a>, <a href="https://github.com/agugliotta/jev-kmp">agugliotta/jev-kmp</a></li>
+</ul>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
