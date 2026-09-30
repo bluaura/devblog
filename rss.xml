@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>OpenAI DevDay 2026 총정리: Dots 에이전트 분석과 개인용 자비스 가능성</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-09-30-openai-devday-dots-agent.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-30-openai-devday-dots-agent.html</guid>
+      <description>DevDay 2026 핵심 발표 30선, Dots vs Meta Muse vs Grok Bot 비교, 앱 개발자 관점 활용도, 개발·자기계발·투자 영역별 자비스 가능성과 4주 파일럿 계획</description>
+      <pubDate>Wed, 30 Sep 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>BFS로 격자 최단 경로 구하기 — 코드 해설과 함정 4가지</title>
       <link>https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html</guid>
