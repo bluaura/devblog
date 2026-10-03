@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karpathy &#x27;Software Is Changing (Again)&#x27; 강연 정리 — Software 3.0과 부분 자율성 앱 · 블루오라 개발노트</title>
+<meta name="description" content="Software 1.0/2.0/3.0, LLM=1960년대 OS 비유, 자율성 슬라이더·생성-검증 루프, &#x27;에이전트의 10년&#x27;, llms.txt 등 에이전트 친화 인프라까지 YC 강연 핵심 정리">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Karpathy &#x27;Software Is Changing (Again)&#x27; 강연 정리 — Software 3.0과 부분 자율성 앱">
+<meta property="og:description" content="Software 1.0/2.0/3.0, LLM=1960년대 OS 비유, 자율성 슬라이더·생성-검증 루프, &#x27;에이전트의 10년&#x27;, llms.txt 등 에이전트 친화 인프라까지 YC 강연 핵심 정리">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-03-karpathy-software-3-0.html">
+<meta property="article:published_time" content="2026-10-03">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-03-karpathy-software-3-0.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>Karpathy &#x27;Software Is Changing (Again)&#x27; 강연 정리 — Software 3.0과 부분 자율성 앱</h1>
+    <p class="sub"><span class="tag">AI</span><span class="tag">LLM</span><span class="tag">Software 3.0</span><span class="tag">에이전트</span> &nbsp;2026-10-03</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat">
+    <div class="label">연사</div>
+    <div class="value">Karpathy</div>
+    <div class="delta">전 Tesla AI 디렉터</div>
+  </div>
+  <div class="stat">
+    <div class="label">행사</div>
+    <div class="value">YC AI SUS</div>
+    <div class="delta">2025-06, 샌프란시스코</div>
+  </div>
+  <div class="stat">
+    <div class="label">핵심 개념</div>
+    <div class="value">SW 3.0</div>
+    <div class="delta">프롬프트 = 프로그램</div>
+  </div>
+  <div class="stat">
+    <div class="label">에이전트 시계</div>
+    <div class="value">10년</div>
+    <div class="delta">"에이전트의 해"가 아니라</div>
+  </div>
+</div>
+
+<blockquote>
+Andrej Karpathy가 YC AI Startup School에서 한 강연 <a href="https://www.youtube.com/watch?v=LCEmiRjPEtQ">"Software Is Changing (Again)"</a> 정리.
+요지는 세 가지다. 자연어 프롬프트가 LLM을 프로그래밍하는 Software 3.0 시대가 왔고,
+LLM은 1960년대 수준의 새로운 운영체제이며, 지금 만들어야 할 것은 완전 자율 에이전트가 아니라
+사람이 검증 루프를 쥔 "부분 자율성" 제품과 에이전트가 읽을 수 있는 인프라라는 것이다.
+</blockquote>
+
+<div class="callout">
+<strong>영상</strong> — <a href="https://www.youtube.com/watch?v=LCEmiRjPEtQ">YouTube: Andrej Karpathy: Software Is Changing (Again)</a> (Y Combinator 채널, 약 40분).
+이 글은 강연 내용을 개인적으로 요약·재서술한 것이며, 원문 표현은 영상과 아래 출처를 참고.
+</div>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">Software 1.0 / 2.0 / 3.0</a></li>
+    <li><a href="#s2">LLM은 무엇과 닮았나</a></li>
+    <li><a href="#s3">LLM의 심리 — 강점과 결함</a></li>
+    <li><a href="#s4">기회: 부분 자율성 앱</a></li>
+    <li><a href="#s5">바이브 코딩과 MenuGen</a></li>
+    <li><a href="#s6">에이전트를 위해 만들어라</a></li>
+    <li><a href="#s7">정리</a></li>
+    <li><a href="#s8">출처</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">Software 1.0 / 2.0 / 3.0</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>구분</th><th>무엇으로 프로그래밍하나</th><th>예시</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Software 1.0</td><td>사람이 직접 작성한 코드</td><td>C++, Python</td></tr>
+    <tr><td>Software 2.0</td><td>신경망 가중치 (데이터와 최적화로 생성)</td><td>Tesla Autopilot 인식 스택</td></tr>
+    <tr><td>Software 3.0</td><td>자연어 프롬프트가 LLM을 프로그래밍</td><td>영어가 곧 프로그래밍 언어</td></tr>
+  </tbody>
+</table>
+</div>
+<ul>
+  <li>Tesla Autopilot 개발 당시, 카메라 간 정보 결합 같은 기능이 신경망으로 옮겨가면서 C++ 코드가 계속 삭제됐다. 2.0이 1.0을 먹어 들어간 사례다.</li>
+  <li>같은 일이 지금 3.0에서 다시 일어나고 있다. 개발자는 세 패러다임을 모두 다루고, 문제마다 어느 쪽이 맞는지 판단할 수 있어야 한다.</li>
+</ul>
+
+<h2 id="s2">LLM은 무엇과 닮았나</h2>
+<ul>
+  <li><strong>유틸리티(전기)</strong> — 학습에 CAPEX, API 서빙에 OPEX를 쓰고 토큰 단위로 과금한다. 주요 모델이 장애를 일으키면 일종의 "지능 정전"이 생긴다.</li>
+  <li><strong>반도체 팹</strong> — 모델 구축에 드는 설비투자가 매우 크고, 기술과 노하우가 소수 기업에 집중된다.</li>
+  <li><strong>운영체제(가장 강조한 비유)</strong> — LLM은 CPU, 컨텍스트 윈도우는 메모리 역할을 하며 연산과 메모리를 조율해 문제를 푼다. 폐쇄형(Windows/macOS)과 오픈소스(Linux에 대응하는 Llama 계열) 생태계로 나뉜다.</li>
+  <li><strong>지금은 1960년대</strong> — 연산이 비싸서 클라우드에 중앙화돼 있고, 사용자는 시분할 방식의 씬 클라이언트로 접속한다. 개인용 컴퓨팅 혁명은 아직 오지 않았다.</li>
+  <li><strong>확산 방향이 반대</strong> — 과거 신기술은 정부·군·기업이 먼저 썼지만, LLM은 소비자가 먼저 쓰고 있다.</li>
+</ul>
+
+<h2 id="s3">LLM의 심리 — 강점과 결함</h2>
+<p>LLM은 인간 데이터로 학습한 "사람의 확률적 시뮬레이션"이다. 그래서 사람과 비슷한 면과 사람과 전혀 다른 면을 함께 가진다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>특성</th><th>내용</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>백과사전급 기억</td><td>엄청난 양의 지식을 기억한다 (영화 Rain Man 비유)</td></tr>
+    <tr><td>들쭉날쭉한 지능</td><td>일부 영역은 초인적이지만 "9.11이 9.9보다 크다" 같은 사람이 안 할 실수를 한다</td></tr>
+    <tr><td>환각</td><td>그럴듯한 오답을 만들어 낸다</td></tr>
+    <tr><td>선행성 기억상실</td><td>경험이 장기 기억으로 쌓이지 않고 컨텍스트가 매번 초기화된다 (Memento, 첫 키스만 50번째 비유)</td></tr>
+    <tr><td>잘 속음</td><td>프롬프트 인젝션 등 보안 위험에 취약하다</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s4">기회: 부분 자율성 앱</h2>
+<p>좋은 예로 Cursor와 Perplexity를 들었다. 이런 앱들이 공통으로 가진 요소는 다음과 같다.</p>
+<ol class="steps">
+  <li><strong>컨텍스트 관리</strong> — 사용자가 일일이 복붙하지 않아도 앱이 필요한 맥락을 모은다.</li>
+  <li><strong>여러 LLM 오케스트레이션</strong> — 임베딩, 채팅, diff 적용 등 여러 모델 호출을 앱이 엮는다.</li>
+  <li><strong>전용 GUI</strong> — 변경 사항을 빨강/초록 diff로 보여주고 단축키로 수락/거절하게 한다. 텍스트를 읽는 것보다 시각적으로 검토하는 게 훨씬 빠르다.</li>
+  <li><strong>자율성 슬라이더</strong> — Cursor 기준 탭 자동완성 → 선택 영역 수정(<kbd>Cmd</kbd>+<kbd>K</kbd>) → 파일 단위(<kbd>Cmd</kbd>+<kbd>L</kbd>) → 저장소 전체(<kbd>Cmd</kbd>+<kbd>I</kbd>). Perplexity도 검색 → 리서치 → 딥 리서치로 단계가 있다.</li>
+</ol>
+<div class="callout">
+<strong>핵심</strong> — AI가 생성하고 사람이 검증하는 루프를 최대한 빠르게 돌려야 한다.
+GUI로 검증 속도를 높이고, AI에게는 작고 구체적인 단위로 일을 시켜 "목줄"을 짧게 유지한다.
+1만 줄짜리 diff를 한 번에 받는 건 사람이 병목이 될 뿐 생산성이 아니다.
+</div>
+<ul>
+  <li><strong>아이언맨 슈트 비유</strong> — 슈트는 사람을 증강하기도 하고 혼자 움직이기도 한다. 지금은 자율 로봇보다 증강형 슈트를 만들 때다.</li>
+  <li><strong>자율주행의 교훈</strong> — 2013년 Waymo 차량으로 팔로알토를 30분간 개입 없이 달렸고 당시엔 곧 완성될 것 같았다. 12년이 지난 지금도 완전 자율주행은 끝나지 않았다. 그래서 "2025년은 에이전트의 해"가 아니라 "에이전트의 10년"으로 봐야 한다.</li>
+</ul>
+
+<h2 id="s5">바이브 코딩과 MenuGen</h2>
+<ul>
+  <li>자연어로 프로그래밍하게 되면서 누구나 개발자가 될 수 있다. Karpathy는 Swift를 모르는 상태로 하루 만에 기본 iOS 앱을 만들었다.</li>
+  <li><strong>MenuGen</strong> — 식당 메뉴판을 찍으면 각 메뉴의 음식 이미지를 생성해 주는 웹앱. 코드 작성은 금방 끝났지만 인증, 결제, 도메인, 배포 같은 DevOps 작업에 약 1주일이 걸렸다.</li>
+  <li>그 시간 대부분은 서비스 문서가 "이 화면에서 이 버튼을 클릭하세요" 식이라 사람이 브라우저에서 직접 클릭해야 했던 탓이다.</li>
+</ul>
+
+<h2 id="s6">에이전트를 위해 만들어라</h2>
+<p>디지털 정보를 소비하는 새로운 사용자가 생겼다. 사람처럼 행동하는 에이전트다. 소프트웨어와 문서를 이들이 읽을 수 있게 만들어야 한다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>방법</th><th>내용</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>llms.txt</code></td><td><code>robots.txt</code> 처럼 도메인 루트에 두고, 이 사이트가 무엇인지 LLM에게 Markdown으로 설명한다</td></tr>
+    <tr><td>Markdown 문서</td><td>Vercel, Stripe 등은 이미 LLM이 읽기 쉬운 Markdown 문서를 제공한다</td></tr>
+    <tr><td>"클릭" → <code>curl</code></td><td>문서 속 "클릭하세요"를 에이전트가 실행할 수 있는 명령으로 바꾼다</td></tr>
+    <tr><td>MCP</td><td>Anthropic의 Model Context Protocol처럼 에이전트와 직접 통신하는 프로토콜</td></tr>
+    <tr><td>gitingest / DeepWiki</td><td>GitHub 저장소를 LLM이 읽기 좋은 하나의 텍스트나 문서로 변환한다</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s7">정리</h2>
+<ul>
+  <li>프롬프트가 프로그램이 되는 Software 3.0 시대다. 1.0, 2.0, 3.0을 함께 다룰 줄 알아야 한다.</li>
+  <li>LLM은 1960년대 수준의 새로운 OS다. 비싸고 중앙화돼 있으며, 개인용 컴퓨팅에 해당하는 단계는 아직 오지 않았다.</li>
+  <li>들쭉날쭉한 지능, 기억상실, 보안 취약성 때문에 사람이 검증 루프를 쥔 부분 자율성 제품이 지금의 정답이다.</li>
+  <li>앱 개발자 관점에서 바로 쓸 만한 것은 두 가지다. 자기 제품에 자율성 슬라이더와 빠른 검증 GUI를 넣는 것, 그리고 문서와 API를 에이전트가 읽고 실행할 수 있게(Markdown, <code>llms.txt</code>, CLI/MCP) 만드는 것.</li>
+  <li>앞으로 10년 동안 자율성 슬라이더는 점점 오른쪽으로 이동한다. 다시 써야 할 소프트웨어가 엄청나게 많다.</li>
+</ul>
+
+<h2 id="s8">출처</h2>
+<ul>
+  <li><a href="https://www.youtube.com/watch?v=LCEmiRjPEtQ">YouTube — Andrej Karpathy: Software Is Changing (Again)</a> (Y Combinator)</li>
+  <li><a href="https://podcasts.apple.com/ci/podcast/andrej-karpathy-software-is-changing-again/id1236907421?i=1000713636573">Y Combinator Startup Podcast — 같은 강연 오디오</a></li>
+  <li><a href="https://singjupost.com/andrej-karpathy-software-is-changing-again/">The Singju Post — 강연 트랜스크립트</a></li>
+  <li><a href="http://ikyle.me/blog/2025/andrej-karpathy-software-is-changing-again">Kyle Howells — 강연 정리</a></li>
+  <li><a href="https://www.donnamagi.com/articles/karpathy-yc-talk">Donna Magi — Karpathy's YC AI SUS talk</a></li>
+</ul>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

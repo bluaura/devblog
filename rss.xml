@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>Karpathy &#x27;Software Is Changing (Again)&#x27; 강연 정리 — Software 3.0과 부분 자율성 앱</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-10-03-karpathy-software-3-0.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-03-karpathy-software-3-0.html</guid>
+      <description>Software 1.0/2.0/3.0, LLM=1960년대 OS 비유, 자율성 슬라이더·생성-검증 루프, &#x27;에이전트의 10년&#x27;, llms.txt 등 에이전트 친화 인프라까지 YC 강연 핵심 정리</description>
+      <pubDate>Sat, 03 Oct 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>OpenAI DevDay 2026 총정리: Dots 에이전트 분석과 개인용 자비스 가능성</title>
       <link>https://bluaura.github.io/devblog/posts/2026-09-30-openai-devday-dots-agent.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-30-openai-devday-dots-agent.html</guid>

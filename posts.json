@@ -18,6 +18,18 @@
   },
   "posts": [
     {
+      "slug": "2026-10-03-karpathy-software-3-0",
+      "title": "Karpathy 'Software Is Changing (Again)' 강연 정리 — Software 3.0과 부분 자율성 앱",
+      "date": "2026-10-03",
+      "tags": [
+        "AI",
+        "LLM",
+        "Software 3.0",
+        "에이전트"
+      ],
+      "summary": "Software 1.0/2.0/3.0, LLM=1960년대 OS 비유, 자율성 슬라이더·생성-검증 루프, '에이전트의 10년', llms.txt 등 에이전트 친화 인프라까지 YC 강연 핵심 정리"
+    },
+    {
       "slug": "2026-09-30-jev-decision-model",
       "title": "Jev 정리: LLM이 아닌 결정 모델(System One)과 앱 기능 적용 아이디어",
       "date": "2026-09-30",
