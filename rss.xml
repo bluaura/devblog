@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>실리콘밸리의 AI 에이전트 전환과 개발자 업무의 변화 (2026년 10월 5일 기준)</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-10-05-ai-agent-shift-developer-work.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-05-ai-agent-shift-developer-work.html</guid>
+      <description>2026-10-05 조사: Google 신규 코드 75%가 AI 작성, Stripe 에이전트 PR 주 1,300개. 병목은 검증과 명세로 이동했고, 개발자가 준비할 8가지를 정리</description>
+      <pubDate>Mon, 05 Oct 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>Karpathy &#x27;Software Is Changing (Again)&#x27; 강연 정리 — Software 3.0과 부분 자율성 앱</title>
       <link>https://bluaura.github.io/devblog/posts/2026-10-03-karpathy-software-3-0.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-03-karpathy-software-3-0.html</guid>
