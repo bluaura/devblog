@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>맥에 연결한 아이폰에서 iOS 앱 자동 테스트하기: xcodebuild, devicectl, XCUITest 정리 · 블루오라 개발노트</title>
+<meta name="description" content="xcodebuild test와 devicectl로 실기기 빌드·설치·테스트를 자동화하는 방법, adb 대응표 16항목, ID 기반 요소 탐색, 포그라운드·유선 제약, PASS/FAIL/BLOCKED/FLAKY 판정 설계까지 정리한 사전 조사 노트">
+<meta property="og:type" content="article">
+<meta property="og:title" content="맥에 연결한 아이폰에서 iOS 앱 자동 테스트하기: xcodebuild, devicectl, XCUITest 정리">
+<meta property="og:description" content="xcodebuild test와 devicectl로 실기기 빌드·설치·테스트를 자동화하는 방법, adb 대응표 16항목, ID 기반 요소 탐색, 포그라운드·유선 제약, PASS/FAIL/BLOCKED/FLAKY 판정 설계까지 정리한 사전 조사 노트">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-06-ios-device-auto-testing.html">
+<meta property="article:published_time" content="2026-10-06">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-06-ios-device-auto-testing.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>맥에 연결한 아이폰에서 iOS 앱 자동 테스트하기: xcodebuild, devicectl, XCUITest 정리</h1>
+    <p class="sub"><span class="tag">iOS</span><span class="tag">튜토리얼</span><span class="tag">XCUITest</span><span class="tag">테스트자동화</span> &nbsp;2026-10-06</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">iOS의 adb</div><div class="value">devicectl</div><div class="delta">Xcode 15+, iOS 17+</div></div>
+  <div class="stat"><div class="label">테스트 실행</div><div class="value">xcodebuild test</div><div class="delta">결과는 xcresult 번들</div></div>
+  <div class="stat"><div class="label">요소 탐색</div><div class="value">ID 기반</div><div class="delta">accessibilityIdentifier</div></div>
+  <div class="stat"><div class="label">결과 구분</div><div class="value">4종</div><div class="delta">PASS / FAIL / BLOCKED / FLAKY</div></div>
+</div>
+<p>작성일: 2026-10-06 (KST). 자동 검증 프로그램을 만들기 전 사전 조사 노트다. 명령 예시는 문서 기준으로 정리했으며 직접 실행해 검증하지는 않았다. 옵션은 Xcode 버전에 따라 다를 수 있다.</p>
+<blockquote>
+<p>맥용 테스트 프로그램으로 아이폰 앱을 자동 테스트하는 것은 가능하다. <code>xcodebuild</code>와 <code>devicectl</code>이 adb 역할을 하고, UI 조작은 아이폰 안에서 도는 XCUITest 러너가 맡는다. 요소 탐색은 화면 인식이 아니라 접근성 ID 기반이 기본이며, 아이폰의 백그라운드 제약은 테스트 러너에는 적용되지 않는다.</p>
+</blockquote>
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">사전 준비</a></li>
+    <li><a href="#s2">사용하게 되는 기술</a></li>
+    <li><a href="#s3">xcodebuild</a></li>
+    <li><a href="#s4">devicectl</a></li>
+    <li><a href="#s5">adb 대응 관계</a></li>
+    <li><a href="#s6">맥용 테스트 프로그램의 구조</a></li>
+    <li><a href="#s7">요소 탐색: 화면 인식이 아니라 ID 기반</a></li>
+    <li><a href="#s8">포그라운드, 유선, 백그라운드 제약</a></li>
+    <li><a href="#s9">자동 검증 설계: 조작과 판정을 분리한다</a></li>
+    <li><a href="#s10">만들기 전에 직접 확인할 것</a></li>
+    <li><a href="#s11">정리</a></li>
+    <li><a href="#s12">출처</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. 사전 준비</h2>
+<ol>
+<li>아이폰을 케이블로 연결하고 "이 컴퓨터를 신뢰" 승인.</li>
+<li>설정 &gt; 개인정보 보호 및 보안 &gt; 개발자 모드 켜기(재부팅 필요). 안드로이드의 USB 디버깅에 해당한다.</li>
+<li>Xcode에서 Apple 계정으로 서명 팀 설정. 무료 계정도 가능하지만 앱이 7일 뒤 만료된다.</li>
+<li>이후에는 같은 네트워크에서 무선 연결도 가능하다.</li>
+</ol>
+<h2 id="s2">2. 사용하게 되는 기술</h2>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>계층</th>
+<th>기술</th>
+<th>역할</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>빌드·테스트 실행</td>
+<td><code>xcodebuild</code></td>
+<td>빌드, 서명, 기기 설치, 테스트 실행, 결과 번들 생성</td>
+</tr>
+<tr>
+<td>기기 관리</td>
+<td><code>devicectl</code></td>
+<td>기기 목록, 앱 설치·삭제·실행, 파일 복사, 프로세스 조회</td>
+</tr>
+<tr>
+<td>UI 조작</td>
+<td>XCUITest (XCTest 프레임워크)</td>
+<td>탭·입력·스와이프, 요소 조회, 스크린샷</td>
+</tr>
+<tr>
+<td>결과 파싱</td>
+<td><code>xcresulttool</code></td>
+<td>결과 번들에서 케이스별 성공·실패, 첨부물 추출</td>
+</tr>
+<tr>
+<td>실시간 원격 조작 (선택)</td>
+<td>WebDriverAgent / Appium</td>
+<td>맥에서 HTTP로 탭·조회 명령 전송</td>
+</tr>
+<tr>
+<td>보조 (선택)</td>
+<td>pymobiledevice3</td>
+<td>시스템 로그, 스크린샷, 포트 포워딩, 크래시 리포트</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="s3">3. xcodebuild</h2>
+<div class="code">
+  <div class="code-head"><span class="fname">terminal</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-bash"># 빌드 후 실기기에서 테스트 실행
+xcodebuild test \
+  -scheme MyApp \
+  -destination 'platform=iOS,id=&lt;UDID&gt;' \
+  -allowProvisioningUpdates \
+  -resultBundlePath out.xcresult
+
+# 결과를 JSON으로 추출
+xcrun xcresulttool get test-results summary --path out.xcresult</code></pre>
+</div>
+<ul>
+<li><strong>주요 동작</strong>: <code>build</code>, <code>test</code>, <code>build-for-testing</code>(빌드만), <code>test-without-building</code>(빌드 없이 반복 실행).</li>
+<li><strong>기기 지정</strong>: <code>-destination 'platform=iOS,id=&lt;UDID&gt;'</code>. 사용 가능한 대상은 <code>xcodebuild -showdestinations -scheme &lt;스킴&gt;</code>으로 확인한다.</li>
+<li><strong>서명 자동 처리</strong>: <code>-allowProvisioningUpdates</code>.</li>
+<li><strong>케이스 선택</strong>: <code>-only-testing:타깃/클래스/메서드</code>, <code>-skip-testing:</code>, <code>-testPlan</code>.</li>
+<li><strong>불안정 테스트 대응</strong>: <code>-retry-tests-on-failure</code>, <code>-test-iterations &lt;N&gt;</code>.</li>
+<li><strong>판정</strong>: 종료 코드가 0이면 전체 통과다. 케이스별 결과와 실패 시점 스크린샷은 xcresult 번들에 들어 있다.</li>
+</ul>
+<h2 id="s4">4. devicectl</h2>
+<p>Xcode 15에서 도입됐고 iOS 17 이상 기기를 지원한다.</p>
+<div class="code">
+  <div class="code-head"><span class="fname">terminal</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-bash">xcrun devicectl list devices
+xcrun devicectl device install app --device &lt;ID&gt; MyApp.app
+xcrun devicectl device process launch --device &lt;ID&gt; --console &lt;번들ID&gt;
+xcrun devicectl device copy from --device &lt;ID&gt; \
+  --domain-type appDataContainer --domain-identifier &lt;번들ID&gt; \
+  --source Documents/result.json --destination ./result.json</code></pre>
+</div>
+<ul>
+<li><strong>기기</strong>: <code>list devices</code>, <code>device info details</code>, <code>device info lockState</code>, <code>device reboot</code>, <code>manage pair</code>.</li>
+<li><strong>앱</strong>: <code>device install app</code>, <code>device uninstall app</code>, <code>device info apps</code>.</li>
+<li><strong>프로세스</strong>: <code>device process launch</code>(<code>--console</code>로 앱 출력 확인, <code>--terminate-existing</code>으로 재시작), <code>device info processes</code>.</li>
+<li><strong>파일</strong>: <code>device copy from/to</code>, <code>device info files</code>. 앱 컨테이너는 <code>--domain-type appDataContainer --domain-identifier &lt;번들ID&gt;</code>로 지정한다.</li>
+<li><strong>자동화용 출력</strong>: 모든 명령에 <code>--json-output &lt;파일&gt;</code>을 붙이면 파싱하기 쉽다.</li>
+<li><strong>한계</strong>: 스크린샷, UI 입력, 시스템 전체 로그 스트림이 없다. 폴더 단위 재귀 복사도 안 된다.</li>
+</ul>
+<h2 id="s5">5. adb 대응 관계</h2>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>하려는 일</th>
+<th>Android</th>
+<th>iOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>디버깅 허용</td>
+<td>USB 디버깅</td>
+<td>개발자 모드 + 컴퓨터 신뢰</td>
+</tr>
+<tr>
+<td>기기 목록</td>
+<td><code>adb devices</code></td>
+<td><code>devicectl list devices</code></td>
+</tr>
+<tr>
+<td>기기 정보</td>
+<td><code>adb shell getprop</code></td>
+<td><code>devicectl device info details</code></td>
+</tr>
+<tr>
+<td>설치 / 삭제</td>
+<td><code>adb install</code> / <code>uninstall</code></td>
+<td><code>devicectl device install app</code> / <code>uninstall app</code></td>
+</tr>
+<tr>
+<td>설치된 앱 목록</td>
+<td><code>pm list packages</code></td>
+<td><code>devicectl device info apps</code></td>
+</tr>
+<tr>
+<td>앱 실행</td>
+<td><code>am start</code></td>
+<td><code>devicectl device process launch</code></td>
+</tr>
+<tr>
+<td>파일 복사</td>
+<td><code>adb pull</code> / <code>push</code></td>
+<td><code>devicectl device copy from</code> / <code>to</code></td>
+</tr>
+<tr>
+<td>로그</td>
+<td><code>adb logcat</code></td>
+<td><code>--console</code>(앱 출력), Console 앱, <code>pymobiledevice3 syslog live</code></td>
+</tr>
+<tr>
+<td>테스트 실행</td>
+<td><code>am instrument</code></td>
+<td><code>xcodebuild test</code></td>
+</tr>
+<tr>
+<td>UI 트리 덤프</td>
+<td><code>uiautomator dump</code></td>
+<td>XCUITest의 <code>debugDescription</code>, WDA의 <code>/source</code></td>
+</tr>
+<tr>
+<td>탭·입력</td>
+<td><code>adb shell input</code></td>
+<td>XCUITest / WDA만 가능</td>
+</tr>
+<tr>
+<td>스크린샷</td>
+<td><code>adb shell screencap</code></td>
+<td>XCUITest의 <code>screenshot()</code>, <code>pymobiledevice3 developer dvt screenshot</code></td>
+</tr>
+<tr>
+<td>포트 포워딩</td>
+<td><code>adb forward</code></td>
+<td><code>pymobiledevice3 usbmux forward</code>, <code>iproxy</code></td>
+</tr>
+<tr>
+<td>무선 연결</td>
+<td><code>adb tcpip</code></td>
+<td>Xcode의 "Connect via network"</td>
+</tr>
+<tr>
+<td>재부팅</td>
+<td><code>adb reboot</code></td>
+<td><code>devicectl device reboot</code></td>
+</tr>
+<tr>
+<td>셸</td>
+<td><code>adb shell</code></td>
+<td>없음</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3>안드로이드와 다른 점</h3>
+<ul>
+<li>셸이 없다. 기기 안에서 임의 명령을 실행할 수 없다.</li>
+<li>UI 조작은 테스트 러너를 거쳐야 한다. <code>adb shell input tap</code> 같은 직접 명령이 없다.</li>
+<li>서명이 필수다. 서명되지 않은 앱은 실기기에 설치되지 않는다.</li>
+</ul>
+<h2 id="s6">6. 맥용 테스트 프로그램의 구조</h2>
+<p>UI 조작 명령은 아이폰 안에서 도는 테스트 러너 앱이 실행해야 하므로 "맥의 지휘 프로그램 + 아이폰의 러너" 구조가 된다.</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>방식</th>
+<th>동작</th>
+<th>적합한 경우</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A. xcodebuild 지휘형</td>
+<td>테스트를 Swift XCUITest로 작성하고, 맥 프로그램이 <code>xcodebuild test</code>를 호출해 xcresult를 읽는다</td>
+<td>정해진 시나리오의 회귀 테스트. 가장 단순하고 안정적</td>
+</tr>
+<tr>
+<td>B. 실시간 조작형</td>
+<td>러너가 아이폰에서 HTTP 서버를 띄우고(WebDriverAgent), 맥이 포트 포워딩으로 명령을 보낸다</td>
+<td>맥 쪽에서 단계별로 판단하며 조작해야 하는 탐색형 테스트</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>소스 없는 앱도 <code>XCUIApplication(bundleIdentifier:)</code>로 대상으로 삼을 수 있다. 서명이 필요한 것은 러너 쪽이다.</li>
+<li>Appium 문서에 따르면 iOS 27부터는 <code>devicectl</code>로 WDA를 띄우는 방식이 막혀 <code>xcodebuild</code>나 RemoteXPC 터널로 시작해야 한다.</li>
+</ul>
+<h2 id="s7">7. 요소 탐색: 화면 인식이 아니라 ID 기반</h2>
+<p>XCUITest는 접근성 요소 트리를 조회하며 화면 픽셀을 분석하지 않는다.</p>
+<div class="code">
+  <div class="code-head"><span class="fname">TransferTests.swift</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-swift">let app = XCUIApplication()
+app.launch()
+
+let send = app.buttons[&quot;sendButton&quot;]   // accessibilityIdentifier로 조회
+XCTAssertTrue(send.waitForExistence(timeout: 10))
+send.tap()
+
+XCTAssertTrue(app.staticTexts[&quot;transferDone&quot;].waitForExistence(timeout: 30))</code></pre>
+</div>
+<ul>
+<li>앱 코드에서 <code>accessibilityIdentifier</code>를 달아두는 것이 가장 안정적이다. 화면에 보이지 않는 값이라 문구나 언어가 바뀌어도 깨지지 않는다.</li>
+<li>요소 종류, 표시 텍스트, 조건식으로도 찾을 수 있다.</li>
+<li><code>waitForExistence(timeout:)</code>로 요소가 나타날 때까지 기다린다.</li>
+<li>게임, 캔버스, 접근성 정보가 없는 커스텀 뷰는 스크린샷과 좌표 탭으로 처리해야 한다.</li>
+</ul>
+<h2 id="s8">8. 포그라운드, 유선, 백그라운드 제약</h2>
+<ul>
+<li><strong>대상 앱은 포그라운드여야 조작된다.</strong> <code>app.launch()</code>나 <code>app.activate()</code>가 앱을 앞으로 가져온다.</li>
+<li><strong>러너는 백그라운드 제약을 받지 않는다.</strong> 테스트 세션 동안 시스템 테스트 데몬의 지원을 받아 살아 있고, 대상 앱이 앞에 있는 동안 뒤에서 이벤트를 주입한다.</li>
+<li><strong>백그라운드 전환도 테스트된다.</strong> <code>XCUIDevice.shared.press(.home)</code>으로 홈으로 보내고 <code>app.state</code>로 <code>.runningBackground</code> 여부를 확인한 뒤 다시 <code>activate()</code>할 수 있다. 설정 앱이나 시스템 권한 팝업도 번들 ID로 조작된다.</li>
+<li><strong>유선은 최초 페어링에만 필수다.</strong> 무선도 되지만 자동 테스트에는 유선이 안정적이다.</li>
+<li><strong>기기는 잠금 해제 상태여야 한다.</strong> 화면이 꺼지면 UI 테스트가 실패하므로 자동 잠금을 끈다.</li>
+<li><strong>앱 내부 상태는 직접 읽을 수 없다.</strong> 러너와 대상 앱은 별도 프로세스다. 실행 인자, 로그, 컨테이너 파일로 확인한다.</li>
+<li>대상 앱이 백그라운드에서 얼마나 동작하는지는 iOS 규칙을 그대로 따른다. 실제 사용 조건과 같으므로 그 자체가 테스트 대상이다.</li>
+</ul>
+<h2 id="s9">9. 자동 검증 설계: 조작과 판정을 분리한다</h2>
+<p>테스트를 실행하는 쪽(스크립트든 AI 에이전트든)이 "성공했다"고 보고하는 것을 판정 기준으로 쓰지 않는다. 판정은 별도 모듈이 결정적 조건으로 내린다.</p>
+<h3>구조</h3>
+<ol>
+<li><strong>테스트 케이스 정의</strong>: Given/When/Then 형식. Then은 기계가 확인할 수 있는 조건으로 적는다(예: 식별자 <code>transferDone</code> 요소가 30초 안에 나타남).</li>
+<li><strong>기기 제어 계층</strong>: XCUITest 또는 WebDriverAgent를 감싸 <code>tap</code>, <code>type</code>, <code>swipe</code>, <code>launch</code>, <code>waitFor</code> 같은 동작으로 노출한다.</li>
+<li><strong>관찰</strong>: 접근성 요소 트리가 기본, 스크린샷은 보조.</li>
+<li><strong>판정기(오라클)</strong>: 조작이 끝난 뒤 독립적으로 조건을 검사한다.</li>
+<li><strong>리포트</strong>: 단계별 스크린샷, 요소 트리, 로그, 영상을 남기고 JUnit XML로 출력하면 CI에 바로 붙는다.</li>
+</ol>
+<h3>판정 방법의 우선순위</h3>
+<ul>
+<li><strong>1순위, 결정적 검증</strong>: UI 요소의 존재·값, 앱 로그, 앱 컨테이너의 파일·DB, 네트워크 요청(목 서버나 프록시), 서버 상태.</li>
+<li><strong>2순위, 스냅샷 비교</strong>: 기준 스크린샷과의 차이로 레이아웃 깨짐을 잡는다.</li>
+<li><strong>3순위, 시각 판정</strong>: 위 방법으로 안 되는 것에만 쓴다. 조작한 주체와 분리하고 판정 근거를 함께 남긴다.</li>
+</ul>
+<h3>결과 구분</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>결과</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PASS / FAIL</td>
+<td>앱이 기대대로 동작했는지 여부</td>
+</tr>
+<tr>
+<td>BLOCKED</td>
+<td>화면을 못 찾았거나 환경 문제로 검증까지 못 간 경우</td>
+</tr>
+<tr>
+<td>FLAKY</td>
+<td>재실행 시 결과가 바뀌는 경우. 실패 케이스는 2~3회 자동 재실행해 분류</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>BLOCKED를 FAIL과 섞으면 앱 버그와 테스트 도구의 실수를 구별할 수 없다.</p>
+<h3>안정성을 위한 설계</h3>
+<ul>
+<li><strong>매 케이스 초기화</strong>: 앱 재설치, 고정된 로케일·시간, 목 서버, 애니메이션 끄기로 시작 상태를 동일하게 맞춘다.</li>
+<li><strong>기록 후 재생</strong>: 한 번 성공한 조작 경로는 스크립트로 저장해 그대로 재생하고, 재생이 깨질 때만 경로를 다시 찾는다.</li>
+<li><strong>한도 설정</strong>: 케이스당 최대 단계 수와 시간 제한을 둔다.</li>
+</ul>
+<h3>기기 간 연동 기능을 테스트한다면</h3>
+<ul>
+<li>시뮬레이터는 Bluetooth를 지원하지 않으므로 실기기가 필요하다.</li>
+<li>판정을 양쪽에서 한다. 파일 전송은 iOS 화면의 완료 표시만이 아니라 상대 기기에 도착한 파일의 해시까지 비교한다.</li>
+<li>연결 끊김, 권한 거부 같은 실패 상황은 테스트용 실행 인자나 훅으로 주입한다.</li>
+</ul>
+<h2 id="s10">10. 만들기 전에 직접 확인할 것</h2>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>확인 방법</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>현재 Xcode에서 <code>devicectl</code> 옵션 이름</td>
+<td><code>xcrun devicectl help</code>, 하위 명령별 <code>--help</code></td>
+</tr>
+<tr>
+<td>xcresult JSON 구조</td>
+<td>실패 케이스를 하나 만들어 <code>xcresulttool</code> 출력 확인</td>
+</tr>
+<tr>
+<td>무료 계정으로 UI 테스트 러너 서명 가능 여부</td>
+<td>실기기에서 <code>xcodebuild test</code> 1회 실행</td>
+</tr>
+<tr>
+<td>무선 연결 안정성</td>
+<td>같은 테스트를 유선·무선으로 반복 실행해 실패율 비교</td>
+</tr>
+<tr>
+<td>iOS 27에서 WebDriverAgent 기동 방식</td>
+<td>Appium XCUITest 드라이버 최신 문서 확인</td>
+</tr>
+<tr>
+<td>앱 컨테이너 파일 복사 범위</td>
+<td><code>device info files</code>로 보이는 경로 확인</td>
+</tr>
+<tr>
+<td>백그라운드 전환 후 <code>app.state</code> 값</td>
+<td>홈 버튼 전환 테스트 케이스 작성</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="s11">정리</h2>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>질문</th>
+<th>결론</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>iOS의 adb</td>
+<td><code>xcodebuild</code> + <code>devicectl</code> + XCUITest</td>
+</tr>
+<tr>
+<td>맥용 프로그램으로 테스트 가능한가</td>
+<td>가능. 맥의 지휘 프로그램 + 아이폰의 러너 구조</td>
+</tr>
+<tr>
+<td>요소 탐색 방식</td>
+<td>접근성 ID 기반, 화면 인식은 보조</td>
+</tr>
+<tr>
+<td>포그라운드 필요 여부</td>
+<td>대상 앱은 포그라운드, 러너는 제약 없음</td>
+</tr>
+<tr>
+<td>유선 필요 여부</td>
+<td>최초 페어링만 필수, 자동화는 유선 권장</td>
+</tr>
+<tr>
+<td>판정 원칙</td>
+<td>조작과 판정 분리, PASS/FAIL/BLOCKED/FLAKY 구분</td>
+</tr>
+<tr>
+<td>시작 순서</td>
+<td>방식 A로 xcresult 판정까지 만든 뒤 방식 B 추가</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="s12">출처</h2>
+<ul>
+<li><a href="https://developer.apple.com/documentation/xcode/xcode-command-line-tool-reference">Xcode command-line tool reference — Apple</a></li>
+<li><a href="https://zenn.dev/scenee/articles/df3a6d9fb18465">CoreDevice: devicectl 개요와 사용 예 — Zenn</a></li>
+<li><a href="https://appium.github.io/appium-xcuitest-driver/latest/guides/run-preinstalled-wda/">Run Preinstalled WDA — Appium XCUITest Driver</a></li>
+<li><a href="https://pypi.org/project/pymobiledevice3/">pymobiledevice3 — PyPI</a></li>
+<li><a href="https://developer.apple.com/forums/thread/688200">XCUITest Failure: activate application (Running Background) — Apple Developer Forums</a></li>
+<li><a href="https://useyourloaf.com/blog/ui-testing-quick-guide/">UI Testing Quick Guide — Use Your Loaf</a></li>
+</ul>
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
