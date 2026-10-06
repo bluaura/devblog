@@ -18,6 +18,19 @@
   },
   "posts": [
     {
+      "slug": "2026-10-06-local-llm-agent-ios-device-testing",
+      "title": "256GB 맥 로컬 LLM으로 에이전트 만들기: 모델 선택부터 iOS 실기기 자동 테스트까지",
+      "date": "2026-10-06",
+      "tags": [
+        "AI",
+        "iOS",
+        "튜토리얼",
+        "LLM",
+        "XCUITest"
+      ],
+      "summary": "256GB 맥의 로컬 최고 모델은 종합 지수 41.8로 클라우드 1위(58.9)의 약 70%. 에이전트는 툴 호출 신뢰성이 핵심이고, iOS 실기기 테스트는 xcodebuild·devicectl·XCUITest로 ID 기반 자동화가 가능하다. adb 대응표 포함"
+    },
+    {
       "slug": "2026-10-05-ai-agent-shift-developer-work",
       "title": "실리콘밸리의 AI 에이전트 전환과 개발자 업무의 변화 (2026년 10월 5일 기준)",
       "date": "2026-10-05",

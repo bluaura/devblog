@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>256GB 맥 로컬 LLM으로 에이전트 만들기: 모델 선택부터 iOS 실기기 자동 테스트까지 · 블루오라 개발노트</title>
+<meta name="description" content="256GB 맥의 로컬 최고 모델은 종합 지수 41.8로 클라우드 1위(58.9)의 약 70%. 에이전트는 툴 호출 신뢰성이 핵심이고, iOS 실기기 테스트는 xcodebuild·devicectl·XCUITest로 ID 기반 자동화가 가능하다. adb 대응표 포함">
+<meta property="og:type" content="article">
+<meta property="og:title" content="256GB 맥 로컬 LLM으로 에이전트 만들기: 모델 선택부터 iOS 실기기 자동 테스트까지">
+<meta property="og:description" content="256GB 맥의 로컬 최고 모델은 종합 지수 41.8로 클라우드 1위(58.9)의 약 70%. 에이전트는 툴 호출 신뢰성이 핵심이고, iOS 실기기 테스트는 xcodebuild·devicectl·XCUITest로 ID 기반 자동화가 가능하다. adb 대응표 포함">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-06-local-llm-agent-ios-device-testing.html">
+<meta property="article:published_time" content="2026-10-06">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-06-local-llm-agent-ios-device-testing.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>256GB 맥 로컬 LLM으로 에이전트 만들기: 모델 선택부터 iOS 실기기 자동 테스트까지</h1>
+    <p class="sub"><span class="tag">AI</span><span class="tag">iOS</span><span class="tag">튜토리얼</span><span class="tag">LLM</span><span class="tag">XCUITest</span> &nbsp;2026-10-06</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">256GB 로컬 최고 (종합 지수)</div><div class="value">41.8</div><div class="delta">클라우드 1위 58.9</div></div>
+  <div class="stat"><div class="label">Flash-Next 속도 (M5 Ultra)</div><div class="value">84~108 tok/s</div><div class="delta">4bit 실측</div></div>
+  <div class="stat"><div class="label">장기 화면 조작 (OSWorld 2.0)</div><div class="value">19.4%</div><div class="delta">클라우드 72.6%</div></div>
+  <div class="stat"><div class="label">20단계 작업 성공률</div><div class="value">36% / 82%</div><div class="delta">단계당 95% / 99%</div></div>
+</div>
+<p>작성일: 2026-10-06 (KST). 모델 순위와 도구 옵션은 작성 시점 기준이며 빠르게 바뀐다.</p>
+<blockquote>
+<p>256GB 맥에서 돌릴 수 있는 최상위 로컬 모델은 최고 클라우드 모델의 약 70% 수준(종합 지수 기준)이다. 에이전트 용도에서는 종합 지능보다 툴 호출 신뢰성이 더 중요하고, 화면 조작은 짧은 작업에서만 클라우드에 근접한다. iOS 실기기 자동 테스트는 <code>xcodebuild</code>, <code>devicectl</code>, XCUITest 조합으로 가능하며, 화면 인식이 아니라 요소 ID 기반이 기본이다.</p>
+</blockquote>
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">256GB 맥에서 쓸 수 있는 로컬 LLM</a></li>
+    <li><a href="#s2">로컬 모델의 현재 성능</a></li>
+    <li><a href="#s3">에이전트를 만들 때 중요한 LLM 능력 (코딩 제외)</a></li>
+    <li><a href="#s4">화면 이해(컴퓨터 유즈)에 강한 로컬 모델</a></li>
+    <li><a href="#s5">iOS 자동 테스트 설계: 조작은 LLM, 판정은 코드</a></li>
+    <li><a href="#s6">맥에 연결한 아이폰에서 빌드·실행·테스트하기</a></li>
+    <li><a href="#s7">맥용 테스트 프로그램으로 아이폰 앱을 테스트할 수 있는가</a></li>
+    <li><a href="#s8">정리</a></li>
+    <li><a href="#s9">출처</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">1. 256GB 맥에서 쓸 수 있는 로컬 LLM</h2>
+<p>256GB 중 모델에 쓸 수 있는 메모리는 약 218GB다. 오픈웨이트 최상위권 모델은 여기에 들어가지 않는다.</p>
+<h3>256GB에 안 들어가는 모델</h3>
+<p>GLM-5.3(753B), DeepSeek V4 Pro(1.6T), Kimi K3(2.8T), MiMo-V2.6-Pro(1.02T), Hunyuan Hy4는 모두 300GB 이상이 필요하다. DeepSeek V4.1 Flash도 512GB급 후보로 분류된다.</p>
+<h3>256GB에서 돌릴 수 있는 선택지</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>용도</th>
+<th>모델</th>
+<th>메모리</th>
+<th>속도 (M5 Ultra)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>에이전트·종합</td>
+<td>Qwen3.8-Flash-Next (4bit)</td>
+<td>약 155~179GB (256K 컨텍스트 피크)</td>
+<td>약 84~108 tok/s (실측)</td>
+</tr>
+<tr>
+<td>상위권 모델의 경량판</td>
+<td>GLM-5.3-Flash (4/8bit 혼합)</td>
+<td>여유 있게 적재</td>
+<td>약 41 tok/s (실측)</td>
+</tr>
+<tr>
+<td>가성비</td>
+<td>Qwen3.8 27B (4bit)</td>
+<td>약 17GB</td>
+<td>약 46 tok/s 이상 (실측)</td>
+</tr>
+<tr>
+<td>툴 호출 안정성 (구세대)</td>
+<td>gpt-oss 120B</td>
+<td>약 65~120GB</td>
+<td>약 34~88 tok/s (추정)</td>
+</tr>
+<tr>
+<td>비전 포함 (구세대)</td>
+<td>Qwen3-VL 235B (Q4)</td>
+<td>약 130GB</td>
+<td>약 30~44 tok/s (추정)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>Qwen3.8-Flash-Next는 MacStories의 M5 Ultra 256GB 실측 리뷰에서 기본 모델로 채택됐다. 프롬프트 처리 속도는 약 2,887 tok/s(16K 컨텍스트)다.</li>
+<li>같은 모델을 6/8bit로 올리면 메모리 초과로 프로세스가 종료된 사례가 있다. 4bit가 현실적 상한이다.</li>
+<li>8월 자료의 속도는 M3 Ultra 실측을 대역폭 비율로 환산한 추정치이고, 9월 말 자료만 M5 Ultra 실측이다.</li>
+</ul>
+<h2 id="s2">2. 로컬 모델의 현재 성능</h2>
+<h3>종합 지능 (Artificial Analysis Intelligence Index, 2026-10-02 집계)</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>구분</th>
+<th>모델</th>
+<th>점수</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>클라우드 1위</td>
+<td>GPT-5.6 Sol</td>
+<td>58.9</td>
+</tr>
+<tr>
+<td>클라우드</td>
+<td>Claude Opus 5.5</td>
+<td>57.6</td>
+</tr>
+<tr>
+<td>오픈웨이트 1위 (256GB 불가)</td>
+<td>DeepSeek V4 Pro</td>
+<td>53.2</td>
+</tr>
+<tr>
+<td>오픈웨이트 (256GB 불가)</td>
+<td>GLM-5.3</td>
+<td>44.8</td>
+</tr>
+<tr>
+<td>256GB 가능</td>
+<td>GLM-5.3-Flash</td>
+<td>41.8</td>
+</tr>
+<tr>
+<td>256GB 가능</td>
+<td>Qwen3.8-Flash-Next</td>
+<td>39.8</td>
+</tr>
+<tr>
+<td>256GB 가능</td>
+<td>Qwen3.8 27B</td>
+<td>33.7</td>
+</tr>
+<tr>
+<td>256GB 가능</td>
+<td>Qwen3.5 122B</td>
+<td>15.6</td>
+</tr>
+<tr>
+<td>256GB 가능</td>
+<td>Gemma 4 31B</td>
+<td>14.7</td>
+</tr>
+<tr>
+<td>256GB 가능</td>
+<td>gpt-oss 120B</td>
+<td>11.6</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3>코딩·에이전트 벤치마크 (제조사 발표치 중심)</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>벤치마크</th>
+<th>GLM-5.3-Flash</th>
+<th>Qwen3.8-Flash-Next</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DeepSWE v1.1</td>
+<td>63.4</td>
+<td>58.7</td>
+</tr>
+<tr>
+<td>Toolathlon Verified</td>
+<td>78.4</td>
+<td>73.5</td>
+</tr>
+<tr>
+<td>NL2Repo</td>
+<td>56.3</td>
+<td>48.1</td>
+</tr>
+<tr>
+<td>SWE-bench Pro</td>
+<td>미공개</td>
+<td>62.5</td>
+</tr>
+<tr>
+<td>Terminal Bench 2.1</td>
+<td>84.3</td>
+<td>미공개</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3>해석</h3>
+<ul>
+<li>세대 차이가 크다. 8월 말 출시된 Qwen3.8·GLM-5.3 계열은 40 안팎인데, 이전 세대(gpt-oss 120B, Qwen3.5, Gemma 4)는 11~16점이다.</li>
+<li>품질은 GLM-5.3-Flash, 속도는 Flash-Next가 앞선다.</li>
+<li>Qwen3.8 27B는 4bit 약 17GB로 33.7점이라 64GB 맥에서도 돌아간다.</li>
+<li>Epoch AI는 오픈웨이트가 최고 클로즈드 모델을 평균 4개월가량 뒤따른다고 분석한다.</li>
+</ul>
+<h3>주의할 점</h3>
+<ul>
+<li>위 점수는 원본 정밀도 기준이다. 로컬 4bit 양자화에서는 품질 저하 보고가 있다.</li>
+<li>Flash-Next는 Qwen이 의도적으로 덜 학습시킨 연구용 프리뷰로 내놓은 모델이며, 출력이 장황하다.</li>
+<li>지수는 버전에 따라 척도가 다르다. 8월 출시 당시 리뷰는 두 모델을 56~57점으로 적었으므로 같은 표 안에서의 상대 비교로만 봐야 한다.</li>
+</ul>
+<h2 id="s3">3. 에이전트를 만들 때 중요한 LLM 능력 (코딩 제외)</h2>
+<p>가장 중요한 것은 툴 호출 신뢰성이다. 에이전트는 여러 단계를 연속 실행하므로 단계별 오류가 곱으로 누적된다. 단계당 성공률 95%면 20단계 작업 성공률은 약 36%이고, 99%면 약 82%다.</p>
+<ol>
+<li><strong>툴 호출 신뢰성</strong>: 올바른 툴 선택, 스키마에 맞는 인자, 깨지지 않는 JSON. 양자화하면 이 부분이 먼저 무너지는 경우가 많다.</li>
+<li><strong>지시 준수와 장기 작업 안정성</strong>: 수십 턴이 지나도 시스템 프롬프트의 규칙을 지키는 능력. 파일 삭제나 메일 전송처럼 되돌릴 수 없는 동작과 직결된다.</li>
+<li><strong>오류 복구와 멈출 줄 아는 판단</strong>: 툴 실패 시 같은 호출을 반복하지 않고, 불확실할 때 지어내지 않고 묻는 능력.</li>
+<li><strong>긴 컨텍스트 활용</strong>: 쌓이는 툴 결과 속에서 필요한 정보를 정확히 찾는 능력. 맥에서는 프롬프트 처리 속도도 같이 본다.</li>
+<li><strong>화면 이해</strong>: 앱을 직접 조작한다면 필수. AppleScript, 단축어, MCP, CLI 중심 설계면 우선순위가 내려간다.</li>
+<li><strong>속도</strong>: 한 작업에 호출이 수십 번이라, 충분히 똑똑하고 빠른 모델이 유리한 경우가 많다.</li>
+</ol>
+<p>공개 벤치마크는 원본 정밀도 기준이므로, 실제 쓸 툴 10~20개로 자체 테스트 세트를 만들어 양자화 모델의 호출 성공률을 재는 것이 가장 정확하다.</p>
+<h2 id="s4">4. 화면 이해(컴퓨터 유즈)에 강한 로컬 모델</h2>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>모델</th>
+<th>크기</th>
+<th>화면 조작 성적</th>
+<th>비고</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qwen3.8 27B</td>
+<td>27B (4bit 약 17GB)</td>
+<td>BenchLM 컴퓨터 유즈 종합 78.9 (전체 4위)</td>
+<td>범용 모델, 계획과 툴 호출까지 한 모델로 가능</td>
+</tr>
+<tr>
+<td>Holo 3.1</td>
+<td>35B-A3B</td>
+<td>OSWorld-Verified 82.56% (제작사 자체 측정)</td>
+<td>컴퓨터 유즈 전용, Apache 2.0</td>
+</tr>
+<tr>
+<td>Muse Glimmer 30B</td>
+<td>30B</td>
+<td>ScreenSpot-Pro 75.4, 종합 69.7</td>
+<td>화면 요소 위치 찾기에 강함</td>
+</tr>
+<tr>
+<td>Qwen3.8-Flash-Next</td>
+<td>180B (256GB 필요)</td>
+<td>AndroidWorld 84.5, OSWorld 2.0 19.4%</td>
+<td>빠르지만 긴 작업은 약함</td>
+</tr>
+<tr>
+<td>MAI-UI</td>
+<td>8B / 2B</td>
+<td>ScreenSpot-Pro 65.7 (8B)</td>
+<td>가벼운 좌표 찾기 전용</td>
+</tr>
+<tr>
+<td>UI-TARS</td>
+<td>7B / 72B</td>
+<td>OSWorld 27.5% (7B)</td>
+<td>맥용 데스크톱 앱 있음, 성적은 구세대</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3>클라우드와의 격차</h3>
+<ul>
+<li>짧은 작업: OSWorld-Verified 기준 Claude Opus 5가 83.4%, Gemini 3.7 Flash가 83.0%이고 Holo 3.1이 82.56%로 비슷하다.</li>
+<li>긴 워크플로: OSWorld 2.0(108개 장기 작업)에서는 GPT-6 Astra 72.6%, Claude Opus 5 70.6%인데 오픈웨이트 최고가 19.4%다.</li>
+</ul>
+<h3>맥 에이전트 설계 시 참고</h3>
+<ul>
+<li>화면만 보지 말고 손쉬운 사용(Accessibility) API의 요소 트리를 같이 쓴다. 좌표 추정 오류가 크게 줄어든다.</li>
+<li>클릭보다 명령을 우선한다. Qwen-UI-Agent 논문에서 가장 어려운 데스크톱 벤치마크 동작의 55.1%가 타이핑 명령이었다.</li>
+<li>긴 작업은 5~10단계 단위로 쪼개고 단계마다 결과를 검증한다.</li>
+<li>계획은 큰 모델, 좌표 찾기는 작은 전용 모델로 나누는 2모델 구성도 가능하다.</li>
+</ul>
+<p>벤치마크는 대부분 Ubuntu·Android·웹 환경 기준이라 macOS 성능은 직접 측정된 것이 아니다. 집계 사이트마다 오픈웨이트 표기가 엇갈리는 모델도 있으므로 라이선스는 받기 전에 확인한다.</p>
+<h2 id="s5">5. iOS 자동 테스트 설계: 조작은 LLM, 판정은 코드</h2>
+<p>LLM이 "성공했다"고 스스로 보고하는 것을 판정 기준으로 쓰면 신뢰할 수 없다. 조작과 판정을 분리한다.</p>
+<h3>구조</h3>
+<ol>
+<li><strong>테스트 케이스 정의</strong>: Given/When/Then 형식. Then은 기계가 확인할 수 있는 조건으로 적는다.</li>
+<li><strong>기기 제어 계층</strong>: XCUITest 또는 WebDriverAgent를 감싸 <code>tap</code>, <code>type</code>, <code>swipe</code>, <code>launch</code>, <code>waitFor</code> 같은 툴로 노출한다.</li>
+<li><strong>관찰</strong>: 접근성 요소 트리가 기본, 스크린샷은 보조.</li>
+<li><strong>판정기(오라클)</strong>: 에이전트와 별도 모듈. 에이전트가 끝났다고 한 뒤 독립적으로 조건을 검사한다.</li>
+<li><strong>리포트</strong>: 단계별 스크린샷, 요소 트리, 로그, 영상을 남기고 JUnit XML로 출력한다.</li>
+</ol>
+<h3>판정 방법의 우선순위</h3>
+<ul>
+<li>1순위, 결정적 검증: UI 요소의 존재·값, 앱 로그, 앱 컨테이너의 파일·DB, 네트워크 요청, 서버 상태.</li>
+<li>2순위, 스냅샷 비교: 기준 스크린샷과의 차이.</li>
+<li>3순위, LLM 시각 판정: 위 방법으로 안 되는 것에만. 조작한 모델과 다른 호출로 분리한다.</li>
+</ul>
+<h3>결과 구분</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>결과</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PASS / FAIL</td>
+<td>앱이 기대대로 동작했는지 여부</td>
+</tr>
+<tr>
+<td>BLOCKED</td>
+<td>에이전트가 화면을 못 찾았거나 환경 문제로 검증까지 못 간 경우</td>
+</tr>
+<tr>
+<td>FLAKY</td>
+<td>재실행 시 결과가 바뀌는 경우</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>BLOCKED를 FAIL과 섞으면 앱 버그와 에이전트 실수를 구별할 수 없다.</p>
+<h3>안정성을 위한 설계</h3>
+<ul>
+<li>매 케이스 초기화: 앱 재설치, 고정된 로케일·시간, 목 서버, 애니메이션 끄기.</li>
+<li>기록 후 재생: LLM이 한 번 성공한 경로는 스크립트로 저장해 LLM 없이 재생하고, 재생이 깨질 때만 LLM을 부른다.</li>
+<li>한도 설정: 케이스당 최대 단계 수와 시간 제한.</li>
+</ul>
+<h3>기기 간 연동 기능을 테스트한다면</h3>
+<ul>
+<li>시뮬레이터는 Bluetooth를 지원하지 않으므로 실기기가 필요하다.</li>
+<li>판정을 양쪽에서 한다. 파일 전송은 iOS 화면의 완료 표시만이 아니라 상대 기기에 도착한 파일의 해시까지 비교한다.</li>
+<li>연결 끊김, 권한 거부 같은 실패 상황은 테스트용 실행 인자나 훅으로 주입한다.</li>
+</ul>
+<h2 id="s6">6. 맥에 연결한 아이폰에서 빌드·실행·테스트하기</h2>
+<p>iOS에서는 Xcode에 포함된 <code>xcodebuild</code>와 <code>devicectl</code>이 adb 역할을 한다.</p>
+<h3>사전 준비</h3>
+<ol>
+<li>아이폰을 케이블로 연결하고 "이 컴퓨터를 신뢰" 승인.</li>
+<li>설정 &gt; 개인정보 보호 및 보안 &gt; 개발자 모드 켜기(재부팅 필요).</li>
+<li>Xcode에서 Apple 계정으로 서명 팀 설정. 무료 계정은 앱이 7일 뒤 만료된다.</li>
+<li>이후에는 같은 네트워크에서 무선 연결도 가능하다.</li>
+</ol>
+<h3>사용하게 되는 기술</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>계층</th>
+<th>기술</th>
+<th>역할</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>빌드·테스트 실행</td>
+<td><code>xcodebuild</code></td>
+<td>빌드, 서명, 설치, 테스트 실행, 결과 번들 생성</td>
+</tr>
+<tr>
+<td>기기 관리</td>
+<td><code>devicectl</code></td>
+<td>기기 목록, 앱 설치·삭제·실행, 파일 복사, 프로세스 조회</td>
+</tr>
+<tr>
+<td>UI 조작</td>
+<td>XCUITest</td>
+<td>탭·입력·스와이프, 요소 조회, 스크린샷</td>
+</tr>
+<tr>
+<td>결과 파싱</td>
+<td><code>xcresulttool</code></td>
+<td>케이스별 성공·실패, 첨부물 추출</td>
+</tr>
+<tr>
+<td>실시간 원격 조작 (선택)</td>
+<td>WebDriverAgent / Appium</td>
+<td>맥에서 HTTP로 명령 전송</td>
+</tr>
+<tr>
+<td>보조 (선택)</td>
+<td>pymobiledevice3</td>
+<td>시스템 로그, 스크린샷, 포트 포워딩, 크래시 리포트</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3>xcodebuild</h3>
+<div class="code">
+  <div class="code-head"><span class="fname">terminal</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-bash"># 빌드 후 실기기에서 테스트 실행
+xcodebuild test \
+  -scheme MyApp \
+  -destination 'platform=iOS,id=&lt;UDID&gt;' \
+  -allowProvisioningUpdates \
+  -resultBundlePath out.xcresult
+
+# 결과를 JSON으로 추출
+xcrun xcresulttool get test-results summary --path out.xcresult</code></pre>
+</div>
+<ul>
+<li>주요 동작: <code>build</code>, <code>test</code>, <code>build-for-testing</code>, <code>test-without-building</code>.</li>
+<li>대상 확인: <code>xcodebuild -showdestinations -scheme &lt;스킴&gt;</code>.</li>
+<li>케이스 선택: <code>-only-testing:타깃/클래스/메서드</code>, <code>-skip-testing:</code>, <code>-testPlan</code>.</li>
+<li>불안정 테스트 대응: <code>-retry-tests-on-failure</code>, <code>-test-iterations &lt;N&gt;</code>.</li>
+<li>종료 코드가 0이면 전체 통과다.</li>
+</ul>
+<h3>devicectl</h3>
+<p>Xcode 15에서 도입됐고 iOS 17 이상 기기를 지원한다.</p>
+<div class="code">
+  <div class="code-head"><span class="fname">terminal</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-bash">xcrun devicectl list devices
+xcrun devicectl device install app --device &lt;ID&gt; MyApp.app
+xcrun devicectl device process launch --device &lt;ID&gt; --console &lt;번들ID&gt;
+xcrun devicectl device copy from --device &lt;ID&gt; \
+  --domain-type appDataContainer --domain-identifier &lt;번들ID&gt; \
+  --source Documents/result.json --destination ./result.json</code></pre>
+</div>
+<ul>
+<li>기기: <code>list devices</code>, <code>device info details</code>, <code>device info lockState</code>, <code>device reboot</code>, <code>manage pair</code>.</li>
+<li>앱: <code>device install app</code>, <code>device uninstall app</code>, <code>device info apps</code>.</li>
+<li>프로세스: <code>device process launch</code>, <code>device info processes</code>.</li>
+<li>파일: <code>device copy from/to</code>, <code>device info files</code>.</li>
+<li>자동화용 출력: <code>--json-output &lt;파일&gt;</code>.</li>
+<li>한계: 스크린샷, UI 입력, 시스템 전체 로그 스트림이 없다. 폴더 단위 재귀 복사도 안 된다.</li>
+</ul>
+<p>세부 옵션은 Xcode 버전에 따라 다르므로 <code>xcrun devicectl help</code>와 <code>man xcodebuild</code>로 확인한다. 위 명령 예시는 문서 기준으로 정리한 것이며 직접 실행해 검증하지는 않았다.</p>
+<h3>adb 대응 관계</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>하려는 일</th>
+<th>Android</th>
+<th>iOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>디버깅 허용</td>
+<td>USB 디버깅</td>
+<td>개발자 모드 + 컴퓨터 신뢰</td>
+</tr>
+<tr>
+<td>기기 목록</td>
+<td><code>adb devices</code></td>
+<td><code>devicectl list devices</code></td>
+</tr>
+<tr>
+<td>기기 정보</td>
+<td><code>adb shell getprop</code></td>
+<td><code>devicectl device info details</code></td>
+</tr>
+<tr>
+<td>설치 / 삭제</td>
+<td><code>adb install</code> / <code>uninstall</code></td>
+<td><code>devicectl device install app</code> / <code>uninstall app</code></td>
+</tr>
+<tr>
+<td>설치된 앱 목록</td>
+<td><code>pm list packages</code></td>
+<td><code>devicectl device info apps</code></td>
+</tr>
+<tr>
+<td>앱 실행</td>
+<td><code>am start</code></td>
+<td><code>devicectl device process launch</code></td>
+</tr>
+<tr>
+<td>파일 복사</td>
+<td><code>adb pull</code> / <code>push</code></td>
+<td><code>devicectl device copy from</code> / <code>to</code></td>
+</tr>
+<tr>
+<td>로그</td>
+<td><code>adb logcat</code></td>
+<td><code>--console</code>, Console 앱, <code>pymobiledevice3 syslog live</code></td>
+</tr>
+<tr>
+<td>테스트 실행</td>
+<td><code>am instrument</code></td>
+<td><code>xcodebuild test</code></td>
+</tr>
+<tr>
+<td>UI 트리 덤프</td>
+<td><code>uiautomator dump</code></td>
+<td>XCUITest의 <code>debugDescription</code>, WDA의 <code>/source</code></td>
+</tr>
+<tr>
+<td>탭·입력</td>
+<td><code>adb shell input</code></td>
+<td>XCUITest / WDA만 가능</td>
+</tr>
+<tr>
+<td>스크린샷</td>
+<td><code>adb shell screencap</code></td>
+<td>XCUITest의 <code>screenshot()</code>, <code>pymobiledevice3 developer dvt screenshot</code></td>
+</tr>
+<tr>
+<td>포트 포워딩</td>
+<td><code>adb forward</code></td>
+<td><code>pymobiledevice3 usbmux forward</code>, <code>iproxy</code></td>
+</tr>
+<tr>
+<td>무선 연결</td>
+<td><code>adb tcpip</code></td>
+<td>Xcode의 "Connect via network"</td>
+</tr>
+<tr>
+<td>재부팅</td>
+<td><code>adb reboot</code></td>
+<td><code>devicectl device reboot</code></td>
+</tr>
+<tr>
+<td>셸</td>
+<td><code>adb shell</code></td>
+<td>없음</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="s7">7. 맥용 테스트 프로그램으로 아이폰 앱을 테스트할 수 있는가</h2>
+<p>가능하다. UI 조작 명령은 아이폰 안에서 도는 테스트 러너 앱이 실행해야 하므로 "맥의 지휘 프로그램 + 아이폰의 러너" 구조가 된다.</p>
+<ul>
+<li><strong>방식 A, xcodebuild 지휘형</strong>: 테스트를 Swift XCUITest로 작성하고, 맥 프로그램이 <code>xcodebuild test</code>를 호출해 xcresult를 읽는다. 가장 단순하고 안정적이다.</li>
+<li><strong>방식 B, 실시간 조작형</strong>: 러너가 아이폰에서 HTTP 서버를 띄우고(WebDriverAgent), 맥이 포트 포워딩으로 명령을 보낸다. LLM 에이전트가 화면을 보며 탐색하려면 이 방식이 필요하다.</li>
+<li>소스 없는 앱도 <code>XCUIApplication(bundleIdentifier:)</code>로 대상으로 삼을 수 있다. 서명이 필요한 것은 러너 쪽이다.</li>
+<li>Appium 문서에 따르면 iOS 27부터는 <code>devicectl</code>로 WDA를 띄우는 방식이 막혀 <code>xcodebuild</code>나 RemoteXPC 터널로 시작해야 한다.</li>
+</ul>
+<h3>화면 인식인가, ID인가</h3>
+<p>기본은 ID 기반이다. XCUITest는 접근성 요소 트리를 조회하며 화면 픽셀을 분석하지 않는다.</p>
+<div class="code">
+  <div class="code-head"><span class="fname">TransferTests.swift</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-swift">let app = XCUIApplication()
+app.launch()
+
+let send = app.buttons[&quot;sendButton&quot;]   // accessibilityIdentifier로 조회
+XCTAssertTrue(send.waitForExistence(timeout: 10))
+send.tap()
+
+XCTAssertTrue(app.staticTexts[&quot;transferDone&quot;].waitForExistence(timeout: 30))</code></pre>
+</div>
+<ul>
+<li>앱 코드에서 <code>accessibilityIdentifier</code>를 달아두는 것이 가장 안정적이다. 문구나 언어가 바뀌어도 깨지지 않는다.</li>
+<li>요소 종류, 표시 텍스트, 조건식으로도 찾을 수 있다.</li>
+<li>게임, 캔버스, 접근성 정보가 없는 커스텀 뷰는 스크린샷과 좌표 탭으로 처리해야 하고, 여기에 비전 모델을 붙일 수 있다.</li>
+</ul>
+<h3>포그라운드, 유선, 백그라운드 제약</h3>
+<ul>
+<li>대상 앱은 포그라운드여야 조작된다. <code>app.launch()</code>나 <code>app.activate()</code>가 앱을 앞으로 가져온다.</li>
+<li>러너는 백그라운드 제약을 받지 않는다. 테스트 세션 동안 시스템 테스트 데몬의 지원을 받아 살아 있고, 대상 앱이 앞에 있는 동안 뒤에서 이벤트를 주입한다.</li>
+<li>백그라운드 전환도 테스트된다. <code>XCUIDevice.shared.press(.home)</code>으로 홈으로 보내고 <code>app.state</code>로 <code>.runningBackground</code> 여부를 확인한 뒤 다시 <code>activate()</code>할 수 있다.</li>
+<li>유선은 최초 페어링에만 필수다. 무선도 되지만 자동 테스트에는 유선이 안정적이다.</li>
+<li>기기는 잠금 해제 상태여야 한다. 자동 잠금을 끈다.</li>
+<li>러너와 대상 앱은 별도 프로세스라 앱 내부 상태를 직접 읽을 수 없다. 실행 인자, 로그, 컨테이너 파일로 확인한다.</li>
+</ul>
+<h2 id="s8">정리</h2>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>질문</th>
+<th>결론</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>256GB 맥의 최선 모델</td>
+<td>속도는 Qwen3.8-Flash-Next, 품질은 GLM-5.3-Flash, 가성비는 Qwen3.8 27B</td>
+</tr>
+<tr>
+<td>클라우드 대비 수준</td>
+<td>종합 지수 약 70%, 평균 4개월 격차</td>
+</tr>
+<tr>
+<td>에이전트에 가장 중요한 능력</td>
+<td>툴 호출 신뢰성</td>
+</tr>
+<tr>
+<td>화면 조작</td>
+<td>짧은 작업은 근접, 긴 워크플로는 19.4% 대 72.6%</td>
+</tr>
+<tr>
+<td>iOS 테스트 판정</td>
+<td>조작은 LLM, 판정은 결정적 코드</td>
+</tr>
+<tr>
+<td>iOS의 adb</td>
+<td><code>xcodebuild</code> + <code>devicectl</code> + XCUITest</td>
+</tr>
+<tr>
+<td>요소 탐색 방식</td>
+<td>접근성 ID 기반, 화면 인식은 보조</td>
+</tr>
+<tr>
+<td>시작 순서</td>
+<td>방식 A로 xcresult 판정까지 만든 뒤 방식 B 추가</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="s9">출처</h2>
+<ul>
+<li><a href="https://www.macstories.net/stories/m5-ultra-mac-studio-review-the-dream-mac-for-local-ai-agents/">M5 Ultra Mac Studio Review — MacStories</a></li>
+<li><a href="https://www.contextstudios.ai/blog/mac-studio-m5-ultra-local-ai-guide">Mac Studio M5 Ultra for Local AI — Context Studios</a></li>
+<li><a href="https://geotoolbox.ai/blog/best-open-source-llms">The 10 Best Open-Source LLMs — geotoolbox</a></li>
+<li><a href="https://modelfit.io/blog/best-llm-mac-studio-m5-ultra-256gb/">Best LLM for Mac Studio M5 Ultra 256GB — modelfit</a></li>
+<li><a href="https://openclawdc.com/blog/best-local-llm-m5-ultra-256gb/">Best Local LLM for M5 Ultra 256GB — openclawdc</a></li>
+<li><a href="https://benchlm.ai/benchmarks/artificialanalysis">Artificial Analysis Intelligence Index Leaderboard — BenchLM</a></li>
+<li><a href="https://artificialanalysis.ai/models/qwen3-8-flash-next">Qwen3.8-Flash-Next — Artificial Analysis</a></li>
+<li><a href="https://www.datacamp.com/blog/glm-5-3-flash-vs-qwen3-8-flash-next">GLM-5.3-Flash vs Qwen3.8-Flash-Next — DataCamp</a></li>
+<li><a href="https://www.eesel.ai/blog/qwen38-flash-next-review">Qwen 3.8 Flash Next review — eesel</a></li>
+<li><a href="https://epoch.ai/data-insights/open-closed-eci-gap">Open models lag state-of-the-art closed models by 4 months — Epoch AI</a></li>
+<li><a href="https://benchlm.ai/best/computer-use">Best Computer Use AI Models — BenchLM</a></li>
+<li><a href="https://benchlm.ai/benchmarks/osworld2">OSWorld 2.0 Leaderboard — BenchLM</a></li>
+<li><a href="https://llm-stats.com/benchmarks/screenspot-pro">ScreenSpot Pro Leaderboard — LLM Stats</a></li>
+<li><a href="https://www.eesel.ai/blog/qwen-ui-agent-alternatives">Qwen-UI-Agent alternatives — eesel</a></li>
+<li><a href="https://developer.apple.com/documentation/xcode/xcode-command-line-tool-reference">Xcode command-line tool reference — Apple</a></li>
+<li><a href="https://zenn.dev/scenee/articles/df3a6d9fb18465">CoreDevice: devicectl 개요와 사용 예 — Zenn</a></li>
+<li><a href="https://appium.github.io/appium-xcuitest-driver/latest/guides/run-preinstalled-wda/">Run Preinstalled WDA — Appium XCUITest Driver</a></li>
+<li><a href="https://pypi.org/project/pymobiledevice3/">pymobiledevice3 — PyPI</a></li>
+</ul>
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
