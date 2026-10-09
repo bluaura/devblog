@@ -47,7 +47,7 @@ document.documentElement.setAttribute('data-theme',t);})();
   </div>
   <div class="toolbar">
     <input class="search" id="q" type="search" placeholder="제목·태그·요약 검색 (예: Kotlin, 코딩테스트, LLM)" autocomplete="off">
-    <span class="count" id="count">32편</span>
+    <span class="count" id="count">33편</span>
   </div>
   <div class="posts" id="list">
   <a class="card" href="/devblog/posts/2026-10-10-algo-vertex-edge-set-count-areas.html"
@@ -70,6 +70,13 @@ document.documentElement.setAttribute('data-theme',t);})();
     <div class="card-meta"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">완전탐색</span><span>2026-10-10</span></div>
     <h2>방문 순서 완전 탐색 — 순열로 푸는 최단 순회와 (N−1)!의 한계</h2>
     <p>0번에서 출발해 모든 지점을 들르고 돌아오는 최단 거리를 순열 완전 탐색으로 푸는 과정. 복귀 누락·그리디·대칭 가정이 틀리는 반례, N=11에서 1.54초가 걸리는 규모 한계, 0.006초로 줄이는 비트마스크 DP와 BFS 거리 행렬 전처리를 정리</p>
+  </a>
+  <a class="card" href="/devblog/posts/2026-10-10-algo-monotonic-stack.html"
+     data-tags="코딩테스트|Python|스택"
+     data-search="단조 스택 두 문제 — 오른쪽의 첫 큰 값과 서로 보이는 쌍 세기 단조 스택으로 푸는 두 문제를 나란히 추적. 오른쪽의 첫 큰 값은 인덱스를 쌓고 같은 값을 유지하며, 보이는 쌍 세기는 값을 쌓고 같은 값을 교체한다. 비교 연산자 하나로 [3,3,-1]이 [2,3,-1]이 되는 반례, 이중 반복문 0.46초 대 0.0006초, 쌍 목록 변형을 정리 코딩테스트 python 스택">
+    <div class="card-meta"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">스택</span><span>2026-10-10</span></div>
+    <h2>단조 스택 두 문제 — 오른쪽의 첫 큰 값과 서로 보이는 쌍 세기</h2>
+    <p>단조 스택으로 푸는 두 문제를 나란히 추적. 오른쪽의 첫 큰 값은 인덱스를 쌓고 같은 값을 유지하며, 보이는 쌍 세기는 값을 쌓고 같은 값을 교체한다. 비교 연산자 하나로 [3,3,-1]이 [2,3,-1]이 되는 반례, 이중 반복문 0.46초 대 0.0006초, 쌍 목록 변형을 정리</p>
   </a>
   <a class="card" href="/devblog/posts/2026-10-10-algo-greedy-reverse-group-leaders.html"
      data-tags="코딩테스트|Python|그리디"
