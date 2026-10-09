@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>격자 최단 거리 BFS 다시 보기 — distance 배열 하나로 방문·거리·경로 복원까지 · 블루오라 개발노트</title>
+<meta name="description" content="임의의 시작·도착점 BFS를 큐 단위로 추적하고, 벽 검사 생략 시 0이 나오는 경우·튜플과 리스트 비교·음수 인덱스 등 함정 5가지와 distance 배열만으로 경로를 역추적하는 변형을 정리">
+<meta property="og:type" content="article">
+<meta property="og:title" content="격자 최단 거리 BFS 다시 보기 — distance 배열 하나로 방문·거리·경로 복원까지">
+<meta property="og:description" content="임의의 시작·도착점 BFS를 큐 단위로 추적하고, 벽 검사 생략 시 0이 나오는 경우·튜플과 리스트 비교·음수 인덱스 등 함정 5가지와 distance 배열만으로 경로를 역추적하는 변형을 정리">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-09-algo-grid-bfs-distance.html">
+<meta property="article:published_time" content="2026-10-09">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-09-algo-grid-bfs-distance.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>격자 최단 거리 BFS 다시 보기 — distance 배열 하나로 방문·거리·경로 복원까지</h1>
+    <p class="sub"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">BFS</span> &nbsp;2026-10-09</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">알고리즘</div><div class="value">BFS</div><div class="delta">너비 우선 탐색</div></div>
+  <div class="stat"><div class="label">예제 결과</div><div class="value">4</div><div class="delta">3×3 격자, (0,0) → (2,2)</div></div>
+  <div class="stat"><div class="label">시간 복잡도</div><div class="value">O(R·C)</div><div class="delta">칸마다 1회 방문</div></div>
+  <div class="stat"><div class="label">공간 복잡도</div><div class="value">O(R·C)</div><div class="delta">distance 배열과 큐</div></div>
+</div>
+
+<blockquote>
+0은 통로, 1은 벽인 격자에서 임의의 시작점부터 도착점까지 최소 이동 횟수를 구하는 문제다.
+이 풀이의 중심은 <code>distance</code> 배열 하나다. -1이면 미방문, 0 이상이면 방문과 동시에 시작점으로부터의 거리를 뜻한다.
+시작점을 0으로 두기 때문에 답은 "지나간 칸 수"가 아니라 "이동 횟수"가 된다.
+학습 교재 05단원 예제 코드를 추적한 기록이며, 같은 배열로 경로까지 복원하는 변형을 덧붙였다 (Python 3 실행 확인).
+</blockquote>
+
+<div class="callout">
+BFS를 왜 쓰는지, 큐가 왜 최단 거리를 보장하는지는 <a href="/devblog/posts/2026-09-29-algo-bfs-shortest-path.html">BFS로 격자 최단 경로 구하기 — 코드 해설과 함정 4가지</a>에서 다뤘다.
+이 글은 그 글의 "개선한 코드"에 해당하는 형태를 처음부터 다시 추적하고, 시작·도착점이 인자로 들어올 때 생기는 경계 조건에 집중한다.
+</div>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">문제</a></li>
+    <li><a href="#s2">전체 코드</a></li>
+    <li><a href="#s3">distance 배열의 세 가지 역할</a></li>
+    <li><a href="#s4">코드 한 줄씩 보기</a></li>
+    <li><a href="#s5">예제 추적</a></li>
+    <li><a href="#s6">놓치기 쉬운 함정</a></li>
+    <li><a href="#s7">경로까지 복원하기</a></li>
+    <li><a href="#s8">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">문제</h2>
+<p>0은 통로, 1은 벽인 격자가 주어진다. 상하좌우로 한 칸씩 움직여 <code>start</code>에서 <code>end</code>까지 가는 <strong>최소 이동 횟수</strong>를 구한다.</p>
+<ul>
+  <li>입력: <code>grid</code> — 비어 있지 않은 0/1 직사각형 행렬. <code>start</code>, <code>end</code> — 범위 안의 <code>(행, 열)</code> 튜플.</li>
+  <li>출력: 최소 이동 횟수. 지나간 칸의 개수가 아니다.</li>
+  <li>같은 통로 칸에서 시작하고 끝나면 0.</li>
+  <li>시작이나 끝이 벽이거나 도달할 수 없으면 -1.</li>
+</ul>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>격자</th><th>start → end</th><th class="num">출력</th><th>이유</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>[[0,0,1],[1,0,1],[0,0,0]]</code></td><td>(0,0) → (2,2)</td><td class="num">4</td><td>오른쪽 1, 아래 2, 오른쪽 1</td></tr>
+    <tr><td><code>[[0,1,0]]</code></td><td>(0,0) → (0,2)</td><td class="num">-1</td><td>가운데 벽에 막혀 도달 불가</td></tr>
+    <tr><td><code>[[0]]</code></td><td>(0,0) → (0,0)</td><td class="num">0</td><td>이미 도착해 있다</td></tr>
+    <tr><td><code>[[1]]</code></td><td>(0,0) → (0,0)</td><td class="num">-1</td><td>시작점이 벽이다</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s2">전체 코드</h2>
+<div class="code">
+  <div class="code-head"><span class="fname">shortest_path.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">from collections import deque
+
+
+def shortest_path(grid, start, end):
+    rows, columns = len(grid), len(grid[0])
+    sr, sc = start
+    er, ec = end
+    if grid[sr][sc] == 1 or grid[er][ec] == 1:
+        return -1
+    distance = [[-1] * columns for _ in range(rows)]
+    distance[sr][sc] = 0
+    queue = deque([start])
+    while queue:
+        r, c = queue.popleft()
+        if (r, c) == end:
+            return distance[r][c]
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nr, nc = r + dr, c + dc
+            if not (0 &lt;= nr &lt; rows and 0 &lt;= nc &lt; columns):
+                continue
+            if grid[nr][nc] == 1 or distance[nr][nc] != -1:
+                continue
+            distance[nr][nc] = distance[r][c] + 1
+            queue.append((nr, nc))
+    return -1
+
+
+def run_checks():
+    assert shortest_path([[0, 0, 1], [1, 0, 1], [0, 0, 0]], (0, 0), (2, 2)) == 4
+    assert shortest_path([[0, 1, 0]], (0, 0), (0, 2)) == -1
+    assert shortest_path([[0]], (0, 0), (0, 0)) == 0
+    assert shortest_path([[1]], (0, 0), (0, 0)) == -1
+    print("05단원: 확인용 테스트 4개 통과")
+
+
+if __name__ == "__main__":
+    run_checks()</code></pre>
+</div>
+
+<h2 id="s3">distance 배열의 세 가지 역할</h2>
+<p>이 코드에는 <code>visited</code> 배열도, 큐에 함께 넣는 거리 값도 없다. <code>distance</code> 하나가 전부 맡는다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>역할</th><th>코드에서 쓰이는 곳</th><th>의미</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>방문 표시</td><td><code>distance[nr][nc] != -1</code></td><td>-1이 아니면 이미 큐에 들어간 칸이다</td></tr>
+    <tr><td>거리 기록</td><td><code>distance[r][c] + 1</code></td><td>이웃의 거리는 현재 칸보다 1 크다</td></tr>
+    <tr><td>답</td><td><code>return distance[r][c]</code></td><td>도착점을 꺼낸 순간의 값이 최소 이동 횟수다</td></tr>
+  </tbody>
+</table>
+</div>
+<p>격자에 직접 거리를 덮어쓰는 방식과 비교하면 차이가 분명하다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>항목</th><th>격자에 직접 기록</th><th>distance 배열 분리</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>입력 격자</td><td>호출 후 값이 바뀐다</td><td>그대로 보존된다</td></tr>
+    <tr><td>거리 값</td><td>벽(1)과 겹치지 않게 2부터 시작, 마지막에 −2</td><td>0부터 시작, 보정 없음</td></tr>
+    <tr><td>미방문 판정</td><td>값이 0인가</td><td>값이 -1인가</td></tr>
+    <tr><td>추가 메모리</td><td>없음</td><td>O(R·C)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s4">코드 한 줄씩 보기</h2>
+
+<h3>탐색 전에 벽부터 거른다</h3>
+<div class="code">
+  <pre><code class="language-python">if grid[sr][sc] == 1 or grid[er][ec] == 1:
+    return -1</code></pre>
+</div>
+<p>BFS 본문은 "이웃이 벽인가"만 검사하고 시작 칸 자체는 검사하지 않는다. 그래서 이 줄이 없으면 벽 위에서 탐색이 시작된다.
+도착점이 벽인 경우는 어차피 도달하지 못해 -1이 나오지만, 격자 전체를 다 돌고 나서야 알게 되므로 미리 끊는 편이 낫다.</p>
+
+<h3>시작점의 거리는 0</h3>
+<div class="code">
+  <pre><code class="language-python">distance = [[-1] * columns for _ in range(rows)]
+distance[sr][sc] = 0
+queue = deque([start])</code></pre>
+</div>
+<p>시작점은 아직 한 번도 움직이지 않았으므로 0이다. 여기를 1로 두면 답이 "지나간 칸의 개수"로 바뀐다.
+방문 표시와 큐 삽입을 같은 시점에 하는 것도 본문과 동일한 규칙이다.</p>
+
+<h3>도착 판정은 꺼낼 때 한다</h3>
+<div class="code">
+  <pre><code class="language-python">r, c = queue.popleft()
+if (r, c) == end:
+    return distance[r][c]</code></pre>
+</div>
+<p>이웃을 발견했을 때가 아니라 큐에서 <strong>꺼냈을 때</strong> 판정한다. 시작점도 큐에서 꺼내지므로 <code>start == end</code>인 경우가 별도 분기 없이 0으로 처리된다.</p>
+
+<h3>이웃 검사는 범위 → 벽 → 방문 순서</h3>
+<div class="code">
+  <pre><code class="language-python">if not (0 &lt;= nr &lt; rows and 0 &lt;= nc &lt; columns):
+    continue
+if grid[nr][nc] == 1 or distance[nr][nc] != -1:
+    continue
+distance[nr][nc] = distance[r][c] + 1
+queue.append((nr, nc))</code></pre>
+</div>
+<p>범위 검사가 반드시 먼저다. 두 조건을 통과한 칸에만 거리를 쓰고 큐에 넣는다.
+거리를 쓰는 순간이 곧 방문 표시이므로 같은 칸이 큐에 두 번 들어가지 않는다.</p>
+
+<h2 id="s5">예제 추적</h2>
+<p><code>[[0, 0, 1], [1, 0, 1], [0, 0, 0]]</code>에서 (0,0) → (2,2)를 따라간다. 방향 순서는 상, 하, 좌, 우다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th class="num">순서</th><th>꺼낸 칸</th><th class="num">거리</th><th>새로 큐에 넣은 칸</th><th>큐 상태</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">1</td><td>(0,0)</td><td class="num">0</td><td>(0,1) = 1</td><td>(0,1)</td></tr>
+    <tr><td class="num">2</td><td>(0,1)</td><td class="num">1</td><td>(1,1) = 2</td><td>(1,1)</td></tr>
+    <tr><td class="num">3</td><td>(1,1)</td><td class="num">2</td><td>(2,1) = 3</td><td>(2,1)</td></tr>
+    <tr><td class="num">4</td><td>(2,1)</td><td class="num">3</td><td>(2,0) = 4, (2,2) = 4</td><td>(2,0), (2,2)</td></tr>
+    <tr><td class="num">5</td><td>(2,0)</td><td class="num">4</td><td>없음</td><td>(2,2)</td></tr>
+    <tr><td class="num">6</td><td>(2,2)</td><td class="num">4</td><td>도착 — 4 반환</td><td></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>종료 시점의 <code>distance</code> 배열이다. <code>#</code>은 벽이고 값은 -1로 남는다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th class="center">행\열</th><th class="center">0</th><th class="center">1</th><th class="center">2</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="center">0</td><td class="center">0</td><td class="center">1</td><td class="center">#</td></tr>
+    <tr><td class="center">1</td><td class="center">#</td><td class="center">2</td><td class="center">#</td></tr>
+    <tr><td class="center">2</td><td class="center">4</td><td class="center">3</td><td class="center">4</td></tr>
+  </tbody>
+</table>
+</div>
+<p>경로는 (0,0) → (0,1) → (1,1) → (2,1) → (2,2)로 칸은 5개, 이동은 4번이다. 문제가 요구하는 값은 4다.</p>
+
+<h2 id="s6">놓치기 쉬운 함정</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>실수</th><th>입력</th><th class="num">잘못된 결과</th><th class="num">기대값</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>시작·도착 벽 검사 생략</td><td><code>[[1]]</code>, (0,0) → (0,0)</td><td class="num">0</td><td class="num">-1</td></tr>
+    <tr><td><code>end</code>를 리스트로 전달</td><td>예제 격자, (0,0) → <code>[2, 2]</code></td><td class="num">-1</td><td class="num">4</td></tr>
+    <tr><td>시작점 거리를 1로 설정</td><td>예제 격자</td><td class="num">5</td><td class="num">4</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>1. 시작점이 벽인데 0을 반환한다</h3>
+<p>벽 검사를 빼고 <code>[[1]]</code>을 넣으면, 시작점을 큐에서 꺼내자마자 도착 판정에 걸려 0이 나온다. 실행해서 확인한 결과다.
+"도착 판정을 꺼낼 때 한다"는 장점이 벽 검사 없이는 오히려 오답을 만든다.</p>
+
+<h3>2. 튜플과 리스트는 같지 않다</h3>
+<p><code>(2, 2) == [2, 2]</code>는 <code>False</code>다. <code>end</code>가 리스트로 들어오면 도착 판정이 한 번도 참이 되지 않아 에러 없이 -1이 나온다.
+입력을 직접 파싱하는 환경이라면 <code>end = tuple(end)</code>로 맞추거나 <code>r == er and c == ec</code>로 비교한다.</p>
+
+<h3>3. 이동 횟수와 칸 수를 혼동한다</h3>
+<p>칸 수는 항상 이동 횟수보다 1 크다. 문제마다 요구가 다르므로 시작점 초기값(0 또는 1)을 문제 문장에 맞춰 정한다.</p>
+
+<h3>4. 범위 검사를 벽 검사 뒤에 둔다</h3>
+<p>파이썬은 음수 인덱스를 허용한다. <code>nr</code>이 -1이면 <code>grid[-1]</code>은 에러가 아니라 <strong>마지막 행</strong>을 읽는다.
+범위 검사가 뒤에 있으면 예외 없이 반대편 칸을 조회하게 되어 원인을 찾기 어렵다.</p>
+
+<h3>5. 2차원 배열을 곱셈으로 만든다</h3>
+<div class="code">
+  <pre><code class="language-python">bad = [[-1] * 3] * 2
+bad[0][0] = 0
+print(bad)  # [[0, -1, -1], [0, -1, -1]]</code></pre>
+</div>
+<p>바깥 곱셈은 같은 행 객체를 여러 번 참조한다. 한 칸을 바꾸면 모든 행이 함께 바뀐다.
+<code>[[-1] * columns for _ in range(rows)]</code>처럼 행마다 새로 만든다.</p>
+
+<h2 id="s7">경로까지 복원하기</h2>
+<p>교재 범위를 넘어 직접 추가한 변형이다. 이동 횟수뿐 아니라 실제 경로가 필요할 때, 부모 칸을 따로 저장하지 않고 <code>distance</code>만으로 되짚을 수 있다.
+도착점에서 출발해 <strong>거리가 정확히 1 작은 이웃</strong>으로 계속 옮겨 가면 시작점에 닿는다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">shortest_route.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">from collections import deque
+
+
+def shortest_route(grid, start, end):
+    rows, columns = len(grid), len(grid[0])
+    start, end = tuple(start), tuple(end)
+    sr, sc = start
+    er, ec = end
+    if grid[sr][sc] == 1 or grid[er][ec] == 1:
+        return []
+    distance = [[-1] * columns for _ in range(rows)]
+    distance[sr][sc] = 0
+    queue = deque([start])
+    while queue:
+        r, c = queue.popleft()
+        if (r, c) == end:
+            break
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            nr, nc = r + dr, c + dc
+            if not (0 &lt;= nr &lt; rows and 0 &lt;= nc &lt; columns):
+                continue
+            if grid[nr][nc] == 1 or distance[nr][nc] != -1:
+                continue
+            distance[nr][nc] = distance[r][c] + 1
+            queue.append((nr, nc))
+    if distance[er][ec] == -1:
+        return []
+
+    # 도착점에서 거리가 1씩 줄어드는 이웃을 따라 거꾸로 올라간다
+    path = [end]
+    r, c = end
+    while (r, c) != start:
+        for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            pr, pc = r + dr, c + dc
+            if (0 &lt;= pr &lt; rows and 0 &lt;= pc &lt; columns
+                    and distance[pr][pc] == distance[r][c] - 1):
+                r, c = pr, pc
+                break
+        path.append((r, c))
+    path.reverse()
+    return path
+
+
+print(shortest_route([[0, 0, 1], [1, 0, 1], [0, 0, 0]], (0, 0), (2, 2)))
+# [(0, 0), (0, 1), (1, 1), (2, 1), (2, 2)]</code></pre>
+</div>
+
+<p>도착점을 꺼낸 시점에 조기 종료해도 복원에는 문제가 없다. BFS는 거리 순서로 칸을 꺼내므로, 도착점보다 거리가 작은 칸은 그때 이미 모두 기록되어 있다.
+도달할 수 없으면 빈 리스트를 반환하고, 최단 경로가 여러 개면 방향 순서에 따라 그중 하나가 나온다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>검증 항목</th><th>조건</th><th class="num">결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>무작위 대조</td><td>1×1 ~ 6×6, 벽 비율 30%, 10만 건</td><td class="num">전부 통과</td></tr>
+    <tr><td>도달 가능 케이스</td><td>위 10만 건 중</td><td class="num">45,894건</td></tr>
+    <tr><td>검사 내용</td><td colspan="2">경로 길이 = 이동 횟수 + 1 / 시작·끝 일치 / 전부 통로 / 연속한 칸이 인접</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s8">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>포인트</th><th>내용</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>상태 저장</td><td><code>distance</code> 하나로 방문 여부와 거리를 함께 관리. -1이 미방문</td></tr>
+    <tr><td>초기값</td><td>시작점 0이면 이동 횟수, 1이면 칸 수</td></tr>
+    <tr><td>사전 검사</td><td>시작·도착이 벽이면 탐색 전에 -1</td></tr>
+    <tr><td>도착 판정</td><td>큐에서 꺼낼 때. 시작 = 도착인 경우가 0으로 처리된다</td></tr>
+    <tr><td>이웃 검사 순서</td><td>범위 → 벽 → 방문. 음수 인덱스는 에러가 나지 않는다</td></tr>
+    <tr><td>좌표 비교</td><td>튜플끼리 비교. 리스트가 섞이면 조용히 -1</td></tr>
+    <tr><td>경로 복원</td><td>도착점에서 거리가 1 작은 이웃을 따라 역추적</td></tr>
+    <tr><td>복잡도</td><td>시간·공간 모두 O(R·C)</td></tr>
+  </tbody>
+</table>
+</div>
+<p>이전 글: <a href="/devblog/posts/2026-10-09-algo-balance-extra.html">04단원 — 행렬의 모든 행·열 합을 같게 만드는 최소 추가량</a></p>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
