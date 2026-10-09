@@ -19,6 +19,13 @@
       <pubDate>Fri, 09 Oct 2026 00:00:00 +0900</pubDate>
     </item>
     <item>
+      <title>BFS 응용 2종 — 격자 연결 구역 크기와 네 자리 숫자 상태 탐색</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-10-09-algo-bfs-components-number-state.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-09-algo-bfs-components-number-state.html</guid>
+      <description>같은 값 연결 구역 크기 구하기와 한 자리씩 바꾸는 행성 번호 최단 이동을 추적. 한 자리 차이인 2023→2123이 8번 걸리는 이유, 약수 개수 전처리를 4,999만 회에서 9만 회로 줄이는 방법, 예제는 통과하지만 틀리는 함정을 정리</description>
+      <pubDate>Fri, 09 Oct 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>한 종류를 제거해 최장 연속 구간 만들기 — 후보 열거 풀이와 O(N) 개선</title>
       <link>https://bluaura.github.io/devblog/posts/2026-10-09-algo-best-removal.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-09-algo-best-removal.html</guid>
