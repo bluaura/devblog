@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>행렬의 모든 행·열 합을 같게 만드는 최소 추가량 — 답의 하한으로 푸는 한 줄 공식 · 블루오라 개발노트</title>
+<meta name="description" content="목표 합 T는 행 합·열 합의 최댓값보다 작을 수 없다는 하한에서 N×T − 전체 합 공식을 끌어내고, 그 하한이 항상 달성됨을 투 포인터 구성 코드와 무작위 10만 건 검증으로 확인">
+<meta property="og:type" content="article">
+<meta property="og:title" content="행렬의 모든 행·열 합을 같게 만드는 최소 추가량 — 답의 하한으로 푸는 한 줄 공식">
+<meta property="og:description" content="목표 합 T는 행 합·열 합의 최댓값보다 작을 수 없다는 하한에서 N×T − 전체 합 공식을 끌어내고, 그 하한이 항상 달성됨을 투 포인터 구성 코드와 무작위 10만 건 검증으로 확인">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-09-algo-balance-extra.html">
+<meta property="article:published_time" content="2026-10-09">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-09-algo-balance-extra.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>행렬의 모든 행·열 합을 같게 만드는 최소 추가량 — 답의 하한으로 푸는 한 줄 공식</h1>
+    <p class="sub"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">그리디</span> &nbsp;2026-10-09</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">기법</div><div class="value">답의 하한</div><div class="delta">행·열 합 집계</div></div>
+  <div class="stat"><div class="label">예제 결과</div><div class="value">4</div><div class="delta">[[1, 2], [3, 4]] 기준</div></div>
+  <div class="stat"><div class="label">공식</div><div class="value">N·T − S</div><div class="delta">T는 행·열 합의 최댓값</div></div>
+  <div class="stat"><div class="label">시간 복잡도</div><div class="value">O(N²)</div><div class="delta">행렬을 읽는 비용뿐</div></div>
+</div>
+
+<blockquote>
+N×N 행렬에 수를 더하기만 해서 모든 행의 합과 모든 열의 합을 같은 값으로 만들 때, 더하는 양의 최소 합을 구하는 문제다.
+값을 줄일 수 없으므로 목표 합 T는 행 합·열 합 중 가장 큰 값보다 작을 수 없다. 이것이 답의 하한이고, 실제로 그 값에 딱 맞춰 채울 수 있다.
+그래서 행렬을 실제로 고치지 않고 <code>N × T − 전체 합</code> 한 줄로 답이 나온다.
+학습 교재 04단원 예제 코드를 추적한 기록이며, 하한이 달성 가능하다는 것을 보여 주는 구성 코드를 덧붙였다 (Python 3 실행 확인).
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">문제</a></li>
+    <li><a href="#s2">전체 코드</a></li>
+    <li><a href="#s3">핵심 아이디어</a></li>
+    <li><a href="#s4">코드 한 줄씩 보기</a></li>
+    <li><a href="#s5">예제 추적</a></li>
+    <li><a href="#s6">하한은 정말 달성되는가</a></li>
+    <li><a href="#s7">놓치기 쉬운 함정</a></li>
+    <li><a href="#s8">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">문제</h2>
+<p>N×N 행렬이 주어진다. 원하는 칸에 수를 더해서 <strong>모든 행의 합과 모든 열의 합을 같은 값</strong>으로 만든다.</p>
+<ul>
+  <li>입력: <code>matrix</code> — 비어 있지 않은 N×N 행렬. 원소는 음이 아닌 정수다.</li>
+  <li>기존 값을 줄일 수는 없다. 더하기만 가능하다.</li>
+  <li>출력: 추가한 수의 전체 합의 최솟값. 목표 합이나 바뀐 행렬이 아니다.</li>
+</ul>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>입력</th><th class="num">출력</th><th>이유</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>[[1, 2], [3, 4]]</code></td><td class="num">4</td><td>가장 큰 합은 2행의 7. 전체를 7로 맞추려면 2×7 − 10 = 4</td></tr>
+    <tr><td><code>[[0, 0], [0, 0]]</code></td><td class="num">0</td><td>이미 모든 합이 0으로 같다</td></tr>
+    <tr><td><code>[[5, 0], [5, 0]]</code></td><td class="num">10</td><td>행 합은 5로 같지만 1열의 합이 10이다</td></tr>
+    <tr><td><code>[[3]]</code></td><td class="num">0</td><td>1×1은 행 합과 열 합이 항상 같다</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s2">전체 코드</h2>
+<div class="code">
+  <div class="code-head"><span class="fname">balance_extra.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def balance_extra(matrix):
+    size = len(matrix)
+    row_sums = [sum(row) for row in matrix]
+    column_sums = [sum(matrix[r][c] for r in range(size))
+                   for c in range(size)]
+    target = max(max(row_sums), max(column_sums))
+    return size * target - sum(row_sums)
+
+
+def run_checks():
+    assert balance_extra([[1, 2], [3, 4]]) == 4
+    assert balance_extra([[0, 0], [0, 0]]) == 0
+    assert balance_extra([[5, 0], [5, 0]]) == 10
+    assert balance_extra([[3]]) == 0
+    print("04단원: 확인용 테스트 4개 통과")
+
+
+if __name__ == "__main__":
+    run_checks()</code></pre>
+</div>
+
+<h2 id="s3">핵심 아이디어</h2>
+<p>어느 칸에 얼마를 더할지 정하려 들면 경우의 수가 끝이 없다. 이 문제는 "어떻게 채울까"가 아니라 <strong>"최종 목표 합 T가 얼마여야 하는가"</strong>만 정하면 풀린다.</p>
+<ol class="steps">
+  <li><strong>T가 정해지면 답도 정해진다</strong> — 완성된 행렬은 N개 행의 합이 모두 T이므로 전체 합이 N×T다. 원래 전체 합을 S라 하면 추가량은 어떻게 채우든 <code>N×T − S</code>다.</li>
+  <li><strong>T에는 하한이 있다</strong> — 값을 줄일 수 없으니 어떤 행·열의 합도 지금보다 작아질 수 없다. 따라서 T는 현재 행 합·열 합 중 최댓값 이상이어야 한다.</li>
+  <li><strong>T가 작을수록 추가량이 적다</strong> — <code>N×T − S</code>는 T에 대해 증가하므로, 가능한 가장 작은 T인 "최댓값 그 자체"가 최적이다.</li>
+</ol>
+
+<div class="callout">
+<strong>판별 기준</strong> — "최소 비용으로 조건을 맞춰라"에서 직접 구성이 복잡해 보이면, 먼저 "답이 이보다 작을 수 없다"는 하한을 찾는다.
+그 하한에 딱 맞는 방법이 존재한다는 것까지 보이면 하한이 곧 정답이고, 구성 과정을 코드로 옮길 필요가 없다.
+</div>
+
+<h2 id="s4">코드 한 줄씩 보기</h2>
+
+<h3>행 합과 열 합을 따로 집계한다</h3>
+<div class="code">
+  <pre><code class="language-python">row_sums = [sum(row) for row in matrix]
+column_sums = [sum(matrix[r][c] for r in range(size))
+               for c in range(size)]</code></pre>
+</div>
+<p>행은 리스트 하나라 <code>sum(row)</code>로 끝나고, 열은 행 번호 <code>r</code>을 돌리며 같은 열 <code>c</code>의 값을 모아야 한다.
+열 합은 <code>[sum(column) for column in zip(*matrix)]</code>로 써도 결과가 같다. <code>zip(*matrix)</code>가 행렬을 열 단위로 묶어 준다.</p>
+
+<h3>목표 합은 양쪽의 최댓값</h3>
+<div class="code">
+  <pre><code class="language-python">target = max(max(row_sums), max(column_sums))</code></pre>
+</div>
+<p>행만 보거나 열만 보면 안 된다. 행 합이 전부 같아도 열 합이 더 클 수 있기 때문이다 (아래 예제 추적의 두 번째 경우).</p>
+
+<h3>행렬을 고치지 않고 답만 계산한다</h3>
+<div class="code">
+  <pre><code class="language-python">return size * target - sum(row_sums)</code></pre>
+</div>
+<p><code>sum(row_sums)</code>는 행렬 전체 합 S다. 이미 구해 둔 행 합을 다시 더하는 것이라 행렬을 한 번 더 순회하지 않는다.
+<code>sum(column_sums)</code>를 써도 같은 값이다.</p>
+
+<h2 id="s5">예제 추적</h2>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>행렬</th><th>행 합</th><th>열 합</th><th class="num">T</th><th class="num">S</th><th class="num">N×T − S</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>[[1, 2], [3, 4]]</code></td><td>3, 7</td><td>4, 6</td><td class="num">7</td><td class="num">10</td><td class="num">4</td></tr>
+    <tr><td><code>[[5, 0], [5, 0]]</code></td><td>5, 5</td><td>10, 0</td><td class="num">10</td><td class="num">10</td><td class="num">10</td></tr>
+    <tr><td><code>[[0, 0], [0, 0]]</code></td><td>0, 0</td><td>0, 0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+    <tr><td><code>[[3]]</code></td><td>3</td><td>3</td><td class="num">3</td><td class="num">3</td><td class="num">0</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>첫 번째 예제는 실제로 이렇게 채울 수 있다. (1,1) 칸에 3, (1,2) 칸에 1을 더하면 추가량 합이 4다.</p>
+<div class="code">
+  <pre><code class="language-plaintext">원본          결과          행 합
+1  2          4  3          7
+3  4          3  4          7
+
+열 합         7  7</code></pre>
+</div>
+
+<h2 id="s6">하한은 정말 달성되는가</h2>
+<p>"T는 최댓값 이상이어야 한다"는 것만으로는 부족하다. <strong>T를 최댓값으로 두고도 항상 채울 수 있다</strong>는 것까지 보여야 공식이 정답이 된다.</p>
+<p>근거는 부족분의 합이 같다는 점이다. 행 i의 부족분을 <code>T − 행 합</code>, 열 j의 부족분을 <code>T − 열 합</code>이라 하면, 둘 다 전부 더했을 때 <code>N×T − S</code>로 같다.
+즉 부족한 행이 하나라도 있으면 부족한 열도 반드시 있다. 그 교차 칸에 둘 중 작은 부족분만큼 더하면 다른 행·열을 건드리지 않고 적어도 하나가 T에 도달한다. 이를 반복하면 전부 채워진다.</p>
+
+<p>교재 범위를 넘어 직접 추가한 구성 코드다. 행 포인터와 열 포인터를 하나씩 전진시키는 방식이다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">balance_fill.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def balance_fill(matrix):
+    size = len(matrix)
+    result = [row[:] for row in matrix]
+    row_sums = [sum(row) for row in result]
+    column_sums = [sum(column) for column in zip(*result)]
+    target = max(max(row_sums), max(column_sums))
+
+    r = c = 0
+    while r &lt; size and c &lt; size:
+        add = min(target - row_sums[r], target - column_sums[c])
+        result[r][c] += add
+        row_sums[r] += add
+        column_sums[c] += add
+        if row_sums[r] == target:
+            r += 1
+        if column_sums[c] == target:
+            c += 1
+    return result
+
+
+print(balance_fill([[1, 2], [3, 4]]))  # [[4, 3], [3, 4]]
+print(balance_fill([[5, 0], [5, 0]]))  # [[5, 5], [5, 5]]</code></pre>
+</div>
+
+<p>한 번 돌 때마다 행이나 열 중 하나는 반드시 T에 도달하므로 반복은 최대 2N − 1번이다.
+한쪽 포인터가 끝에 닿으면 그쪽은 모두 T이고, 전체 합이 N×T가 되었으니 반대쪽도 모두 T다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>검증 항목</th><th>조건</th><th class="num">결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>구성 결과 검사</td><td>N 1~6, 원소 0~9, 무작위 10만 건</td><td class="num">전부 통과</td></tr>
+    <tr><td>검사 내용</td><td colspan="2">모든 행·열 합이 같음 / 원래 값 이상 / 추가량이 공식 값과 일치</td></tr>
+    <tr><td>완전탐색 대조</td><td>2×2, 원소 0~3, 300건</td><td class="num">최솟값 일치</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s7">놓치기 쉬운 함정</h2>
+
+<h3>1. 행 합만 보고 목표를 정한다</h3>
+<p><code>[[5, 0], [5, 0]]</code>은 행 합이 5, 5로 이미 같다. 행만 보면 답이 0처럼 보이지만 열 합은 10, 0이다.
+1열의 10을 줄일 수 없으니 T는 10이어야 하고 답은 10이다.</p>
+
+<h3>2. 행 부족분과 열 부족분을 둘 다 더한다</h3>
+<p><code>[[1, 2], [3, 4]]</code>에서 행 부족분은 4 + 0 = 4, 열 부족분은 3 + 1 = 4다. 이 둘을 더해 8이라고 답하면 틀린다.
+한 칸에 더한 수는 그 칸이 속한 행과 열을 <strong>동시에</strong> 채운다. 추가량은 둘 중 한쪽만 세면 된다.</p>
+
+<h3>3. 출력 대상을 착각한다</h3>
+<p>구하는 값은 목표 합 T(7)도, 완성된 행렬도 아니고 추가한 양의 합(4)이다.
+문제 설명에 따로 적혀 있을 만큼 자주 틀리는 지점이다.</p>
+
+<h3>4. 실제로 행렬을 채우려 든다</h3>
+<p>답만 구하는 문제에서는 구성이 필요 없다. 채우는 방법은 여러 가지지만 추가량은 T에만 의존하므로 모두 같은 값이 나온다.
+구성 코드는 "가능하다"는 것을 확인하는 용도이지 답을 구하는 데 쓰지 않는다.</p>
+
+<h3>5. 평균으로 맞추려 한다</h3>
+<p>합을 같게 만든다는 말에서 평균을 떠올리기 쉽지만, 줄일 수 없다는 조건 때문에 기준은 평균이 아니라 최댓값이다.</p>
+
+<h2 id="s8">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>항목</th><th>내용</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>목표 합 T</td><td>모든 행 합·열 합 중 최댓값</td></tr>
+    <tr><td>답</td><td>N × T − (행렬 전체 합)</td></tr>
+    <tr><td>시간 복잡도</td><td>O(N²) — 행 합, 열 합 집계</td></tr>
+    <tr><td>추가 공간</td><td>O(N) — 행 합, 열 합 리스트</td></tr>
+    <tr><td>정당성</td><td>T는 최댓값보다 작을 수 없고(하한), 최댓값으로 항상 채울 수 있다(달성 가능)</td></tr>
+  </tbody>
+</table>
+</div>
+<ul>
+  <li>행 방향과 열 방향 집계를 각각 구해 두면 행렬 문제의 상당수가 1차원 문제로 줄어든다.</li>
+  <li>최소화 문제는 "하한 찾기"와 "하한 달성 가능성 보이기" 두 단계로 나눠 생각한다.</li>
+  <li>공식으로 답이 나오는 문제도, 구성 코드와 무작위 검증을 한 번 돌려 두면 공식을 믿을 근거가 생긴다.</li>
+</ul>
+<p>이전 글: <a href="/devblog/posts/2026-10-09-algo-best-removal.html">03단원 — 한 종류를 제거해 최장 연속 구간 만들기</a></p>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
