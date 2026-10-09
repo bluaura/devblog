@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>답에 대한 이분 탐색 — 최소 흡입력을 &#x27;가능한가&#x27; 판정으로 바꿔 찾기 · 블루오라 개발노트</title>
+<meta name="description" content="최대 사용 횟수 안에 일직선의 점을 모두 덮는 최소 반경 문제를 판정 그리디 + 이분 탐색으로 푸는 과정. 좌표 범위 10억에서 판정 28회로 끝나는 이유, 상한을 내림하면 검증 없이 오답이 나오는 경우 등 실행으로 확인한 함정 4가지와 중심 위치 복원 변형을 정리">
+<meta property="og:type" content="article">
+<meta property="og:title" content="답에 대한 이분 탐색 — 최소 흡입력을 &#x27;가능한가&#x27; 판정으로 바꿔 찾기">
+<meta property="og:description" content="최대 사용 횟수 안에 일직선의 점을 모두 덮는 최소 반경 문제를 판정 그리디 + 이분 탐색으로 푸는 과정. 좌표 범위 10억에서 판정 28회로 끝나는 이유, 상한을 내림하면 검증 없이 오답이 나오는 경우 등 실행으로 확인한 함정 4가지와 중심 위치 복원 변형을 정리">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-10-algo-binary-search-on-answer.html">
+<meta property="article:published_time" content="2026-10-10">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-10-algo-binary-search-on-answer.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>답에 대한 이분 탐색 — 최소 흡입력을 &#x27;가능한가&#x27; 판정으로 바꿔 찾기</h1>
+    <p class="sub"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">이분탐색</span> &nbsp;2026-10-10</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">기법</div><div class="value">답 이분 탐색</div><div class="delta">매개 변수 탐색</div></div>
+  <div class="stat"><div class="label">예제 결과</div><div class="value">5</div><div class="delta">이물질 7개, 2번 사용</div></div>
+  <div class="stat"><div class="label">시간 복잡도</div><div class="value">O(N log R)</div><div class="delta">R은 좌표 범위</div></div>
+  <div class="stat"><div class="label">판정 호출</div><div class="value">28회</div><div class="delta">좌표 범위 10억일 때</div></div>
+</div>
+
+<blockquote>
+일직선 위의 이물질을 최대 <code>uses</code>번의 장비 사용으로 모두 덮을 때 필요한 최소 흡입력 V를 구하는 문제다.
+"최소 V가 얼마인가"를 직접 구하기는 어렵지만, <strong>"V가 이 값이면 가능한가"</strong>는 왼쪽부터 덮어 나가는 그리디로 쉽게 판정된다.
+V가 커질수록 가능해지기만 하므로, 판정 함수를 이분 탐색으로 감싸면 가능과 불가능의 경계가 곧 답이다.
+학습 교재 09단원 예제 코드를 추적한 기록이며, 장비 중심 위치까지 구하는 변형을 덧붙였다 (Python 3 실행 확인).
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">문제</a></li>
+    <li><a href="#s2">전체 코드</a></li>
+    <li><a href="#s3">핵심 아이디어</a></li>
+    <li><a href="#s4">판정 함수 possible</a></li>
+    <li><a href="#s5">이분 탐색 틀</a></li>
+    <li><a href="#s6">예제 추적</a></li>
+    <li><a href="#s7">놓치기 쉬운 함정</a></li>
+    <li><a href="#s8">변형: 장비 중심 위치까지</a></li>
+    <li><a href="#s9">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">문제</h2>
+<p>일직선 위에 이물질이 놓여 있다. 장비를 중심 x에서 한 번 사용하면 구간 <code>[x − V, x + V]</code>의 이물질이 제거된다. 양 끝을 포함한다.</p>
+<ul>
+  <li>입력: <code>points</code> — 비어 있지 않은 음이 아닌 좌표 리스트. 정렬되어 있지 않을 수 있다. <code>uses</code> — 1 이상의 최대 사용 횟수.</li>
+  <li>흡입력 V는 모든 사용에서 같고, 음이 아닌 정수다.</li>
+  <li>중심은 이물질 위치가 아니어도 된다.</li>
+  <li>장비를 <code>uses</code>번보다 적게 써도 된다.</li>
+  <li>출력: 모든 이물질을 덮을 수 있는 최소 V.</li>
+</ul>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>points</th><th class="num">uses</th><th class="num">출력</th><th>이유</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>[1, 3, 8, 10, 18, 20, 25]</code></td><td class="num">2</td><td class="num">5</td><td>중심 6이 1 ~ 11, 중심 23이 18 ~ 28을 덮는다</td></tr>
+    <tr><td><code>[0, 3]</code></td><td class="num">1</td><td class="num">2</td><td>간격 3을 정수 V로 덮으려면 2V ≥ 3</td></tr>
+    <tr><td><code>[10, 0, 5]</code></td><td class="num">3</td><td class="num">0</td><td>이물질마다 한 번씩 쓰면 V = 0으로 충분</td></tr>
+    <tr><td><code>[0, 1000000000]</code></td><td class="num">1</td><td class="num">500000000</td><td>양 끝의 한가운데에 중심</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s2">전체 코드</h2>
+<div class="code">
+  <div class="code-head"><span class="fname">minimum_power.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def minimum_power(points, uses):
+    points = sorted(points)
+
+    def possible(power):
+        count = 0
+        covered_until = -1
+        for point in points:
+            if point &lt;= covered_until:
+                continue
+            count += 1
+            if count &gt; uses:
+                return False
+            covered_until = point + 2 * power
+        return True
+
+    low = 0
+    high = (points[-1] - points[0] + 1) // 2
+    while low &lt; high:
+        mid = (low + high) // 2
+        if possible(mid):
+            high = mid
+        else:
+            low = mid + 1
+    return low
+
+
+def run_checks():
+    assert minimum_power([1, 3, 8, 10, 18, 20, 25], 2) == 5
+    assert minimum_power([0, 3], 1) == 2
+    assert minimum_power([10, 0, 5], 3) == 0
+    assert minimum_power([0, 1000000000], 1) == 500000000
+    print("09단원: 확인용 테스트 4개 통과")
+
+
+if __name__ == "__main__":
+    run_checks()</code></pre>
+</div>
+
+<h2 id="s3">핵심 아이디어</h2>
+<p>문제를 두 겹으로 나눈다.</p>
+<ol class="steps">
+  <li><strong>최적화 문제를 판정 문제로 바꾼다</strong> — "최소 V는?" 대신 "V가 주어지면 <code>uses</code>번 안에 다 덮을 수 있나?"를 묻는다. 답은 예/아니오다.</li>
+  <li><strong>판정 결과가 한 방향으로만 바뀐다</strong> — V로 가능하면 V + 1로도 가능하다(같은 중심에서 더 넓게 덮을 뿐이다). 따라서 V를 0부터 늘려 가면 결과가 "불가능 … 불가능, 가능 … 가능"으로 딱 한 번 바뀐다.</li>
+  <li><strong>바뀌는 지점을 이분 탐색으로 찾는다</strong> — 첫 번째 "가능"이 최소 V다.</li>
+</ol>
+
+<div class="code">
+  <pre><code class="language-plaintext">V        0   1   2   3   4   5   6   7  ...  12
+가능?    X   X   X   X   X   O   O   O  ...   O
+                             ^
+                          최소 V = 5</code></pre>
+</div>
+
+<div class="callout">
+<strong>판별 기준</strong> — "조건을 만족하는 최솟값(최댓값)을 구하라"에서 값을 직접 계산하는 식이 떠오르지 않으면 두 가지를 확인한다.
+값을 하나 정했을 때 가능 여부를 빠르게 판정할 수 있는가. 그리고 값이 커질수록 가능 여부가 한 방향으로만 바뀌는가. 둘 다 예라면 답에 대한 이분 탐색이다.
+</div>
+
+<h2 id="s4">판정 함수 possible</h2>
+<div class="code">
+  <pre><code class="language-python">def possible(power):
+    count = 0
+    covered_until = -1
+    for point in points:
+        if point &lt;= covered_until:
+            continue
+        count += 1
+        if count &gt; uses:
+            return False
+        covered_until = point + 2 * power
+    return True</code></pre>
+</div>
+
+<p>V가 정해졌을 때 필요한 최소 사용 횟수를 세는 그리디다. 정렬된 점을 왼쪽부터 본다.</p>
+<ul>
+  <li><strong>아직 덮이지 않은 가장 왼쪽 점</strong>을 만나면 장비를 한 번 쓴다.</li>
+  <li>그 점을 <strong>구간의 왼쪽 끝</strong>에 맞춘다. 중심은 <code>point + V</code>, 덮는 범위는 <code>[point, point + 2V]</code>다.</li>
+  <li>범위 안의 점은 건너뛰고, 범위를 벗어난 첫 점에서 다시 한 번 쓴다.</li>
+</ul>
+
+<div class="code">
+  <pre><code class="language-plaintext">point          point + V        point + 2V
+  |----------------x----------------|
+ 왼쪽 끝          중심            오른쪽 끝 (covered_until)</code></pre>
+</div>
+
+<p>왼쪽 끝에 맞추는 것이 최선인 이유는 단순하다. 가장 왼쪽 점은 어차피 덮어야 하고, 그보다 왼쪽에는 덮을 것이 없다.
+구간을 더 왼쪽으로 밀면 빈 곳을 덮느라 오른쪽을 손해 보고, 더 오른쪽으로 밀면 그 점을 놓친다.</p>
+<p><code>covered_until</code>의 초기값 <code>-1</code>은 "아직 아무것도 덮지 않았다"는 뜻이다. 좌표가 음이 아니므로 첫 점은 항상 미덮임으로 판정된다.
+횟수가 <code>uses</code>를 넘는 즉시 <code>False</code>를 반환해 남은 점을 보지 않는다.</p>
+
+<h2 id="s5">이분 탐색 틀</h2>
+<div class="code">
+  <pre><code class="language-python">low = 0
+high = (points[-1] - points[0] + 1) // 2
+while low &lt; high:
+    mid = (low + high) // 2
+    if possible(mid):
+        high = mid
+    else:
+        low = mid + 1
+return low</code></pre>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>요소</th><th>값</th><th>근거</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>low</code> 초기값</td><td>0</td><td>V는 음이 아닌 정수</td></tr>
+    <tr><td><code>high</code> 초기값</td><td>(최대 − 최소 + 1) // 2</td><td>전체 폭의 절반을 올림한 값. 한 번만 써도 전부 덮이므로 항상 가능한 값이다</td></tr>
+    <tr><td>가능하면</td><td><code>high = mid</code></td><td><code>mid</code>가 답일 수 있으므로 버리지 않는다</td></tr>
+    <tr><td>불가능하면</td><td><code>low = mid + 1</code></td><td><code>mid</code> 이하는 전부 불가능하다</td></tr>
+    <tr><td>종료</td><td><code>low == high</code></td><td>후보가 하나 남았고 그것이 답</td></tr>
+  </tbody>
+</table>
+</div>
+<p>반복 내내 "답은 <code>low</code> 이상 <code>high</code> 이하이고, <code>high</code>는 항상 가능한 값"이라는 조건이 유지된다.
+그래서 끝난 뒤 <code>low</code>를 다시 판정할 필요가 없다. 대신 <code>high</code>의 초기값이 정말 가능한 값이어야 한다.</p>
+
+<h2 id="s6">예제 추적</h2>
+<p><code>[1, 3, 8, 10, 18, 20, 25]</code>, <code>uses = 2</code>. <code>high</code>는 (25 − 1 + 1) // 2 = 12에서 시작한다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th class="num">low</th><th class="num">high</th><th class="num">mid</th><th>왼쪽부터 덮은 구간</th><th>판정</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">0</td><td class="num">12</td><td class="num">6</td><td>[1, 13], [18, 30]</td><td>2번, 가능</td></tr>
+    <tr><td class="num">0</td><td class="num">6</td><td class="num">3</td><td>[1, 7], [8, 14], 18에서 세 번째 필요</td><td>불가능</td></tr>
+    <tr><td class="num">4</td><td class="num">6</td><td class="num">5</td><td>[1, 11], [18, 28]</td><td>2번, 가능</td></tr>
+    <tr><td class="num">4</td><td class="num">5</td><td class="num">4</td><td>[1, 9], [10, 18], 20에서 세 번째 필요</td><td>불가능</td></tr>
+    <tr><td class="num">5</td><td class="num">5</td><td class="num"></td><td>종료</td><td>답 5</td></tr>
+  </tbody>
+</table>
+</div>
+<p>판정 함수는 4번 호출됐다. V = 4에서는 첫 구간이 9까지만 닿아 10을 놓치고, V = 5가 되어야 11까지 닿아 1, 3, 8, 10이 한 번에 덮인다.</p>
+
+<p>같은 이물질에서 사용 횟수만 바꾼 결과다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>uses</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th class="num">6</th><th class="num">7</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>최소 V</td><td class="num">12</td><td class="num">5</td><td class="num">4</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">0</td></tr>
+  </tbody>
+</table>
+</div>
+<p>횟수가 늘면 V는 줄거나 그대로다. 7번이면 이물질마다 하나씩 써서 0이 된다.</p>
+
+<h2 id="s7">놓치기 쉬운 함정</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>실수</th><th>입력</th><th class="num">잘못된 결과</th><th class="num">기대값</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>중심을 이물질 위에 둠 (<code>point + power</code>)</td><td>첫 번째 예제</td><td class="num">9</td><td class="num">5</td></tr>
+    <tr><td>경계 미포함 (<code>point &lt; covered_until</code>)</td><td><code>[0, 2, 4]</code>, 2</td><td class="num">2</td><td class="num">1</td></tr>
+    <tr><td><code>high</code>를 내림 (폭 // 2)</td><td><code>[0, 3]</code>, 1</td><td class="num">1</td><td class="num">2</td></tr>
+    <tr><td>정렬 생략</td><td><code>[10, 0, 5]</code>, 1</td><td class="num">0</td><td class="num">5</td></tr>
+  </tbody>
+</table>
+</div>
+<p>네 줄 모두 잘못 짠 코드를 실행해 얻은 값이다.</p>
+
+<h3>1. 중심은 이물질 위치가 아니어도 된다</h3>
+<p>가장 왼쪽 이물질 위에 중심을 두면 구간의 왼쪽 절반이 빈 곳을 덮는다. 덮는 범위가 <code>point + V</code>까지로 줄어 필요한 V가 거의 두 배가 된다.
+이물질을 구간의 <strong>왼쪽 끝</strong>에 맞추므로 <code>2 * power</code>다.</p>
+
+<h3>2. 양 끝을 포함한다</h3>
+<p><code>[0, 2, 4]</code>, 2번 사용에서 V = 1이면 [0, 2]와 [4, 6]으로 충분하다. 비교를 <code>&lt;</code>로 쓰면 정확히 끝에 걸친 2를 못 덮은 것으로 처리해 V = 1을 불가능으로 판정한다.</p>
+
+<h3>3. 상한은 반드시 "가능한 값"이어야 한다</h3>
+<p>폭이 홀수일 때 내림하면 그 값으로는 전체를 덮지 못한다. <code>[0, 3]</code>에서 <code>high</code>를 1로 잡으면 반복문은 1을 검증 없이 답으로 돌려준다.
+이 틀은 <code>high</code>를 한 번도 판정하지 않고 믿기 때문에, 상한 계산의 올림 여부가 그대로 정답에 반영된다.</p>
+
+<h3>4. 정렬을 빼먹는다</h3>
+<p>왼쪽부터 덮는 그리디와 <code>points[-1] - points[0]</code> 상한 모두 정렬을 전제로 한다. 입력이 정렬되어 있다는 보장이 없으므로 함수 첫 줄에서 정렬한다.
+문제 조건으로 정렬이 금지되지 않았는지도 확인한다. 이 문제는 위치만 의미가 있고 입력 순서는 의미가 없다.</p>
+
+<h3>5. 갱신식을 섞어 쓰면 끝나지 않는다</h3>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>조합</th><th>결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>mid</code> 내림 + <code>high = mid</code> + <code>low = mid + 1</code></td><td>정상. 최솟값 찾기 (이 코드)</td></tr>
+    <tr><td><code>mid</code> 내림 + <code>low = mid</code></td><td><code>low</code>와 <code>high</code>가 1 차이일 때 <code>mid == low</code>가 되어 무한 반복</td></tr>
+    <tr><td><code>mid</code> 올림 + <code>low = mid</code> + <code>high = mid - 1</code></td><td>정상. 최댓값 찾기에 쓰는 대칭형</td></tr>
+  </tbody>
+</table>
+</div>
+<p>구간이 매번 반드시 줄어드는지를 <code>low</code>와 <code>high</code>가 붙어 있는 경우로 확인하면 된다.</p>
+
+<h3>6. V를 0부터 하나씩 올려 본다</h3>
+<p>판정 함수가 있으니 선형으로 올려도 답은 나온다. 하지만 마지막 예제는 답이 5억이라 판정을 5억 번 넘게 호출해야 한다.
+이분 탐색은 같은 입력에서 판정을 <strong>28번</strong> 호출했다(실행해서 센 값). 좌표 범위가 두 배가 되어도 호출은 한 번 늘 뿐이다.</p>
+
+<h2 id="s8">변형: 장비 중심 위치까지</h2>
+<p>교재 범위를 넘어 직접 추가한 변형이다. 최소 V를 구한 뒤 판정 함수와 같은 순회를 한 번 더 하면서 중심을 기록하면 실제 배치가 나온다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">cleaning_plan.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def cleaning_plan(points, uses):
+    power = minimum_power(points, uses)
+    centers = []
+    covered_until = -1
+    for point in sorted(points):
+        if point &lt;= covered_until:
+            continue
+        centers.append(point + power)
+        covered_until = point + 2 * power
+    return power, centers
+
+
+print(cleaning_plan([1, 3, 8, 10, 18, 20, 25], 2))  # (5, [6, 23])
+print(cleaning_plan([1, 3, 8, 10, 18, 20, 25], 3))  # (4, [5, 14, 24])
+print(cleaning_plan([0, 3], 1))                     # (2, [2])</code></pre>
+</div>
+<p>최소 V를 만드는 배치는 여러 개일 수 있고, 이 코드는 그중 구간을 가능한 한 왼쪽 이물질에 붙인 배치 하나를 돌려준다.</p>
+
+<p>검증에는 이분 탐색도 그리디도 쓰지 않는 구현을 따로 만들었다. 정렬한 점을 연속한 묶음으로 나누는 모든 방법을 동적 계획법으로 탐색해, 묶음별 필요 V(폭의 절반 올림)의 최댓값이 가장 작은 경우를 찾는 방식이다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>검증 항목</th><th>조건</th><th class="num">결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>최소 V 대조</td><td>점 1 ~ 8개, 좌표 0 ~ 40, 사용 1 ~ 5번, 무작위 10만 건</td><td class="num">전부 일치</td></tr>
+    <tr><td>배치 검사</td><td>중심 개수가 <code>uses</code> 이하, 모든 점이 어떤 중심에서 V 이내</td><td class="num">전부 통과</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s9">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>포인트</th><th>내용</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>문제 변환</td><td>"최소 V" → "V가 주어지면 가능한가"</td></tr>
+    <tr><td>전제 조건</td><td>V가 커질수록 가능 여부가 불가능에서 가능으로 한 번만 바뀐다</td></tr>
+    <tr><td>판정</td><td>정렬 후, 미덮임 가장 왼쪽 점을 구간 왼쪽 끝에 맞추는 그리디. O(N)</td></tr>
+    <tr><td>탐색 범위</td><td>하한 0, 상한은 전체 폭의 절반 올림 (항상 가능한 값)</td></tr>
+    <tr><td>갱신</td><td>가능하면 <code>high = mid</code>, 불가능하면 <code>low = mid + 1</code></td></tr>
+    <tr><td>복잡도</td><td>정렬 O(N log N) + 탐색 O(N log R)</td></tr>
+  </tbody>
+</table>
+</div>
+<p>판정 함수 안의 그리디는 08단원과 같은 형태다. 한 방향으로 훑으면서 요약값 하나(<code>covered_until</code>)만 들고 간다.</p>
+<p>이전 글: <a href="/devblog/posts/2026-10-10-algo-greedy-reverse-group-leaders.html">08단원 — 그리디와 역방향 순회</a></p>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
