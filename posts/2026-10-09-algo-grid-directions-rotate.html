@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>좌표와 방향 벡터로 푸는 격자 문제 3종 — 8방향 패턴 세기, 테두리 회전, 한 방향 포위 · 블루오라 개발노트</title>
+<meta name="description" content="8방향 직선 패턴 세기, 행렬 테두리 반시계 한 칸 회전, 포위·폭탄 처리 세 함수를 표로 추적하고, 범위 검사 순서·모서리 중복·판정과 수정 분리 등 함정과 테두리를 리스트로 뽑아 k칸 회전하는 변형을 정리">
+<meta property="og:type" content="article">
+<meta property="og:title" content="좌표와 방향 벡터로 푸는 격자 문제 3종 — 8방향 패턴 세기, 테두리 회전, 한 방향 포위">
+<meta property="og:description" content="8방향 직선 패턴 세기, 행렬 테두리 반시계 한 칸 회전, 포위·폭탄 처리 세 함수를 표로 추적하고, 범위 검사 순서·모서리 중복·판정과 수정 분리 등 함정과 테두리를 리스트로 뽑아 k칸 회전하는 변형을 정리">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-09-algo-grid-directions-rotate.html">
+<meta property="article:published_time" content="2026-10-09">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-09-algo-grid-directions-rotate.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>좌표와 방향 벡터로 푸는 격자 문제 3종 — 8방향 패턴 세기, 테두리 회전, 한 방향 포위</h1>
+    <p class="sub"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">구현</span> &nbsp;2026-10-09</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">문제 수</div><div class="value">3</div><div class="delta">패턴 세기·회전·포위</div></div>
+  <div class="stat"><div class="label">공통 도구</div><div class="value">방향 벡터</div><div class="delta">(dr, dc) 8개</div></div>
+  <div class="stat"><div class="label">좌표 공식</div><div class="value">r + dr·k</div><div class="delta">시작점 + 방향 × 걸음 수</div></div>
+  <div class="stat"><div class="label">확인 테스트</div><div class="value">8</div><div class="delta">전부 통과</div></div>
+</div>
+
+<blockquote>
+격자 구현 문제의 기본기 세 가지를 한 단원으로 묶은 예제다. 8방향 직선에서 숫자 패턴 세기, 행렬 테두리를 반시계로 한 칸 돌리기, 한 방향으로 늘어선 값의 포위·폭탄 처리.
+세 문제 모두 알고리즘이 어려운 것이 아니라 <strong>좌표를 정확히 다루는 것</strong>이 전부다. 범위 검사 위치, 모서리 중복, 판정과 수정의 분리에서 실수가 난다.
+학습 교재 02단원 예제 코드를 추적한 기록이며, 테두리를 리스트로 뽑아 k칸 회전하는 변형을 덧붙였다 (Python 3 실행 확인).
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">단원 구성</a></li>
+    <li><a href="#s2">공통 도구: 방향 벡터</a></li>
+    <li><a href="#s3">문제 1 — 8방향 패턴 세기</a></li>
+    <li><a href="#s4">문제 2 — 테두리 반시계 회전</a></li>
+    <li><a href="#s5">문제 3 — 한 방향 포위와 폭탄</a></li>
+    <li><a href="#s6">변형: 테두리를 리스트로 뽑아 k칸 회전</a></li>
+    <li><a href="#s7">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">단원 구성</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>함수</th><th>입력</th><th>출력</th><th>핵심</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>count_pattern</code></td><td>숫자 격자, 찾을 숫자 순서</td><td>패턴이 나타난 횟수</td><td>모든 칸 × 8방향 × 패턴 길이</td></tr>
+    <tr><td><code>rotate_ccw</code></td><td>숫자 행렬</td><td>테두리마다 반시계로 한 칸 옮긴 새 행렬</td><td>들고 있는 값을 다음 칸과 교환</td></tr>
+    <tr><td><code>capture_ray</code></td><td>한 방향의 값 리스트, 새 값</td><td>변경된 새 리스트</td><td>판정을 끝낸 뒤 수정</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s2">공통 도구: 방향 벡터</h2>
+<div class="code">
+  <pre><code class="language-python">DIRECTIONS = ((-1, 0), (-1, 1), (0, 1), (1, 1),
+              (1, 0), (1, -1), (0, -1), (-1, -1))</code></pre>
+</div>
+<p>각 원소는 <code>(행 변화량, 열 변화량)</code>이다. 위쪽 <code>(-1, 0)</code>에서 시작해 시계 방향으로 8개를 나열했다.
+행 번호는 아래로 갈수록 커지므로 위쪽이 <code>-1</code>이다. 수학 좌표계의 y축과 반대라는 점이 처음에 가장 헷갈린다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th class="center">(-1, -1) 좌상</th><th class="center">(-1, 0) 상</th><th class="center">(-1, 1) 우상</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="center">(0, -1) 좌</td><td class="center">현재 칸</td><td class="center">(0, 1) 우</td></tr>
+    <tr><td class="center">(1, -1) 좌하</td><td class="center">(1, 0) 하</td><td class="center">(1, 1) 우하</td></tr>
+  </tbody>
+</table>
+</div>
+<p>시작 칸 <code>(r, c)</code>에서 방향 <code>(dr, dc)</code>로 k걸음 간 칸은 <code>(r + dr × k, c + dc × k)</code>다. 이 식 하나로 직선 위의 모든 칸을 표현한다.</p>
+
+<h2 id="s3">문제 1 — 8방향 패턴 세기</h2>
+<p>격자에서 주어진 숫자 순서가 8방향 직선 위에 연속해서 나타나는 횟수를 센다. 겹친 패턴도 각각 센다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">count_pattern.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def count_pattern(grid, pattern):
+    rows, columns = len(grid), len(grid[0])
+    count = 0
+    for r in range(rows):
+        for c in range(columns):
+            for dr, dc in DIRECTIONS:
+                matched = True
+                for step, value in enumerate(pattern):
+                    nr, nc = r + dr * step, c + dc * step
+                    if not (0 &lt;= nr &lt; rows and 0 &lt;= nc &lt; columns):
+                        matched = False
+                        break
+                    if grid[nr][nc] != value:
+                        matched = False
+                        break
+                if matched:
+                    count += 1
+    return count</code></pre>
+</div>
+
+<h3>구조</h3>
+<ol class="steps">
+  <li>모든 칸을 패턴의 <strong>시작점</strong> 후보로 본다.</li>
+  <li>시작점마다 8방향을 각각 시도한다.</li>
+  <li><code>step</code>번째 숫자가 <code>step</code>걸음 간 칸의 값과 같은지 차례로 확인한다. 범위를 벗어나거나 값이 다르면 즉시 포기한다.</li>
+  <li>끝까지 통과한 (시작점, 방향) 쌍의 개수가 답이다.</li>
+</ol>
+<p><code>enumerate(pattern)</code>이 걸음 수와 기대값을 한 번에 준다. <code>step</code>이 0일 때는 시작 칸 자신을 검사하므로 시작 칸에 대한 별도 조건이 필요 없다.</p>
+
+<h3>예제 추적</h3>
+<p><code>[[1, 2, 3], [0, 0, 0], [3, 2, 1]]</code>에서 <code>[1, 2, 3]</code>을 찾는다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>시작점</th><th>방향</th><th>지나는 칸</th><th>결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>(0, 0)</td><td>우 (0, 1)</td><td>(0,0) (0,1) (0,2)</td><td>일치</td></tr>
+    <tr><td>(0, 0)</td><td>우하 (1, 1)</td><td>(0,0) (1,1)</td><td>(1,1)이 0이라 실패</td></tr>
+    <tr><td>(2, 2)</td><td>좌 (0, -1)</td><td>(2,2) (2,1) (2,0)</td><td>일치</td></tr>
+    <tr><td>(2, 2)</td><td>상 (-1, 0)</td><td>(2,2) (1,2)</td><td>(1,2)가 0이라 실패</td></tr>
+  </tbody>
+</table>
+</div>
+<p>일치는 2건이므로 답은 2다. 아래 행은 오른쪽에서 왼쪽으로 읽어야 1, 2, 3이 된다. 8방향을 모두 돌기 때문에 역방향도 자연스럽게 잡힌다.</p>
+
+<h3>놓치기 쉬운 함정</h3>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>상황</th><th>입력</th><th class="num">결과</th><th>설명</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>앞뒤가 같은 패턴</td><td><code>[[1, 2, 1]]</code>, <code>[1, 2, 1]</code></td><td class="num">2</td><td>같은 칸들이 양쪽 끝에서 한 번씩 세어진다</td></tr>
+    <tr><td>겹치는 패턴</td><td><code>[[1, 1, 1]]</code>, <code>[1, 1]</code></td><td class="num">4</td><td>위치 2곳 × 방향 2개</td></tr>
+    <tr><td>길이 1 패턴</td><td><code>[[1]]</code>, <code>[1]</code></td><td class="num">8</td><td>한 칸이 8방향 모두에서 일치로 세어진다</td></tr>
+  </tbody>
+</table>
+</div>
+<ul>
+  <li><strong>범위 검사가 값 비교보다 먼저다.</strong> 순서가 바뀌면 <code>nr</code>이 -1일 때 파이썬이 에러 없이 마지막 행을 읽는다. 격자 반대편과 이어진 것처럼 잘못 세게 된다.</li>
+  <li><strong>길이 1은 입력 조건으로 막혀 있다.</strong> 문제가 "길이 2 이상"을 명시한 이유가 위 표의 세 번째 줄이다. 조건이 없는 변형이라면 따로 처리해야 한다.</li>
+  <li><strong>회문 패턴의 중복은 문제 정의를 확인한다.</strong> 이 문제는 "겹친 패턴도 센다"이므로 2가 맞다. 같은 칸 집합을 한 번만 세라는 문제라면 방향을 4개만 쓰는 식으로 바꿔야 한다.</li>
+</ul>
+<p>시간 복잡도는 O(R × C × 8 × L)이다 (L은 패턴 길이). 불일치 시 바로 빠져나오므로 실제로는 더 적게 돈다.</p>
+
+<h2 id="s4">문제 2 — 테두리 반시계 회전</h2>
+<p>행렬의 각 테두리(바깥 고리, 그 안쪽 고리, …)의 값을 반시계 방향으로 한 칸씩 옮긴 새 행렬을 반환한다. 원본은 유지하고, 한 행이나 한 열만 남은 부분은 움직이지 않는다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">rotate_ccw.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def rotate_ccw(matrix):
+    grid = [row[:] for row in matrix]
+    rows, columns = len(grid), len(grid[0])
+    for layer in range(min(rows, columns) // 2):
+        top, left = layer, layer
+        bottom, right = rows - 1 - layer, columns - 1 - layer
+        carried = grid[top][left]
+        for r in range(top + 1, bottom + 1):
+            grid[r][left], carried = carried, grid[r][left]
+        for c in range(left + 1, right + 1):
+            grid[bottom][c], carried = carried, grid[bottom][c]
+        for r in range(bottom - 1, top - 1, -1):
+            grid[r][right], carried = carried, grid[r][right]
+        for c in range(right - 1, left - 1, -1):
+            grid[top][c], carried = carried, grid[top][c]
+    return grid</code></pre>
+</div>
+
+<h3>구조</h3>
+<ul>
+  <li><strong>복사본에서 작업</strong> — <code>[row[:] for row in matrix]</code>로 행마다 복사한다. <code>matrix[:]</code>만 쓰면 바깥 리스트만 복사되어 원본 행이 함께 바뀐다.</li>
+  <li><strong>고리 개수</strong> — <code>min(rows, columns) // 2</code>. 3×3이면 1개(가운데 칸은 고리가 아님), 4×4면 2개, 1×N이면 0개라 아무것도 움직이지 않는다.</li>
+  <li><strong>값을 들고 걷는다</strong> — 왼쪽 위 값을 <code>carried</code>에 들고, 왼쪽 변을 내려가고 → 아래 변을 오른쪽으로 → 오른쪽 변을 올라가고 → 위 변을 왼쪽으로 돌아온다. 칸마다 들고 있던 값을 내려놓고 그 칸의 원래 값을 집어 든다.</li>
+</ul>
+<div class="code">
+  <pre><code class="language-python">grid[r][left], carried = carried, grid[r][left]</code></pre>
+</div>
+<p>파이썬은 오른쪽을 먼저 전부 계산한 뒤 왼쪽에 대입한다. 그래서 임시 변수 없이 "내려놓기와 집어 들기"가 한 줄로 된다.</p>
+
+<h3>3×3 추적</h3>
+<p><code>[[1, 2, 3], [4, 5, 6], [7, 8, 9]]</code>, <code>carried</code>는 1로 시작한다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>구간</th><th>칸</th><th class="num">내려놓는 값</th><th class="num">집어 드는 값</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>왼쪽 변 ↓</td><td>(1, 0)</td><td class="num">1</td><td class="num">4</td></tr>
+    <tr><td>왼쪽 변 ↓</td><td>(2, 0)</td><td class="num">4</td><td class="num">7</td></tr>
+    <tr><td>아래 변 →</td><td>(2, 1)</td><td class="num">7</td><td class="num">8</td></tr>
+    <tr><td>아래 변 →</td><td>(2, 2)</td><td class="num">8</td><td class="num">9</td></tr>
+    <tr><td>오른쪽 변 ↑</td><td>(1, 2)</td><td class="num">9</td><td class="num">6</td></tr>
+    <tr><td>오른쪽 변 ↑</td><td>(0, 2)</td><td class="num">6</td><td class="num">3</td></tr>
+    <tr><td>위 변 ←</td><td>(0, 1)</td><td class="num">3</td><td class="num">2</td></tr>
+    <tr><td>위 변 ←</td><td>(0, 0)</td><td class="num">2</td><td class="num">1 (버림)</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="code">
+  <pre><code class="language-plaintext">원본           결과
+1  2  3        2  3  6
+4  5  6        1  5  9
+7  8  9        4  7  8</code></pre>
+</div>
+<p>가운데 5는 고리에 속하지 않아 그대로다.</p>
+
+<h3>놓치기 쉬운 함정</h3>
+<ul>
+  <li><strong>모서리를 두 번 처리한다.</strong> 네 구간의 범위가 각각 <code>top + 1</code>, <code>left + 1</code>, <code>bottom - 1</code>, <code>right - 1</code>에서 시작하는 이유다. 앞 구간이 끝난 모서리는 다음 구간에서 건너뛴다. 한 고리에서 처리하는 칸은 정확히 2 × (높이 + 너비) − 4개다.</li>
+  <li><strong>마지막 구간이 시작 칸까지 와야 한다.</strong> 위 변의 범위 끝이 <code>left - 1</code>이라 <code>(top, left)</code>까지 포함된다. 여기서 빠뜨리면 왼쪽 위 칸에 원래 값이 그대로 남는다.</li>
+  <li><strong>회전 방향과 걷는 방향을 혼동한다.</strong> 값을 들고 걷는 방식에서는 걷는 방향이 곧 값이 이동하는 방향이다. 반시계로 돌리려면 반시계로 걷는다. 결과에서 위 행이 왼쪽으로 밀렸는지(2, 3이 앞으로 왔는지)로 확인한다.</li>
+  <li><strong>직사각형에서 고리 수를 잘못 센다.</strong> 3×4는 고리 1개이고 안쪽에 1×2가 남는데, 이 부분은 움직이지 않는다. 실행 결과는 <code>[[2, 3, 4, 8], [1, 6, 7, 12], [5, 9, 10, 11]]</code>로 6, 7이 제자리다.</li>
+</ul>
+
+<h2 id="s5">문제 3 — 한 방향 포위와 폭탄</h2>
+<p>칸 하나를 터치해 값을 <code>new_value</code>(0 또는 1)로 바꿨을 때, 그 칸 <strong>다음부터</strong> 지도 끝까지 한 방향으로 늘어선 값들이 어떻게 바뀌는지 구한다. 2는 폭탄이다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>조건</th><th>결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>방향 안에 <code>new_value</code>가 없다</td><td>그대로</td></tr>
+    <tr><td>첫 <code>new_value</code> 앞에 폭탄이 없다</td><td>그 앞까지만 <code>new_value</code>로 변경 (포위)</td></tr>
+    <tr><td>첫 <code>new_value</code> 앞에 폭탄이 있다</td><td>방향 끝까지 전부 <code>new_value</code>로 변경</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="code">
+  <div class="code-head"><span class="fname">capture_ray.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def capture_ray(values, new_value):
+    result = list(values)
+    end = None
+    has_bomb = False
+    for index, value in enumerate(values):
+        if value == new_value:
+            end = index
+            break
+        if value == 2:
+            has_bomb = True
+    if end is None:
+        return result
+    stop = len(values) if has_bomb else end
+    for index in range(stop):
+        result[index] = new_value
+    return result</code></pre>
+</div>
+
+<h3>구조: 판정 먼저, 수정은 나중</h3>
+<ol class="steps">
+  <li><strong>판정</strong> — 앞에서부터 훑으며 첫 <code>new_value</code>의 위치 <code>end</code>를 찾는다. 그 전에 지나친 폭탄이 있었는지를 <code>has_bomb</code>에 기록한다. 찾는 즉시 <code>break</code>하므로 그 뒤의 폭탄은 보지 않는다.</li>
+  <li><strong>범위 결정</strong> — 닫아 줄 <code>new_value</code>가 없으면 아무것도 하지 않는다. 있으면 폭탄 유무에 따라 <code>stop</code>을 <code>end</code> 또는 리스트 끝으로 정한다.</li>
+  <li><strong>수정</strong> — <code>0</code>부터 <code>stop</code> 직전까지 한꺼번에 바꾼다.</li>
+</ol>
+
+<h3>예제</h3>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>values</th><th class="num">new_value</th><th>판정</th><th>결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>[0, 2, 1, 0]</code></td><td class="num">1</td><td>end = 2, 앞에 폭탄 있음</td><td><code>[1, 1, 1, 1]</code></td></tr>
+    <tr><td><code>[0, 1, 2, 0]</code></td><td class="num">1</td><td>end = 1, 앞에 폭탄 없음</td><td><code>[1, 1, 2, 0]</code></td></tr>
+    <tr><td><code>[0, 2, 0]</code></td><td class="num">1</td><td>new_value 없음</td><td><code>[0, 2, 0]</code></td></tr>
+    <tr><td><code>[1, 0, 0]</code></td><td class="num">1</td><td>end = 0, 바꿀 칸 없음</td><td><code>[1, 0, 0]</code></td></tr>
+    <tr><td><code>[0, 0, 0]</code></td><td class="num">1</td><td>new_value 없음</td><td><code>[0, 0, 0]</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>놓치기 쉬운 함정</h3>
+<ul>
+  <li><strong>훑으면서 바로 바꾼다.</strong> 닫아 줄 값이 있는지 모르는 상태에서 수정하면, 끝까지 가서 없다는 것을 알았을 때 되돌려야 한다. 판정이 끝난 뒤 수정하면 되돌릴 일이 없다.</li>
+  <li><strong>폭탄이 있기만 하면 터진다고 본다.</strong> <code>[0, 2, 0]</code>처럼 폭탄은 있지만 닫아 줄 <code>new_value</code>가 없으면 아무 일도 일어나지 않는다. <code>end is None</code> 검사가 폭탄 처리보다 먼저다.</li>
+  <li><strong>첫 <code>new_value</code> 뒤의 폭탄까지 센다.</strong> <code>[0, 1, 2, 0]</code>의 폭탄은 포위 구간 밖이라 무시된다. <code>break</code>가 이를 보장한다.</li>
+  <li><strong>폭탄 칸 자체도 바뀐다.</strong> 폭탄이 터지면 폭탄 칸과 <code>end</code> 뒤쪽 칸까지 전부 <code>new_value</code>가 된다. <code>stop</code>이 <code>end</code>가 아니라 리스트 길이인 이유다.</li>
+  <li><strong>입력 리스트를 직접 고친다.</strong> <code>result = list(values)</code>로 복사한 뒤 복사본만 수정하고, 판정은 원본 <code>values</code>로 한다.</li>
+</ul>
+
+<h3>격자에서 한 방향 값을 뽑는 방법</h3>
+<p>이 함수는 1차원 리스트만 받는다. 격자에서 그 리스트를 만드는 부분은 앞의 좌표 공식 그대로다. 직접 추가한 보조 코드다.</p>
+<div class="code">
+  <pre><code class="language-python">def ray_cells(rows, columns, r, c, dr, dc):
+    cells = []
+    r, c = r + dr, c + dc
+    while 0 &lt;= r &lt; rows and 0 &lt;= c &lt; columns:
+        cells.append((r, c))
+        r, c = r + dr, c + dc
+    return cells
+
+
+print(ray_cells(3, 4, 1, 1, 0, 1))    # [(1, 2), (1, 3)]
+print(ray_cells(3, 4, 1, 1, -1, -1))  # [(0, 0)]</code></pre>
+</div>
+<p>좌표 목록으로 값을 읽어 <code>capture_ray</code>에 넘기고, 반환된 리스트를 같은 좌표 순서로 다시 써넣으면 된다.
+2차원 문제를 "좌표 목록 뽑기 → 1차원 처리 → 되돌려 쓰기"로 나누는 방식이다.</p>
+
+<h2 id="s6">변형: 테두리를 리스트로 뽑아 k칸 회전</h2>
+<p>교재 범위를 넘어 직접 추가한 변형이다. 같은 분리 방식을 회전에 적용하면 한 칸이 아니라 k칸 회전도 같은 코드로 처리된다.
+고리의 좌표를 반시계 순서로 나열해 두면, 회전은 1차원 리스트를 미는 일이 된다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">rotate_ccw_k.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def ring_cells(top, left, bottom, right):
+    cells = [(r, left) for r in range(top, bottom + 1)]
+    cells += [(bottom, c) for c in range(left + 1, right + 1)]
+    cells += [(r, right) for r in range(bottom - 1, top - 1, -1)]
+    cells += [(top, c) for c in range(right - 1, left, -1)]
+    return cells
+
+
+def rotate_ccw_k(matrix, k=1):
+    grid = [row[:] for row in matrix]
+    rows, columns = len(grid), len(grid[0])
+    for layer in range(min(rows, columns) // 2):
+        cells = ring_cells(layer, layer, rows - 1 - layer, columns - 1 - layer)
+        values = [matrix[r][c] for r, c in cells]
+        shift = k % len(cells)
+        for index, (r, c) in enumerate(cells):
+            grid[r][c] = values[index - shift]
+    return grid
+
+
+print(rotate_ccw_k([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 1))
+# [[2, 3, 6], [1, 5, 9], [4, 7, 8]]
+print(rotate_ccw_k([[1, 2, 3], [4, 5, 6], [7, 8, 9]], 3))
+# [[6, 9, 8], [3, 5, 7], [2, 1, 4]]</code></pre>
+</div>
+
+<p><code>index</code>번째 칸에는 <code>shift</code>칸 앞에 있던 값이 들어온다. <code>index - shift</code>가 음수가 되어도 파이썬의 음수 인덱스가 리스트 뒤쪽을 가리키므로 고리가 자연스럽게 이어진다.
+범위 검사에서는 함정이었던 성질이 여기서는 도움이 된다. <code>k % len(cells)</code>로 줄여 두었기 때문에 k가 아무리 커도 고리 길이만큼만 일한다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>검증 항목</th><th>조건</th><th class="num">결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>k = 1일 때 원본 함수와 일치</td><td>1×1 ~ 6×6 무작위 3만 건</td><td class="num">전부 일치</td></tr>
+    <tr><td>k칸 회전 = 원본 함수 k번 적용</td><td>k는 0 ~ 30</td><td class="num">전부 일치</td></tr>
+    <tr><td>원본 행렬 보존, 값 구성 동일</td><td>같은 입력</td><td class="num">전부 통과</td></tr>
+    <tr><td><code>count_pattern</code> 독립 구현 대조</td><td>패턴 길이 2 ~ 4, 3만 건</td><td class="num">전부 일치</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s7">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>문제</th><th>핵심 한 줄</th><th>가장 흔한 실수</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>8방향 패턴 세기</td><td><code>(r + dr × step, c + dc × step)</code></td><td>범위 검사를 값 비교 뒤에 둠</td></tr>
+    <tr><td>테두리 회전</td><td>들고 있는 값과 칸의 값을 교환하며 한 바퀴</td><td>모서리 중복 처리, 시작 칸 누락</td></tr>
+    <tr><td>한 방향 포위</td><td>첫 동일값 위치와 그 앞의 폭탄 여부를 먼저 판정</td><td>판정 중에 수정, 닫는 값 없이 폭탄 처리</td></tr>
+  </tbody>
+</table>
+</div>
+<ul>
+  <li>방향은 <code>(dr, dc)</code> 튜플 목록으로 한 번만 정의하고 반복문으로 돌린다. 방향별로 코드를 복사하지 않는다.</li>
+  <li>범위 검사는 항상 격자 접근보다 먼저다. 파이썬의 음수 인덱스는 에러를 내지 않는다.</li>
+  <li>원본을 보존해야 하면 2차원은 행 단위로 복사한다.</li>
+  <li>2차원 조작이 복잡하면 좌표 목록을 뽑아 1차원 문제로 바꾼 뒤 되돌려 쓴다.</li>
+</ul>
+<p>다음 글: <a href="/devblog/posts/2026-10-09-algo-best-removal.html">03단원 — 한 종류를 제거해 최장 연속 구간 만들기</a></p>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
