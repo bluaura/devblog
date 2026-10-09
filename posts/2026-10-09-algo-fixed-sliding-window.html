@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>고정 길이 슬라이딩 윈도우 — 목표 16가지를 전부 시도하고 창은 한 칸씩만 갱신하기 · 블루오라 개발노트</title>
+<meta name="description" content="연속 구간과 목표 ID를 함께 고르는 문제를 목표 전수 시도 + 고정 길이 창으로 O(16·N)에 푸는 과정. 들어온 값 +1, 나간 값 −1 갱신을 표로 추적하고, 예제로 드러나지 않는 실수 4가지와 빈도 배열 변형, 1.87초 대 0.009초 비교를 정리">
+<meta property="og:type" content="article">
+<meta property="og:title" content="고정 길이 슬라이딩 윈도우 — 목표 16가지를 전부 시도하고 창은 한 칸씩만 갱신하기">
+<meta property="og:description" content="연속 구간과 목표 ID를 함께 고르는 문제를 목표 전수 시도 + 고정 길이 창으로 O(16·N)에 푸는 과정. 들어온 값 +1, 나간 값 −1 갱신을 표로 추적하고, 예제로 드러나지 않는 실수 4가지와 빈도 배열 변형, 1.87초 대 0.009초 비교를 정리">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-09-algo-fixed-sliding-window.html">
+<meta property="article:published_time" content="2026-10-09">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-09-algo-fixed-sliding-window.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>고정 길이 슬라이딩 윈도우 — 목표 16가지를 전부 시도하고 창은 한 칸씩만 갱신하기</h1>
+    <p class="sub"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">슬라이딩윈도우</span> &nbsp;2026-10-09</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">기법</div><div class="value">슬라이딩 윈도우</div><div class="delta">고정 길이</div></div>
+  <div class="stat"><div class="label">예제 결과</div><div class="value">4</div><div class="delta">길이 10, 구간 8</div></div>
+  <div class="stat"><div class="label">시간 복잡도</div><div class="value">O(16·N)</div><div class="delta">구간 길이와 무관</div></div>
+  <div class="stat"><div class="label">창 이동 비용</div><div class="value">O(1)</div><div class="delta">들어온 값 +1, 나간 값 −1</div></div>
+</div>
+
+<blockquote>
+화합물 ID가 일렬로 놓여 있을 때 연속한 <code>length</code>개 구간과 목표 ID 하나를 골라, 목표와 차이가 1 이하인 화합물 수를 최대로 만드는 문제다.
+목표는 0 ~ 15 중 16가지뿐이라 전부 시도한다. 목표를 하나 고정하면 남는 일은 "길이가 고정된 창을 한 칸씩 밀며 조건에 맞는 개수를 유지"하는 것이고, 창을 밀 때마다 새로 세지 않고 <strong>들어온 값과 나간 값만 반영</strong>한다.
+학습 교재 07단원 예제 코드를 추적한 기록이며, 빈도 배열로 한 번만 훑는 변형을 덧붙였다 (Python 3 실행 확인).
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">문제</a></li>
+    <li><a href="#s2">전체 코드</a></li>
+    <li><a href="#s3">핵심 아이디어</a></li>
+    <li><a href="#s4">코드 한 줄씩 보기</a></li>
+    <li><a href="#s5">예제 추적</a></li>
+    <li><a href="#s6">놓치기 쉬운 함정</a></li>
+    <li><a href="#s7">변형: 빈도 배열로 한 번만 훑기</a></li>
+    <li><a href="#s8">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">문제</h2>
+<p>화합물 ID가 원래 순서대로 놓여 있다. <strong>연속한 <code>length</code>개 구간</strong>과 <strong>목표 ID</strong>를 하나씩 선택한다.
+구간 안에서 목표 ID와의 차이가 1 이하인 화합물이 반응한다. 반응 개수의 최댓값을 구한다.</p>
+<ul>
+  <li>입력: <code>ids</code> — 0 ~ 15의 ID 리스트. <code>length</code> — 구간 길이, 1 이상 <code>len(ids)</code> 이하.</li>
+  <li>목표는 0 ~ 15의 어느 값이든 가능하다. 구간 안에 없는 값이어도 된다.</li>
+  <li>순서를 바꿀 수 없다. 정렬하면 안 된다.</li>
+  <li>출력: 최대 반응 개수. 구간 위치나 목표 값이 아니다.</li>
+</ul>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>ids</th><th class="num">length</th><th class="num">출력</th><th>이유</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>[7, 15, 3, 3, 7, 8, 7, 15, 3, 3]</code></td><td class="num">8</td><td class="num">4</td><td>앞 8개에서 목표 7: 7, 7, 8, 7</td></tr>
+    <tr><td><code>[0, 2, 0, 2]</code></td><td class="num">4</td><td class="num">4</td><td>목표 1: 0과 2가 모두 차이 1</td></tr>
+    <tr><td><code>[0, 15, 0, 15, 0]</code></td><td class="num">3</td><td class="num">2</td><td>어느 구간이든 같은 쪽 값은 최대 2개</td></tr>
+    <tr><td><code>[15, 15, 15]</code></td><td class="num">2</td><td class="num">2</td><td>목표 14 또는 15</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s2">전체 코드</h2>
+<div class="code">
+  <div class="code-head"><span class="fname">maximum_product.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def maximum_product(ids, length):
+    best = 0
+    for target in range(16):
+        count = sum(abs(ids[i] - target) &lt;= 1 for i in range(length))
+        best = max(best, count)
+        for right in range(length, len(ids)):
+            if abs(ids[right] - target) &lt;= 1:
+                count += 1
+            if abs(ids[right - length] - target) &lt;= 1:
+                count -= 1
+            best = max(best, count)
+    return best
+
+
+def run_checks():
+    assert maximum_product([7, 15, 3, 3, 7, 8, 7, 15, 3, 3], 8) == 4
+    assert maximum_product([0, 2, 0, 2], 4) == 4
+    assert maximum_product([0, 15, 0, 15, 0], 3) == 2
+    assert maximum_product([15, 15, 15], 2) == 2
+    print("07단원: 확인용 테스트 4개 통과")
+
+
+if __name__ == "__main__":
+    run_checks()</code></pre>
+</div>
+<p>함수 이름의 product는 곱이 아니라 반응 생성물이라는 뜻이다. 곱셈은 어디에도 없다.</p>
+
+<h2 id="s3">핵심 아이디어</h2>
+<p>고를 것이 두 가지(구간, 목표)라서 복잡해 보이지만, 하나를 고정하면 다른 하나는 단순한 문제가 된다.</p>
+<ol class="steps">
+  <li><strong>목표를 전부 시도한다</strong> — 값의 범위가 0 ~ 15로 좁다. 16가지를 모두 돌려도 비용이 작다.</li>
+  <li><strong>목표가 정해지면 각 칸은 0 또는 1이다</strong> — "목표와 차이가 1 이하인가"는 칸마다 참·거짓으로 결정된다. 문제는 "길이 <code>length</code>인 연속 구간 중 참이 가장 많은 구간"으로 바뀐다.</li>
+  <li><strong>창을 밀 때 바뀌는 것은 두 칸뿐이다</strong> — 오른쪽으로 한 칸 밀면 새 값 하나가 들어오고 가장 왼쪽 값 하나가 나간다. 가운데 <code>length − 1</code>개는 그대로이므로 다시 셀 필요가 없다.</li>
+</ol>
+
+<div class="code">
+  <pre><code class="language-plaintext">창 이동 (length = 4)
+
+ [ a  b  c  d ] e  f        count
+   a [ b  c  d  e ] f       count + (e 조건) - (a 조건)
+   a  b [ c  d  e  f ]      count + (f 조건) - (b 조건)</code></pre>
+</div>
+
+<div class="callout">
+<strong>판별 기준</strong> — "연속한 k개", "길이가 고정된 구간"에서 합·개수·최댓값을 구하라고 하면 슬라이딩 윈도우를 먼저 떠올린다.
+구간마다 다시 계산하는 O(N × k)를 O(N)으로 줄이는 것이 목적이다. 정렬이 금지된 문제는 순서 자체가 조건이라는 신호다.
+</div>
+
+<h2 id="s4">코드 한 줄씩 보기</h2>
+
+<h3>목표 16가지를 바깥에서 돈다</h3>
+<div class="code">
+  <pre><code class="language-python">for target in range(16):</code></pre>
+</div>
+<p><code>set(ids)</code>가 아니라 <code>range(16)</code>이다. 목표는 구간에 없는 값이어도 되기 때문이다. 이 차이가 두 번째 예제의 정답을 가른다.</p>
+
+<h3>첫 창은 직접 센다</h3>
+<div class="code">
+  <pre><code class="language-python">count = sum(abs(ids[i] - target) &lt;= 1 for i in range(length))
+best = max(best, count)</code></pre>
+</div>
+<p>파이썬에서 <code>True</code>는 1, <code>False</code>는 0으로 더해지므로 조건식을 그대로 <code>sum</code>에 넣으면 개수가 된다.
+첫 창의 결과로 <code>best</code>를 바로 갱신하는 줄이 중요하다. <code>length</code>가 전체 길이와 같으면 아래 반복문이 한 번도 돌지 않기 때문이다.</p>
+
+<h3>한 칸 밀기</h3>
+<div class="code">
+  <pre><code class="language-python">for right in range(length, len(ids)):
+    if abs(ids[right] - target) &lt;= 1:
+        count += 1
+    if abs(ids[right - length] - target) &lt;= 1:
+        count -= 1
+    best = max(best, count)</code></pre>
+</div>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>인덱스</th><th>의미</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>right</code></td><td>새로 창에 들어오는 칸. 창의 오른쪽 끝</td></tr>
+    <tr><td><code>right - length</code></td><td>창에서 빠지는 칸. 직전 창의 왼쪽 끝</td></tr>
+    <tr><td><code>right - length + 1</code></td><td>새 창의 왼쪽 끝 (코드에는 쓰이지 않음)</td></tr>
+  </tbody>
+</table>
+</div>
+<p><code>abs(값 - target) &lt;= 1</code>은 목표가 0이나 15여도 그대로 동작한다. 배열 인덱스가 아니라 값의 차이를 보는 것이라 경계 처리가 따로 필요 없다.</p>
+
+<h2 id="s5">예제 추적</h2>
+<p><code>[7, 15, 3, 3, 7, 8, 7, 15, 3, 3]</code>, <code>length = 8</code>. 창은 세 개다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>창</th><th>범위</th><th>내용</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>첫 창</td><td>인덱스 0 ~ 7</td><td>7, 15, 3, 3, 7, 8, 7, 15</td></tr>
+    <tr><td>right = 8</td><td>인덱스 1 ~ 8</td><td>15, 3, 3, 7, 8, 7, 15, 3</td></tr>
+    <tr><td>right = 9</td><td>인덱스 2 ~ 9</td><td>3, 3, 7, 8, 7, 15, 3, 3</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>목표 7일 때 (7 ± 1, 즉 6, 7, 8이 반응):</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>단계</th><th>들어온 값</th><th>나간 값</th><th class="num">count</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>첫 창</td><td></td><td></td><td class="num">4</td></tr>
+    <tr><td>right = 8</td><td>3 (해당 없음)</td><td>7 (−1)</td><td class="num">3</td></tr>
+    <tr><td>right = 9</td><td>3 (해당 없음)</td><td>15 (해당 없음)</td><td class="num">3</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>목표 3일 때 (2, 3, 4가 반응):</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>단계</th><th>들어온 값</th><th>나간 값</th><th class="num">count</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>첫 창</td><td></td><td></td><td class="num">2</td></tr>
+    <tr><td>right = 8</td><td>3 (+1)</td><td>7 (해당 없음)</td><td class="num">3</td></tr>
+    <tr><td>right = 9</td><td>3 (+1)</td><td>15 (해당 없음)</td><td class="num">4</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>목표별 최댓값을 모두 나열하면 다음과 같다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>목표</th><th class="num">0</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th class="num">6</th><th class="num">7</th><th class="num">8</th><th class="num">9</th><th class="num">10</th><th class="num">11</th><th class="num">12</th><th class="num">13</th><th class="num">14</th><th class="num">15</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>최대 count</td><td class="num">0</td><td class="num">0</td><td class="num">4</td><td class="num">4</td><td class="num">4</td><td class="num">0</td><td class="num">3</td><td class="num">4</td><td class="num">4</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">2</td><td class="num">2</td></tr>
+  </tbody>
+</table>
+</div>
+<p>답은 4다. 목표 7(첫 창)과 목표 3(마지막 창)이 서로 다른 구간에서 같은 최댓값을 낸다.
+목표 2와 4도 4가 나오는데, 구간에 2나 4가 하나도 없지만 3이 네 개 있어서다.</p>
+
+<h2 id="s6">놓치기 쉬운 함정</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>실수</th><th>입력</th><th class="num">잘못된 결과</th><th class="num">기대값</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>목표를 구간 안의 값에서만 고름</td><td><code>[0, 2, 0, 2]</code>, 4</td><td class="num">2</td><td class="num">4</td></tr>
+    <tr><td>정렬한 뒤 구간을 잡음</td><td><code>[0, 15, 0, 15, 0]</code>, 3</td><td class="num">3</td><td class="num">2</td></tr>
+    <tr><td>첫 창에서 <code>best</code>를 갱신하지 않음</td><td><code>[0, 2, 0, 2]</code>, 4</td><td class="num">0</td><td class="num">4</td></tr>
+    <tr><td>나가는 칸을 <code>right - length + 1</code>로 계산</td><td><code>[0, 5, 0]</code>, 2</td><td class="num">2</td><td class="num">1</td></tr>
+  </tbody>
+</table>
+</div>
+<p>네 줄 모두 실제로 잘못 짠 코드를 실행해 얻은 값이다.</p>
+
+<h3>1. 목표는 구간에 없는 값일 수 있다</h3>
+<p><code>[0, 2, 0, 2]</code>에서 목표를 0이나 2로 잡으면 2개만 반응한다. 그 사이의 1을 잡아야 4개가 전부 반응한다.
+"등장한 값만 후보"라는 직관이 틀리는 경우이므로 0 ~ 15를 전부 돈다.</p>
+
+<h3>2. 정렬하면 다른 문제가 된다</h3>
+<p>정렬하면 같은 값이 모여서 답이 커진다. <code>[0, 15, 0, 15, 0]</code>을 정렬하면 0이 세 개 붙어 3이 나오지만, 원래 순서에서는 연속 3개 안에 0이 최대 2개다.
+"연속 구간"은 원래 위치를 기준으로 한 조건이다.</p>
+
+<h3>3. 반복문이 한 번도 돌지 않는 경우</h3>
+<p><code>length == len(ids)</code>이면 창이 하나뿐이라 미는 반복문은 실행되지 않는다. <code>best</code> 갱신이 반복문 안에만 있으면 0을 반환한다.
+앞의 긴 예제에서는 이 실수가 드러나지 않는다(4가 그대로 나온다). 창이 여러 개라 뒤쪽 창에서 같은 최댓값을 다시 만나기 때문이다.</p>
+
+<h3>4. 나가는 칸의 인덱스</h3>
+<p>창 길이가 <code>length</code>이고 오른쪽 끝이 <code>right</code>이면 왼쪽 끝은 <code>right - length + 1</code>이다. 빠져야 하는 칸은 그보다 하나 앞인 <code>right - length</code>다.
+<code>[0, 5, 0]</code>, 길이 2에서 목표 0을 보면, 두 번째 0이 들어올 때 첫 번째 0이 나가야 1이 유지된다. 인덱스를 하나 밀려 쓰면 5를 내보내게 되어 2가 된다.</p>
+
+<h3>5. 창마다 처음부터 다시 센다</h3>
+<p>결과는 맞지만 느리다. 창마다 <code>length</code>개를 다시 보면 O(16 × N × length)가 된다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>방식 (N = 5,000, length = 500)</th><th class="num">조건 검사 횟수</th><th class="num">실행 시간</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>창마다 다시 세기</td><td class="num">약 3,600만</td><td class="num">1.87초</td></tr>
+    <tr><td>슬라이딩 윈도우 (이 코드)</td><td class="num">약 15만</td><td class="num">0.009초</td></tr>
+  </tbody>
+</table>
+</div>
+<p>실행 시간은 한 번 측정한 값이라 비율만 참고한다. 구간 길이가 길수록 차이가 벌어진다.</p>
+
+<h2 id="s7">변형: 빈도 배열로 한 번만 훑기</h2>
+<p>교재 범위를 넘어 직접 추가한 변형이다. 원본은 "목표를 고정하고 창을 민다"를 16번 반복한다. 순서를 뒤집어 <strong>창을 한 번만 밀면서 창 안의 값별 개수를 유지</strong>해도 된다.
+목표 t의 반응 개수는 값이 t − 1, t, t + 1인 칸의 개수 합이다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">maximum_product_freq.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def maximum_product_freq(ids, length):
+    freq = [0] * 18          # 값 v는 freq[v + 1]에 저장, 양 끝은 경계용 0
+    for value in ids[:length]:
+        freq[value + 1] += 1
+    best = max(freq[t] + freq[t + 1] + freq[t + 2] for t in range(16))
+    for right in range(length, len(ids)):
+        freq[ids[right] + 1] += 1
+        freq[ids[right - length] + 1] -= 1
+        best = max(best, max(freq[t] + freq[t + 1] + freq[t + 2] for t in range(16)))
+    return best</code></pre>
+</div>
+
+<p>빈도 배열은 값의 차이가 아니라 인덱스로 접근하므로 경계가 문제가 된다. 목표 0의 왼쪽(−1)과 목표 15의 오른쪽(16)을 읽게 되기 때문이다.
+배열을 한 칸씩 밀어 크기 18로 잡고 양 끝을 0으로 두면 조건문 없이 처리된다. 밀지 않으면 <code>freq[-1]</code>이 파이썬에서 에러 없이 마지막 칸을 읽어 조용히 틀린다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>항목</th><th>목표 고정 후 창 이동 (원본)</th><th>창 이동 중 빈도 유지 (변형)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>리스트 순회 횟수</td><td>16번</td><td>1번</td></tr>
+    <tr><td>시간 복잡도</td><td>O(16 × N)</td><td>O(16 × N)</td></tr>
+    <tr><td>추가 공간</td><td>변수 2개</td><td>크기 18 배열</td></tr>
+    <tr><td>경계 처리</td><td>필요 없음</td><td>양 끝 여유 칸 필요</td></tr>
+    <tr><td>어울리는 상황</td><td>코드가 짧고 실수 여지가 적다</td><td>데이터가 한 번만 흘러 들어오는 경우</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>검증 항목</th><th>조건</th><th class="num">결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>세 구현 대조</td><td>원본, 빈도 배열, 창마다 다시 세기. 길이 1 ~ 14 무작위 10만 건</td><td class="num">전부 일치</td></tr>
+    <tr><td>큰 입력</td><td>N = 5,000, length = 500</td><td class="num">세 구현 모두 124</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s8">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>포인트</th><th>내용</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>선택지 분리</td><td>범위가 좁은 쪽(목표 16가지)을 전부 시도하고, 나머지를 슬라이딩 윈도우로 푼다</td></tr>
+    <tr><td>창 갱신</td><td><code>ids[right]</code>가 들어오고 <code>ids[right - length]</code>가 나간다</td></tr>
+    <tr><td>첫 창</td><td>따로 세고 바로 <code>best</code>에 반영한다</td></tr>
+    <tr><td>목표 후보</td><td>등장한 값이 아니라 가능한 값 전체</td></tr>
+    <tr><td>순서</td><td>연속 구간 문제에서는 정렬하지 않는다</td></tr>
+    <tr><td>복잡도</td><td>시간 O(16 × N), 추가 공간 O(1)</td></tr>
+  </tbody>
+</table>
+</div>
+<p>03단원의 <a href="/devblog/posts/2026-10-09-algo-best-removal.html">후보 열거</a>와 같은 구조다. 한쪽 선택을 전부 시도하고, 선택이 고정된 뒤의 문제를 선형 순회 한 번으로 푼다.</p>
+<p>이전 글: <a href="/devblog/posts/2026-10-09-algo-bfs-components-number-state.html">06단원 — BFS 응용 2종</a></p>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
