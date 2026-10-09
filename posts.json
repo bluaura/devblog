@@ -18,6 +18,17 @@
   },
   "posts": [
     {
+      "slug": "2026-10-09-algo-best-removal",
+      "title": "한 종류를 제거해 최장 연속 구간 만들기 — 후보 열거 풀이와 O(N) 개선",
+      "date": "2026-10-09",
+      "tags": [
+        "코딩테스트",
+        "Python",
+        "완전탐색"
+      ],
+      "summary": "제거할 종류를 전부 시도하는 O(K·N) 풀이를 한 줄씩 추적하고, 동점 규칙을 튜플 비교로 처리하는 법과 구간 압축으로 6.75초를 0.016초로 줄인 O(N) 버전까지 정리"
+    },
+    {
       "slug": "2026-10-06-ios-device-auto-testing",
       "title": "맥에 연결한 아이폰에서 iOS 앱 자동 테스트하기: xcodebuild, devicectl, XCUITest 정리",
       "date": "2026-10-06",

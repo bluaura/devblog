@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한 종류를 제거해 최장 연속 구간 만들기 — 후보 열거 풀이와 O(N) 개선 · 블루오라 개발노트</title>
+<meta name="description" content="제거할 종류를 전부 시도하는 O(K·N) 풀이를 한 줄씩 추적하고, 동점 규칙을 튜플 비교로 처리하는 법과 구간 압축으로 6.75초를 0.016초로 줄인 O(N) 버전까지 정리">
+<meta property="og:type" content="article">
+<meta property="og:title" content="한 종류를 제거해 최장 연속 구간 만들기 — 후보 열거 풀이와 O(N) 개선">
+<meta property="og:description" content="제거할 종류를 전부 시도하는 O(K·N) 풀이를 한 줄씩 추적하고, 동점 규칙을 튜플 비교로 처리하는 법과 구간 압축으로 6.75초를 0.016초로 줄인 O(N) 버전까지 정리">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-09-algo-best-removal.html">
+<meta property="article:published_time" content="2026-10-09">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-09-algo-best-removal.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>한 종류를 제거해 최장 연속 구간 만들기 — 후보 열거 풀이와 O(N) 개선</h1>
+    <p class="sub"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">완전탐색</span> &nbsp;2026-10-09</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">기법</div><div class="value">후보 열거</div><div class="delta">제거할 종류를 전부 시도</div></div>
+  <div class="stat"><div class="label">예제 결과</div><div class="value">(3, 2)</div><div class="delta">[1, 2, 1, 1] 기준</div></div>
+  <div class="stat"><div class="label">시간 복잡도</div><div class="value">O(K·N)</div><div class="delta">K는 종류 수</div></div>
+  <div class="stat"><div class="label">개선 버전</div><div class="value">O(N)</div><div class="delta">구간 압축 후 1회 순회</div></div>
+</div>
+
+<blockquote>
+일렬로 놓인 상품에서 한 종류를 통째로 제거했을 때, 남은 것 중 같은 종류가 가장 길게 이어지는 길이를 최대로 만드는 문제다.
+제거할 종류를 하나씩 전부 시도하고(후보 열거), 매번 한 번의 순회로 최장 연속 길이를 센다.
+동점이면 종류 번호가 큰 쪽을 고르는데, 이 규칙은 튜플 비교 한 줄로 끝난다.
+학습 교재 03단원 예제 코드를 추적한 기록이며, 마지막에 O(N) 개선 버전을 덧붙였다 (Python 3 실행 확인).
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">문제</a></li>
+    <li><a href="#s2">전체 코드</a></li>
+    <li><a href="#s3">핵심 아이디어</a></li>
+    <li><a href="#s4">코드 한 줄씩 보기</a></li>
+    <li><a href="#s5">예제 추적</a></li>
+    <li><a href="#s6">놓치기 쉬운 함정</a></li>
+    <li><a href="#s7">O(N)으로 줄이기</a></li>
+    <li><a href="#s8">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">문제</h2>
+<p>상품 종류가 일렬로 놓여 있다. <strong>한 종류의 상품을 모두 제거</strong>한 뒤, 남은 상품에서 같은 종류가 연속으로 이어지는 최장 길이를 최대화한다.</p>
+<ul>
+  <li>입력: <code>values</code> — 비어 있지 않은 양의 정수 리스트. 각 값이 상품 종류다.</li>
+  <li>출력: <code>(최장 길이, 제거 종류)</code> 튜플.</li>
+  <li>동점이면 제거할 종류 번호가 <strong>큰</strong> 것을 고른다.</li>
+  <li>제거 후 아무것도 남지 않으면 최장 길이는 0이다.</li>
+</ul>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>입력</th><th>출력</th><th>이유</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>[1, 2, 1, 1]</code></td><td><code>(3, 2)</code></td><td>2를 빼면 1이 세 개 이어진다</td></tr>
+    <tr><td><code>[1, 2]</code></td><td><code>(1, 2)</code></td><td>어느 쪽을 빼도 길이 1, 동점이라 큰 번호 2</td></tr>
+    <tr><td><code>[5, 5, 5]</code></td><td><code>(0, 5)</code></td><td>후보가 5뿐이고 빼면 비어 버린다</td></tr>
+    <tr><td><code>[1, 2, 1, 2, 1]</code></td><td><code>(3, 2)</code></td><td>2를 빼면 떨어져 있던 1 세 개가 붙는다</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s2">전체 코드</h2>
+<div class="code">
+  <div class="code-head"><span class="fname">best_removal.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def best_removal(values):
+    best_length = -1
+    best_kind = -1
+    for removed in set(values):
+        previous = None
+        run = 0
+        longest = 0
+        for value in values:
+            if value == removed:
+                continue
+            if value == previous:
+                run += 1
+            else:
+                run = 1
+            previous = value
+            longest = max(longest, run)
+        if (longest, removed) &gt; (best_length, best_kind):
+            best_length, best_kind = longest, removed
+    return best_length, best_kind
+
+
+def run_checks():
+    assert best_removal([1, 2, 1, 1]) == (3, 2)
+    assert best_removal([1, 2]) == (1, 2)
+    assert best_removal([5, 5, 5]) == (0, 5)
+    assert best_removal([1, 2, 1, 2, 1]) == (3, 2)
+    print("03단원: 확인용 테스트 4개 통과")
+
+
+if __name__ == "__main__":
+    run_checks()</code></pre>
+</div>
+
+<h2 id="s3">핵심 아이디어</h2>
+<p>이 문제는 두 개의 작은 문제를 겹쳐 놓은 구조다.</p>
+<ol class="steps">
+  <li><strong>후보 열거</strong> — 제거할 수 있는 종류는 리스트에 실제로 등장한 값뿐이다. <code>set(values)</code>로 후보를 뽑아 하나씩 전부 시도한다.</li>
+  <li><strong>연속 구간 세기</strong> — 후보 하나를 정했으면, 그 종류를 건너뛰면서 "직전 값과 같으면 +1, 다르면 1로 리셋"하는 순회 한 번으로 최장 길이를 구한다.</li>
+  <li><strong>최적 후보 갱신</strong> — <code>(길이, 종류)</code> 튜플을 비교해 더 큰 쪽을 남긴다. 길이가 우선이고, 같으면 종류 번호가 큰 쪽이 이긴다.</li>
+</ol>
+
+<div class="callout">
+<strong>판별 기준</strong> — "하나를 골라 없애고(바꾸고) 결과를 최대화"하는 문제에서 고를 수 있는 후보 수가 작으면, 먼저 전부 시도하는 풀이를 세운다.
+정답이 확실한 풀이가 있어야 이후 최적화 버전을 대조 검증할 수 있다.
+</div>
+
+<h2 id="s4">코드 한 줄씩 보기</h2>
+
+<h3>후보는 set으로 뽑는다</h3>
+<div class="code">
+  <pre><code class="language-python">for removed in set(values):</code></pre>
+</div>
+<p>등장하지 않은 종류를 제거하는 것은 의미가 없으므로 후보는 등장한 값의 집합이면 충분하다.
+<code>set</code>의 순회 순서는 보장되지 않지만, 아래에서 튜플로 비교하기 때문에 어떤 순서로 돌아도 결과가 같다.</p>
+
+<h3>제거된 값은 없는 것처럼 건너뛴다</h3>
+<div class="code">
+  <pre><code class="language-python">if value == removed:
+    continue</code></pre>
+</div>
+<p>이 풀이의 핵심 줄이다. 실제로 리스트에서 원소를 지우지 않고 <code>continue</code>로 넘어간다.
+중요한 점은 이때 <code>previous</code>와 <code>run</code>을 <strong>건드리지 않는다</strong>는 것이다.
+그래서 <code>[1, 2, 1]</code>에서 2를 제거하면, 2를 지나친 뒤에도 <code>previous</code>가 1로 남아 있어 양옆의 1이 한 구간으로 이어진다.</p>
+
+<h3>연속 길이 세기</h3>
+<div class="code">
+  <pre><code class="language-python">if value == previous:
+    run += 1
+else:
+    run = 1
+previous = value
+longest = max(longest, run)</code></pre>
+</div>
+<p><code>run</code>은 현재 이어지고 있는 구간의 길이, <code>longest</code>는 지금까지 본 구간 중 최댓값이다.
+<code>previous</code>의 초기값이 <code>None</code>이라 첫 원소는 항상 <code>else</code>로 들어가 <code>run = 1</code>이 된다.
+입력이 양의 정수뿐이므로 <code>None</code>과 겹칠 일이 없다.</p>
+
+<h3>튜플 비교로 동점 처리</h3>
+<div class="code">
+  <pre><code class="language-python">if (longest, removed) &gt; (best_length, best_kind):
+    best_length, best_kind = longest, removed</code></pre>
+</div>
+<p>파이썬 튜플은 앞 원소부터 사전식으로 비교한다. 길이가 더 길면 무조건 이기고, 길이가 같을 때만 종류 번호를 본다.
+"동점이면 번호가 큰 것"이라는 조건을 별도 <code>if</code> 없이 한 줄로 표현한 것이다.
+초기값이 <code>(-1, -1)</code>이라 첫 후보는 길이가 0이어도 반드시 채택된다.</p>
+
+<h2 id="s5">예제 추적</h2>
+<p><code>[1, 2, 1, 2, 1]</code>을 후보별로 따라가 본다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th class="num">제거 종류</th><th>남는 값</th><th class="num">최장 길이</th><th>비교 튜플</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">1</td><td><code>[2, 2]</code></td><td class="num">2</td><td><code>(2, 1)</code></td></tr>
+    <tr><td class="num">2</td><td><code>[1, 1, 1]</code></td><td class="num">3</td><td><code>(3, 2)</code></td></tr>
+  </tbody>
+</table>
+</div>
+<p><code>(3, 2) &gt; (2, 1)</code>이므로 답은 <code>(3, 2)</code>다.</p>
+
+<p>동점이 나는 <code>[1, 1, 2, 2]</code>도 확인한다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th class="num">제거 종류</th><th>남는 값</th><th class="num">최장 길이</th><th>비교 튜플</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">1</td><td><code>[2, 2]</code></td><td class="num">2</td><td><code>(2, 1)</code></td></tr>
+    <tr><td class="num">2</td><td><code>[1, 1]</code></td><td class="num">2</td><td><code>(2, 2)</code></td></tr>
+  </tbody>
+</table>
+</div>
+<p>길이는 둘 다 2지만 <code>(2, 2) &gt; (2, 1)</code>이라 종류 2가 선택된다. 답은 <code>(2, 2)</code>.</p>
+
+<h2 id="s6">놓치기 쉬운 함정</h2>
+
+<h3>1. 제거 지점에서 구간을 끊어 버린다</h3>
+<p>제거된 값을 만났을 때 <code>run = 0</code>이나 <code>previous = None</code>으로 리셋하면 <code>[1, 2, 1, 2, 1]</code>의 답이 3이 아니라 1이 된다.
+제거는 "빈칸을 남기는 것"이 아니라 "당겨 붙이는 것"이다. 건너뛸 때는 상태를 그대로 둔다.</p>
+
+<h3>2. 동점 규칙을 순회 순서에 맡긴다</h3>
+<p><code>if longest &gt;= best_length</code>처럼 쓰고 "나중에 나온 후보가 이긴다"에 기대면, <code>set</code> 순회 순서가 오름차순이라는 보장이 없어서 틀릴 수 있다.
+<code>sorted(set(values))</code>로 순서를 고정하거나, 이 코드처럼 종류 번호를 비교 대상에 직접 넣는다.</p>
+
+<h3>3. 전부 사라지는 경우</h3>
+<p><code>[5, 5, 5]</code>는 후보가 5 하나뿐이고 제거하면 리스트가 빈다. 안쪽 순회가 전부 <code>continue</code>로 끝나 <code>longest</code>는 0으로 남고, 답은 <code>(0, 5)</code>다.
+<code>longest</code>를 0으로 초기화해 둔 덕에 별도 분기가 필요 없다.</p>
+
+<h3>4. 종류 수가 많으면 느려진다</h3>
+<p>후보마다 리스트 전체를 순회하므로 시간 복잡도는 O(K·N)이다 (K는 종류 수, N은 리스트 길이).
+모든 값이 서로 다르면 K = N이 되어 O(N²)까지 간다. 입력 제한이 작다면 이 풀이로 충분하고, 크다면 다음 절의 방법이 필요하다.</p>
+
+<h2 id="s7">O(N)으로 줄이기</h2>
+<p>교재 범위를 넘어선 변형으로, 직접 추가한 버전이다. 관찰은 두 가지다.</p>
+<ul>
+  <li>종류 x를 제거했을 때 결과에 영향을 주는 것은 <strong>x 구간 양옆이 같은 종류일 때 생기는 병합</strong>뿐이다. 나머지 구간은 그대로다.</li>
+  <li>병합은 <code>a x a x a</code>처럼 같은 종류 a가 x를 사이에 두고 반복되는 "사슬" 단위로 일어난다.</li>
+</ul>
+<p>그래서 먼저 리스트를 <code>(종류, 길이)</code> 구간으로 압축하고, 사슬마다 합을 구해 "x를 제거하면 얻는 병합 길이"를 기록한다.
+병합이 없더라도 x가 아닌 종류의 기존 최장 구간은 남으므로, 종류별 최장 길이 상위 2개를 따로 들고 있으면 된다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">best_removal_fast.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">from itertools import groupby
+
+def best_removal_fast(values):
+    runs = [(kind, len(list(group))) for kind, group in groupby(values)]
+    n = len(runs)
+
+    # 1) 제거와 무관하게 이미 존재하는 구간: 종류별 최장 길이
+    own = {}
+    for kind, length in runs:
+        own[kind] = max(own.get(kind, 0), length)
+    top = sorted(((length, kind) for kind, length in own.items()), reverse=True)[:2]
+
+    # 2) 제거로 이어 붙는 구간: a x a x a 형태의 사슬
+    merged = {}
+    for i in range(n - 2):
+        kind = runs[i][0]
+        sep = runs[i + 1][0]
+        if runs[i + 2][0] != kind:
+            continue
+        if i &gt;= 2 and runs[i - 2][0] == kind and runs[i - 1][0] == sep:
+            continue  # 사슬의 시작점이 아님
+        total = runs[i][1]
+        j = i
+        while j + 2 &lt; n and runs[j + 1][0] == sep and runs[j + 2][0] == kind:
+            j += 2
+            total += runs[j][1]
+        merged[sep] = max(merged.get(sep, 0), total)
+
+    best = (-1, -1)
+    for removed in own:
+        untouched = next((length for length, kind in top if kind != removed), 0)
+        best = max(best, (max(untouched, merged.get(removed, 0)), removed))
+    return best</code></pre>
+</div>
+
+<p>각 구간은 사슬 확장 과정에서 상수 번만 방문되므로 압축 이후 처리는 구간 수에 비례한다.
+<code>top</code>을 구할 때 전체 정렬을 썼기 때문에 엄밀히는 O(N + K log K)이고, 상위 2개만 순회로 고르면 O(N)이 된다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>검증 항목</th><th>조건</th><th class="num">결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>무작위 대조</td><td>길이 1~12, 종류 1~4, 20만 건</td><td class="num">전부 일치</td></tr>
+    <tr><td>후보 열거 버전 실행 시간</td><td>N = 20,000, K = 4,915</td><td class="num">6.75초</td></tr>
+    <tr><td>O(N) 버전 실행 시간</td><td>같은 입력</td><td class="num">0.016초</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout warn">
+실행 시간은 클라우드 컨테이너에서 한 번 측정한 값이라 환경에 따라 달라진다. 비율(약 400배)만 참고한다.
+개선 버전은 원본과 무작위 대조로만 검증했고, 별도의 채점 서버에 제출한 코드는 아니다.
+</div>
+
+<h2 id="s8">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>항목</th><th>후보 열거</th><th>구간 압축</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>시간 복잡도</td><td>O(K·N), 최악 O(N²)</td><td>O(N + K log K)</td></tr>
+    <tr><td>추가 공간</td><td>O(K) — 후보 집합</td><td>O(N) — 구간 목록</td></tr>
+    <tr><td>구현 난이도</td><td>낮음, 실수 여지 적음</td><td>사슬 시작점 판정이 까다로움</td></tr>
+    <tr><td>쓰는 시점</td><td>입력이 작거나 정답 기준이 필요할 때</td><td>종류 수가 많고 N이 클 때</td></tr>
+  </tbody>
+</table>
+</div>
+<ul>
+  <li>제거할 후보는 <code>set(values)</code>, 제거는 <code>continue</code>로 표현한다. 건너뛸 때 <code>previous</code>와 <code>run</code>을 유지해야 양옆이 이어진다.</li>
+  <li>우선순위가 여러 개인 최댓값 선택은 <code>(1순위, 2순위)</code> 튜플 비교로 쓴다. 순회 순서에 의존하지 않는다.</li>
+  <li>느리지만 확실한 풀이를 먼저 만들고, 빠른 풀이는 그것과 무작위 대조해 검증한다.</li>
+</ul>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

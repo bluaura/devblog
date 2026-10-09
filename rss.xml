@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>한 종류를 제거해 최장 연속 구간 만들기 — 후보 열거 풀이와 O(N) 개선</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-10-09-algo-best-removal.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-09-algo-best-removal.html</guid>
+      <description>제거할 종류를 전부 시도하는 O(K·N) 풀이를 한 줄씩 추적하고, 동점 규칙을 튜플 비교로 처리하는 법과 구간 압축으로 6.75초를 0.016초로 줄인 O(N) 버전까지 정리</description>
+      <pubDate>Fri, 09 Oct 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>256GB 맥 로컬 LLM으로 에이전트 만들기: 모델 선택부터 iOS 실기기 자동 테스트까지</title>
       <link>https://bluaura.github.io/devblog/posts/2026-10-06-local-llm-agent-ios-device-testing.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-06-local-llm-agent-ios-device-testing.html</guid>
