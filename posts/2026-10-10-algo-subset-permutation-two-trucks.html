@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>부분집합과 순열 결합 — 두 트럭의 수거 지점 분할과 방문 순서 함께 정하기 · 블루오라 개발노트</title>
+<meta name="description" content="상자를 실을수록 연료가 비싸지는 두 트럭 수거 문제를 비트마스크 분할 + 순열 순서 탐색으로 푸는 과정. 영업소별 비용 표 8칸을 직접 채워 102가 나오는 과정, 가까운 영업소 배정이 54 대 42로 지는 반례, 순서 탐색을 DP로 바꿔 0.29초를 0.004초로 줄인 변형을 정리">
+<meta property="og:type" content="article">
+<meta property="og:title" content="부분집합과 순열 결합 — 두 트럭의 수거 지점 분할과 방문 순서 함께 정하기">
+<meta property="og:description" content="상자를 실을수록 연료가 비싸지는 두 트럭 수거 문제를 비트마스크 분할 + 순열 순서 탐색으로 푸는 과정. 영업소별 비용 표 8칸을 직접 채워 102가 나오는 과정, 가까운 영업소 배정이 54 대 42로 지는 반례, 순서 탐색을 DP로 바꿔 0.29초를 0.004초로 줄인 변형을 정리">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-10-algo-subset-permutation-two-trucks.html">
+<meta property="article:published_time" content="2026-10-10">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-10-algo-subset-permutation-two-trucks.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>부분집합과 순열 결합 — 두 트럭의 수거 지점 분할과 방문 순서 함께 정하기</h1>
+    <p class="sub"><span class="tag">코딩테스트</span><span class="tag">Python</span><span class="tag">비트마스크</span> &nbsp;2026-10-10</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">기법</div><div class="value">부분집합 × 순열</div><div class="delta">비트마스크로 분할 표현</div></div>
+  <div class="stat"><div class="label">예제 결과</div><div class="value">102</div><div class="delta">지점 3개, 42 + 60</div></div>
+  <div class="stat"><div class="label">분할 수</div><div class="value">2ᴺ</div><div class="delta">지점 8개면 256가지</div></div>
+  <div class="stat"><div class="label">순열 시도</div><div class="value">109,600</div><div class="delta">지점 8개, 영업소 하나당</div></div>
+</div>
+
+<blockquote>
+두 영업소의 트럭이 수거 지점을 나눠 돌고 각자 영업소로 돌아온다. 상자를 실을수록 이동 연료가 비싸진다. 두 트럭의 합계 연료를 최소화하는 문제다.
+정해야 할 것이 두 가지다. <strong>어느 트럭이 어느 지점을 맡는가(부분집합)</strong>와 <strong>맡은 지점을 어떤 순서로 도는가(순열)</strong>.
+지점을 나누고 나면 두 트럭은 서로 영향을 주지 않는다. 그래서 영업소별로 "이 묶음을 맡으면 최소 얼마"를 표로 만들어 두고, 마지막에 서로 보완하는 묶음끼리 더한다.
+학습 교재 11단원 예제 코드를 추적한 기록이며, 순서 탐색을 동적 계획법으로 바꾼 변형을 덧붙였다 (Python 3 실행 확인).
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">문제</a></li>
+    <li><a href="#s2">전체 코드</a></li>
+    <li><a href="#s3">핵심 아이디어</a></li>
+    <li><a href="#s4">코드 한 줄씩 보기</a></li>
+    <li><a href="#s5">예제 추적</a></li>
+    <li><a href="#s6">놓치기 쉬운 함정</a></li>
+    <li><a href="#s7">변형: 순서 탐색을 DP로</a></li>
+    <li><a href="#s8">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">문제</h2>
+<p>영업소가 두 곳 있고 각각 트럭이 한 대씩 있다. 트럭들은 수거 지점을 나누어 방문한 뒤 자기 영업소로 돌아온다.</p>
+<ul>
+  <li>입력: <code>bases</code> — 두 영업소의 <code>(x, y)</code> 좌표. <code>points</code> — 수거 지점 좌표, 최대 8개.</li>
+  <li>트럭은 빈 상태로 출발하고, 지점을 들를 때마다 상자가 하나 늘어난다.</li>
+  <li>이동 연료 = 맨해튼 거리 × (1 + 현재 상자 수).</li>
+  <li>모든 지점은 정확히 한 번 수거된다. 한 트럭이 전혀 움직이지 않아도 된다.</li>
+  <li>출력: 복귀를 포함한 두 트럭의 최소 합계 연료. 지점이 없으면 0.</li>
+</ul>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>구간</th><th class="num">싣고 있는 상자</th><th class="num">거리에 곱하는 값</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>영업소 → 첫 지점</td><td class="num">0</td><td class="num">1</td></tr>
+    <tr><td>첫 지점 → 둘째 지점</td><td class="num">1</td><td class="num">2</td></tr>
+    <tr><td>둘째 지점 → 셋째 지점</td><td class="num">2</td><td class="num">3</td></tr>
+    <tr><td>k개 수거 후 → 영업소</td><td class="num">k</td><td class="num">k + 1</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>bases</th><th>points</th><th class="num">출력</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>[(10, 10), (20, 20)]</code></td><td><code>[(5, 5), (12, 8), (30, 30)]</code></td><td class="num">102</td></tr>
+    <tr><td><code>[(0, 0), (100, 0)]</code></td><td><code>[(1, 0)]</code></td><td class="num">3</td></tr>
+    <tr><td><code>[(0, 0), (100, 0)]</code></td><td><code>[]</code></td><td class="num">0</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s2">전체 코드</h2>
+<div class="code">
+  <div class="code-head"><span class="fname">minimum_fuel.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">from itertools import permutations
+
+
+def minimum_fuel(bases, points):
+    size = len(points)
+    full = (1 &lt;&lt; size) - 1
+
+    def distance(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    def costs(base):
+        best = [0] * (1 &lt;&lt; size)
+        for mask in range(1, 1 &lt;&lt; size):
+            chosen = [i for i in range(size) if mask &amp; (1 &lt;&lt; i)]
+            minimum = float('inf')
+            for order in permutations(chosen):
+                current = base
+                boxes = 0
+                fuel = 0
+                for index in order:
+                    fuel += distance(current, points[index]) * (1 + boxes)
+                    current = points[index]
+                    boxes += 1
+                fuel += distance(current, base) * (1 + boxes)
+                minimum = min(minimum, fuel)
+            best[mask] = minimum
+        return best
+
+    cost_a, cost_b = costs(bases[0]), costs(bases[1])
+    return min(cost_a[mask] + cost_b[full ^ mask]
+               for mask in range(1 &lt;&lt; size))
+
+
+def run_checks():
+    assert minimum_fuel([(10, 10), (20, 20)], [(5, 5), (12, 8), (30, 30)]) == 102
+    assert minimum_fuel([(0, 0), (100, 0)], [(1, 0)]) == 3
+    assert minimum_fuel([(0, 0), (100, 0)], []) == 0
+    print("11단원: 확인용 테스트 3개 통과")
+
+
+if __name__ == "__main__":
+    run_checks()</code></pre>
+</div>
+
+<h2 id="s3">핵심 아이디어</h2>
+<ol class="steps">
+  <li><strong>분할을 정하면 두 트럭은 독립이다</strong> — A 트럭이 어떤 묶음을 맡을지 정해지면 B 트럭의 몫은 나머지로 자동 결정된다. 그 뒤 A가 어떤 순서로 돌든 B의 연료에는 영향이 없다.</li>
+  <li><strong>영업소별 비용 표를 먼저 만든다</strong> — "이 영업소의 트럭이 이 묶음을 전부 수거하고 돌아올 때의 최소 연료"를 가능한 모든 묶음에 대해 구해 둔다. 묶음 안에서는 방문 순서를 전부 시도한다.</li>
+  <li><strong>보완하는 묶음끼리 더한다</strong> — A의 묶음과 B의 묶음이 겹치지 않으면서 합쳐서 전체가 되는 모든 조합의 합계 중 최솟값이 답이다.</li>
+</ol>
+
+<h3>묶음을 정수 하나로 표현한다</h3>
+<p>지점이 3개면 묶음은 2³ = 8가지다. i번 지점이 묶음에 들어 있으면 i번째 비트를 1로 둔 정수(마스크)로 나타낸다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th class="num">mask</th><th class="center">2진수</th><th>포함된 지점</th><th class="num">full ^ mask</th><th>나머지 지점</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">0</td><td class="center">000</td><td>없음</td><td class="num">7</td><td>0, 1, 2</td></tr>
+    <tr><td class="num">3</td><td class="center">011</td><td>0, 1</td><td class="num">4</td><td>2</td></tr>
+    <tr><td class="num">5</td><td class="center">101</td><td>0, 2</td><td class="num">2</td><td>1</td></tr>
+    <tr><td class="num">7</td><td class="center">111</td><td>0, 1, 2</td><td class="num">0</td><td>없음</td></tr>
+  </tbody>
+</table>
+</div>
+<p><code>full</code>은 모든 비트가 1인 값이다. <code>full ^ mask</code>는 비트를 전부 뒤집어 "A가 맡지 않은 지점"을 한 번에 구한다.
+정수이므로 리스트의 인덱스로 바로 쓸 수 있다는 점이 비트마스크의 장점이다.</p>
+
+<div class="callout">
+<strong>판별 기준</strong> — "여럿이 나눠 맡는다 + 각자의 몫 안에서 순서가 중요하다"는 구조이고 원소가 10개 미만이면, 부분집합 열거와 순열 열거를 겹친다.
+이때 몫마다의 최적값을 표로 먼저 만들어 두면 나누는 단계와 순서를 정하는 단계가 분리된다.
+</div>
+
+<h2 id="s4">코드 한 줄씩 보기</h2>
+
+<h3>전체 집합</h3>
+<div class="code">
+  <pre><code class="language-python">size = len(points)
+full = (1 &lt;&lt; size) - 1</code></pre>
+</div>
+<p><code>1 &lt;&lt; size</code>는 2의 <code>size</code>제곱이고, 1을 빼면 아래 <code>size</code>개 비트가 모두 1이 된다. 괄호가 필요하다. 이유는 함정 절에서 다룬다.</p>
+
+<h3>묶음에서 지점 번호 뽑기</h3>
+<div class="code">
+  <pre><code class="language-python">for mask in range(1, 1 &lt;&lt; size):
+    chosen = [i for i in range(size) if mask &amp; (1 &lt;&lt; i)]</code></pre>
+</div>
+<p><code>mask &amp; (1 &lt;&lt; i)</code>는 i번째 비트가 켜져 있을 때만 0이 아니다. <code>mask</code>가 0인 경우(아무것도 맡지 않음)는 <code>best[0] = 0</code>으로 이미 채워져 있어 1부터 돈다.</p>
+
+<h3>한 순서의 연료 계산</h3>
+<div class="code">
+  <pre><code class="language-python">current = base
+boxes = 0
+fuel = 0
+for index in order:
+    fuel += distance(current, points[index]) * (1 + boxes)
+    current = points[index]
+    boxes += 1
+fuel += distance(current, base) * (1 + boxes)</code></pre>
+</div>
+<p>순서가 중요한 줄이다. <strong>이동 연료를 먼저 더하고, 도착한 뒤에 상자를 늘린다.</strong> 지금 가고 있는 지점의 상자는 아직 싣지 않았기 때문이다.
+반복문이 끝난 시점의 <code>boxes</code>는 수거한 전체 개수이고, 복귀 구간에는 그 값이 그대로 곱해진다.</p>
+
+<h3>두 표를 결합</h3>
+<div class="code">
+  <pre><code class="language-python">cost_a, cost_b = costs(bases[0]), costs(bases[1])
+return min(cost_a[mask] + cost_b[full ^ mask]
+           for mask in range(1 &lt;&lt; size))</code></pre>
+</div>
+<p><code>mask</code>가 0이면 B가 전부 맡고, <code>full</code>이면 A가 전부 맡는다. "한 트럭은 움직이지 않아도 된다"는 조건이 범위의 양 끝에 자연스럽게 들어 있다.
+지점이 없으면 <code>size</code>가 0이라 <code>range(1)</code>에서 <code>mask = 0</code>만 돌고 0 + 0이 반환된다.</p>
+
+<h2 id="s5">예제 추적</h2>
+<p>영업소 A (10, 10), B (20, 20). 지점 0번 (5, 5), 1번 (12, 8), 2번 (30, 30).</p>
+
+<h3>순서에 따라 연료가 달라진다</h3>
+<p>A가 0번과 1번을 맡는 경우의 두 순서다.</p>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>순서</th><th>구간별 (거리 × 배수)</th><th class="num">연료</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>A → 0번 → 1번 → A</td><td>10 × 1 + 10 × 2 + 4 × 3</td><td class="num">42</td></tr>
+    <tr><td>A → 1번 → 0번 → A</td><td>4 × 1 + 10 × 2 + 10 × 3</td><td class="num">54</td></tr>
+  </tbody>
+</table>
+</div>
+<p>이동한 거리의 합은 둘 다 24로 같다. 차이는 <strong>긴 구간을 언제 달리느냐</strong>에서 난다.
+먼 곳(0번)을 빈 차로 먼저 가고, 무거워진 마지막 복귀 구간을 짧게(거리 4) 만든 쪽이 싸다. 이 예제에서 가까운 곳부터 들르면 긴 구간(거리 10)에 가장 큰 배수 3이 붙는다.</p>
+
+<h3>비용 표와 결합</h3>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th class="num">mask</th><th>A의 몫</th><th class="num">cost_a</th><th>B의 몫</th><th class="num">cost_b</th><th class="num">합계</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">0</td><td>없음</td><td class="num">0</td><td>0, 1, 2</td><td class="num">230</td><td class="num">230</td></tr>
+    <tr><td class="num">1</td><td>0</td><td class="num">30</td><td>1, 2</td><td class="num">160</td><td class="num">190</td></tr>
+    <tr><td class="num">2</td><td>1</td><td class="num">12</td><td>0, 2</td><td class="num">190</td><td class="num">202</td></tr>
+    <tr><td class="num">3</td><td>0, 1</td><td class="num">42</td><td>2</td><td class="num">60</td><td class="num">102</td></tr>
+    <tr><td class="num">4</td><td>2</td><td class="num">120</td><td>0, 1</td><td class="num">110</td><td class="num">230</td></tr>
+    <tr><td class="num">5</td><td>0, 2</td><td class="num">170</td><td>1</td><td class="num">60</td><td class="num">230</td></tr>
+    <tr><td class="num">6</td><td>1, 2</td><td class="num">132</td><td>0</td><td class="num">90</td><td class="num">222</td></tr>
+    <tr><td class="num">7</td><td>0, 1, 2</td><td class="num">186</td><td>없음</td><td class="num">0</td><td class="num">186</td></tr>
+  </tbody>
+</table>
+</div>
+<p>최솟값은 <code>mask = 3</code>의 102다. A가 0번과 1번을 돌고(42), B가 2번을 다녀온다(20 × 1 + 20 × 2 = 60).</p>
+
+<h2 id="s6">놓치기 쉬운 함정</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>실수</th><th>입력</th><th class="num">잘못된 결과</th><th class="num">기대값</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>복귀 구간에 배수를 곱하지 않음</td><td>첫 번째 예제</td><td class="num">74</td><td class="num">102</td></tr>
+    <tr><td>배수를 아예 무시 (거리 합만 최소화)</td><td>첫 번째 예제</td><td class="num">64</td><td class="num">102</td></tr>
+    <tr><td>지점을 가까운 영업소에 배정</td><td>영업소 (0, 0), (10, 0) / 지점 (4, 5), (6, 5)</td><td class="num">54</td><td class="num">42</td></tr>
+  </tbody>
+</table>
+</div>
+<p>세 줄 모두 잘못 짠 코드를 실행해 얻은 값이다.</p>
+
+<h3>1. 복귀 구간이 가장 비싸다</h3>
+<p>돌아올 때는 상자를 전부 실은 상태다. 복귀 거리에 <code>(1 + boxes)</code>를 곱하지 않으면 가장 큰 항을 통째로 빠뜨린다.</p>
+
+<h3>2. 상자를 늘리는 시점</h3>
+<p><code>boxes += 1</code>을 연료 계산보다 앞에 두면 지점으로 가는 구간의 배수가 1씩 커진다. "이동 → 도착 → 적재" 순서를 코드 줄 순서와 맞춘다.</p>
+
+<h3>3. 가까운 영업소에 맡기면 된다고 생각한다</h3>
+<p>표의 세 번째 반례에서 지점 (4, 5)는 A에, (6, 5)는 B에 더 가깝다. 각자 하나씩 맡으면 27 + 27 = 54다.
+그런데 A가 둘 다 맡아 (6, 5) → (4, 5) 순으로 돌면 11 × 1 + 2 × 2 + 9 × 3 = 42다. 두 지점이 서로 붙어 있어 한 대가 한꺼번에 도는 편이 왕복을 두 번 하는 것보다 싸다.
+분할은 지점 하나하나를 따로 보고 정할 수 없고, 묶음 전체의 비용을 봐야 한다.</p>
+
+<h3>4. 역순은 같은 비용이 아니다</h3>
+<p>맨해튼 거리는 양방향이 같지만, 구간마다 곱해지는 배수가 다르기 때문에 순서를 뒤집으면 연료가 달라진다(위 추적의 42와 54).
+<a href="/devblog/posts/2026-10-10-algo-permutation-shortest-tour.html">10단원</a>에서 본 "대칭이면 절반만 탐색" 최적화는 여기서 쓸 수 없다.</p>
+
+<h3>5. 연산자 우선순위</h3>
+<div class="code">
+  <pre><code class="language-python">print(1 &lt;&lt; 3 - 1)    # 4   (1 &lt;&lt; 2로 계산된다)
+print((1 &lt;&lt; 3) - 1)  # 7</code></pre>
+</div>
+<p>파이썬에서 뺄셈은 시프트보다 먼저 계산된다. 괄호를 빼면 <code>full</code>이 전혀 다른 값이 된다.</p>
+
+<h3>6. 결합 단계에서 순열을 다시 돌린다</h3>
+<p>비용 표는 영업소마다 한 번만 만든다. 분할을 열거하는 반복문 안에서 매번 순서를 다시 탐색하지 않는다.
+표를 만들어 두면 결합은 덧셈 2ᴺ번으로 끝난다.</p>
+
+<h2 id="s7">변형: 순서 탐색을 DP로</h2>
+<p>교재 범위를 넘어 직접 추가한 변형이다. 원본은 묶음마다 그 안의 순열을 전부 돈다. 지점 8개면 영업소 하나당 순열이 109,600개다.
+<a href="/devblog/posts/2026-10-10-algo-permutation-shortest-tour.html">10단원 글</a>의 비트마스크 DP를 그대로 가져올 수 있는데, 조건이 하나 맞아떨어지기 때문이다.
+<strong>싣고 있는 상자 수는 방문 순서와 무관하게 "지금까지 수거한 묶음의 크기"로 정해진다.</strong> 그래서 (수거한 묶음, 현재 위치)만 알면 다음 이동의 연료를 계산할 수 있다.</p>
+
+<div class="code">
+  <div class="code-head"><span class="fname">costs_dp.py</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-python">def distance(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+
+def costs_dp(base, points):
+    size = len(points)
+    INF = float('inf')
+    # reach[mask][last]: mask를 수거하고 last에 있을 때 최소 연료
+    reach = [[INF] * size for _ in range(1 &lt;&lt; size)]
+    for first in range(size):
+        reach[1 &lt;&lt; first][first] = distance(base, points[first])
+    best = [0] * (1 &lt;&lt; size)
+    for mask in range(1, 1 &lt;&lt; size):
+        boxes = bin(mask).count("1")
+        for last in range(size):
+            fuel = reach[mask][last]
+            if fuel == INF:
+                continue
+            for nxt in range(size):
+                if mask &amp; (1 &lt;&lt; nxt):
+                    continue
+                candidate = fuel + distance(points[last], points[nxt]) * (1 + boxes)
+                if candidate &lt; reach[mask | (1 &lt;&lt; nxt)][nxt]:
+                    reach[mask | (1 &lt;&lt; nxt)][nxt] = candidate
+        best[mask] = min(reach[mask][last] + distance(points[last], base) * (1 + boxes)
+                         for last in range(size) if mask &amp; (1 &lt;&lt; last))
+    return best
+
+
+def minimum_fuel_dp(bases, points):
+    size = len(points)
+    full = (1 &lt;&lt; size) - 1
+    cost_a, cost_b = costs_dp(bases[0], points), costs_dp(bases[1], points)
+    return min(cost_a[mask] + cost_b[full ^ mask] for mask in range(1 &lt;&lt; size))</code></pre>
+</div>
+
+<p><code>bin(mask).count("1")</code>이 묶음의 크기, 즉 현재 상자 수다. 한 번의 DP가 모든 묶음의 <code>best[mask]</code>를 함께 채우므로 원본의 <code>costs</code>와 같은 표가 나오고, 결합 단계는 그대로다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th class="num">지점 수</th><th class="num">영업소당 순열 수</th><th class="num">원본 실행 시간</th><th class="num">DP 실행 시간</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="num">6</td><td class="num">1,956</td><td class="num">0.007초</td><td class="num">0.0007초</td></tr>
+    <tr><td class="num">7</td><td class="num">13,699</td><td class="num">0.034초</td><td class="num">0.0013초</td></tr>
+    <tr><td class="num">8</td><td class="num">109,600</td><td class="num">0.293초</td><td class="num">0.0042초</td></tr>
+    <tr><td class="num">12</td><td class="num">1,302,061,344</td><td class="num">측정 안 함</td><td class="num">0.13초</td></tr>
+  </tbody>
+</table>
+</div>
+<p>실행 시간은 한 번 측정한 값이라 비율만 참고한다. 문제의 제한(최대 8개)에서는 원본으로 충분하다. 제한이 8인 것 자체가 순열 완전 탐색을 의도했다는 표시다.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>검증 항목</th><th>조건</th><th class="num">결과</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>원본과 DP 대조</td><td>지점 0 ~ 6개, 좌표 0 ~ 30 무작위 3,000건</td><td class="num">전부 일치</td></tr>
+    <tr><td>큰 입력 대조</td><td>지점 6, 7, 8개</td><td class="num">전부 일치</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2 id="s8">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>포인트</th><th>내용</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>문제 분해</td><td>분할(부분집합)을 고정하면 두 트럭은 독립. 영업소별 비용 표 + 보완 묶음 결합</td></tr>
+    <tr><td>부분집합 표현</td><td>비트마스크. 나머지는 <code>full ^ mask</code></td></tr>
+    <tr><td>연료 계산</td><td>이동 연료를 더한 뒤 상자를 늘린다. 복귀에도 배수를 곱한다</td></tr>
+    <tr><td>순서의 영향</td><td>거리 합이 같아도 긴 구간을 가벼울 때 달리는 순서가 싸다</td></tr>
+    <tr><td>분할의 영향</td><td>가까운 영업소 배정은 최적이 아닐 수 있다</td></tr>
+    <tr><td>빈 몫</td><td><code>best[0] = 0</code>, <code>mask</code> 범위에 0과 <code>full</code> 포함</td></tr>
+    <tr><td>규모</td><td>지점 8개까지는 순열, 그 이상은 (묶음, 위치) DP</td></tr>
+  </tbody>
+</table>
+</div>
+<p>이전 글: <a href="/devblog/posts/2026-10-10-algo-permutation-shortest-tour.html">10단원 — 방문 순서 완전 탐색</a></p>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
