@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>REA(Reverse Engineer Anything) 정리 — AI 에이전트용 리버스 엔지니어링 MCP의 아키텍처와 OS·대상별 지원 범위</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-10-15-rea-reverse-engineer-anything.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-15-rea-reverse-engineer-anything.html</guid>
+      <description>GitHub 255k 스타 REA의 동작 흐름·헥사고날 아키텍처·Evidence 모델을 정리하고, Windows/macOS/Linux별 Hopper·Ghidra·IDA 지원과 EXE·DLL·APK·Electron·.NET 분석 가능 여부를 표로 비교</description>
+      <pubDate>Thu, 15 Oct 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>방문 지점과 선분 집합 — 로봇이 그린 선으로 닫힌 영역 세기</title>
       <link>https://bluaura.github.io/devblog/posts/2026-10-10-algo-vertex-edge-set-count-areas.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-10-algo-vertex-edge-set-count-areas.html</guid>
@@ -206,12 +213,5 @@
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-01-os-ai-local-llm-scenarios-startups-ideas.html</guid>
       <description>Apple·MS·Google의 에이전틱 OS 현황, OpenClaw 이후 스타트업 25곳 지형, AI OS 서비스 프리미티브 14종, 그리고 씬 클라이언트·승인 UX·허브 콘솔 등 앱 개발자 아이디어 12선과 우선순위 3개</description>
       <pubDate>Tue, 01 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>DeepSeek Harness 해부: 이용자 관점과 아키텍트 관점</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-08-27-deepseek-harness-review.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-08-27-deepseek-harness-review.html</guid>
-      <description>Everything is a Plugin을 내세운 DeepSeek Harness v0.1의 Cordis 커널·3계층 설정·주요 플러그인 구조와, Claude Code 대비 8개 항목 장단점 비교</description>
-      <pubDate>Thu, 27 Aug 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>

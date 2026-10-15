@@ -18,6 +18,20 @@
   },
   "posts": [
     {
+      "slug": "2026-10-15-rea-reverse-engineer-anything",
+      "title": "REA(Reverse Engineer Anything) 정리 — AI 에이전트용 리버스 엔지니어링 MCP의 아키텍처와 OS·대상별 지원 범위",
+      "date": "2026-10-15",
+      "tags": [
+        "AI",
+        "Windows",
+        "Android",
+        "iOS",
+        "MCP",
+        "리버스엔지니어링"
+      ],
+      "summary": "GitHub 255k 스타 REA의 동작 흐름·헥사고날 아키텍처·Evidence 모델을 정리하고, Windows/macOS/Linux별 Hopper·Ghidra·IDA 지원과 EXE·DLL·APK·Electron·.NET 분석 가능 여부를 표로 비교"
+    },
+    {
       "slug": "2026-10-10-algo-monotonic-stack",
       "title": "단조 스택 두 문제 — 오른쪽의 첫 큰 값과 서로 보이는 쌍 세기",
       "date": "2026-10-10",
