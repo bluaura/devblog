@@ -25,10 +25,11 @@
         "튜토리얼",
         "Windows",
         "Android",
+        "iOS",
         "Ghidra",
         "리버스엔지니어링"
       ],
-      "summary": "Ghidra 12.1.4(JDK 21) 기준 기능·12.x 변경점·IDA/Hopper 비교를 정리하고, 크래시 추적·패치 diff·펌웨어·SDK 검증 등 활용 사례 8가지와 상황별 사용 판단표 제공"
+      "summary": "Ghidra 12.1.4(JDK 21) 기준 기능·12.x 변경점·IDA/Hopper 비교를 정리하고, 크래시 추적·패치 diff·펌웨어·SDK 검증·iOS/macOS 프레임워크 분석 등 활용 사례 9가지와 상황별 사용 판단표 제공"
     },
     {
       "slug": "2026-10-15-rea-reverse-engineer-anything",
