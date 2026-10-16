@@ -18,6 +18,19 @@
   },
   "posts": [
     {
+      "slug": "2026-10-16-ghidra-guide",
+      "title": "Ghidra 정리 — NSA 무료 리버스 엔지니어링 도구의 기능, 12.x 변경점, 언제 쓰면 좋은가",
+      "date": "2026-10-16",
+      "tags": [
+        "튜토리얼",
+        "Windows",
+        "Android",
+        "Ghidra",
+        "리버스엔지니어링"
+      ],
+      "summary": "Ghidra 12.1.4(JDK 21) 기준 기능·12.x 변경점·IDA/Hopper 비교를 정리하고, 크래시 추적·패치 diff·펌웨어·SDK 검증 등 활용 사례 8가지와 상황별 사용 판단표 제공"
+    },
+    {
       "slug": "2026-10-15-rea-reverse-engineer-anything",
       "title": "REA(Reverse Engineer Anything) 정리 — AI 에이전트용 리버스 엔지니어링 MCP의 아키텍처와 OS·대상별 지원 범위",
       "date": "2026-10-15",

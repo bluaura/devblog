@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>Ghidra 정리 — NSA 무료 리버스 엔지니어링 도구의 기능, 12.x 변경점, 언제 쓰면 좋은가</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-10-16-ghidra-guide.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-16-ghidra-guide.html</guid>
+      <description>Ghidra 12.1.4(JDK 21) 기준 기능·12.x 변경점·IDA/Hopper 비교를 정리하고, 크래시 추적·패치 diff·펌웨어·SDK 검증 등 활용 사례 8가지와 상황별 사용 판단표 제공</description>
+      <pubDate>Fri, 16 Oct 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>REA(Reverse Engineer Anything) 정리 — AI 에이전트용 리버스 엔지니어링 MCP의 아키텍처와 OS·대상별 지원 범위</title>
       <link>https://bluaura.github.io/devblog/posts/2026-10-15-rea-reverse-engineer-anything.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-15-rea-reverse-engineer-anything.html</guid>
@@ -205,13 +212,6 @@
       <link>https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</guid>
       <description>Foundation Models 프로바이더 스왑·PCC 무료(200만 다운로드 미만)·Core AI·Xcode 27 에이전트 등 개발자 12선, Gemini 기반 Siri AI 등 사용자 10선, fm CLI·Shortcuts 자연어 등 AI 생산성 8선. Gruber·Troughton-Smith 등 개발자 반응 포함</description>
-      <pubDate>Tue, 01 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>로컬 LLM 시대의 OS + AI: 유저 시나리오, 스타트업 지형, AI OS 서비스, 앱 개발자의 기회 (2026.09)</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-09-01-os-ai-local-llm-scenarios-startups-ideas.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-01-os-ai-local-llm-scenarios-startups-ideas.html</guid>
-      <description>Apple·MS·Google의 에이전틱 OS 현황, OpenClaw 이후 스타트업 25곳 지형, AI OS 서비스 프리미티브 14종, 그리고 씬 클라이언트·승인 UX·허브 콘솔 등 앱 개발자 아이디어 12선과 우선순위 3개</description>
       <pubDate>Tue, 01 Sep 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>
