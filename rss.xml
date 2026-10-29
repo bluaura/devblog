@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>하네스 엔지니어링 01 — 에이전트에게 맡길 일을 &#x27;작업 계약&#x27;으로 정하기</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-10-29-harness-engineering-01-task-contract.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-29-harness-engineering-01-task-contract.html</guid>
+      <description>입력·범위·기대 동작·완료 증거 4요소로 에이전트 작업 명세를 쓰는 법. C# 진행률 함수 예제, 고정 검증 사례 8개, 25분 실습과 복사용 요청문 포함</description>
+      <pubDate>Thu, 29 Oct 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>Ghidra 정리 — NSA 무료 리버스 엔지니어링 도구의 기능, 12.x 변경점, 언제 쓰면 좋은가</title>
       <link>https://bluaura.github.io/devblog/posts/2026-10-16-ghidra-guide.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-16-ghidra-guide.html</guid>
@@ -206,12 +213,5 @@
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-claude-prompt-harness.html</guid>
       <description>Opus 4.5+/Fable 5.1은 지시를 줄이고 Sonnet은 절차를 늘리는 이유, 그리고 PRD 외에 초기화·구현·리뷰 3세션 하네스가 필요한 근거를 Anthropic 공식 문서 기준으로 정리</description>
       <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>WWDC 2026 핵심 30선: 개발자·사용자·AI 생산성 관점과 개발자 반응</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-01-wwdc-2026-top30.html</guid>
-      <description>Foundation Models 프로바이더 스왑·PCC 무료(200만 다운로드 미만)·Core AI·Xcode 27 에이전트 등 개발자 12선, Gemini 기반 Siri AI 등 사용자 10선, fm CLI·Shortcuts 자연어 등 AI 생산성 8선. Gruber·Troughton-Smith 등 개발자 반응 포함</description>
-      <pubDate>Tue, 01 Sep 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>

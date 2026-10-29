@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://bluaura.github.io/devblog/</loc></url>
+  <url><loc>https://bluaura.github.io/devblog/posts/2026-10-29-harness-engineering-01-task-contract.html</loc><lastmod>2026-10-29</lastmod></url>
   <url><loc>https://bluaura.github.io/devblog/posts/2026-10-16-ghidra-guide.html</loc><lastmod>2026-10-16</lastmod></url>
   <url><loc>https://bluaura.github.io/devblog/posts/2026-10-15-rea-reverse-engineer-anything.html</loc><lastmod>2026-10-15</lastmod></url>
   <url><loc>https://bluaura.github.io/devblog/posts/2026-10-10-algo-vertex-edge-set-count-areas.html</loc><lastmod>2026-10-10</lastmod></url>
