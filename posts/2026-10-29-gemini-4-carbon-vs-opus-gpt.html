@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gemini 4 Carbon 분석: 앱 개발자 관점에서 Opus 5.5, GPT-6 Astra와 비교 · 블루오라 개발노트</title>
+<meta name="description" content="AA 지수 59로 1위지만 코딩 에이전트는 Opus 5.5(62)에 3점 열세. 긴 컨텍스트·보안·비용은 강점, 현재 일반 API 미공개">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gemini 4 Carbon 분석: 앱 개발자 관점에서 Opus 5.5, GPT-6 Astra와 비교">
+<meta property="og:description" content="AA 지수 59로 1위지만 코딩 에이전트는 Opus 5.5(62)에 3점 열세. 긴 컨텍스트·보안·비용은 강점, 현재 일반 API 미공개">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-10-29-gemini-4-carbon-vs-opus-gpt.html">
+<meta property="article:published_time" content="2026-10-29">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-10-29-gemini-4-carbon-vs-opus-gpt.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>Gemini 4 Carbon 분석: 앱 개발자 관점에서 Opus 5.5, GPT-6 Astra와 비교</h1>
+    <p class="sub"><span class="tag">AI</span><span class="tag">LLM</span><span class="tag">Gemini</span><span class="tag">Claude</span><span class="tag">GPT</span> &nbsp;2026-10-29</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat">
+    <div class="label">AA Intelligence Index v5</div>
+    <div class="value">59</div>
+    <div class="delta">Opus 5.5 58 / Astra 57</div>
+  </div>
+  <div class="stat">
+    <div class="label">Coding Agent Index</div>
+    <div class="value">59</div>
+    <div class="delta down">Opus 5.5 62에 3점 열세</div>
+  </div>
+  <div class="stat">
+    <div class="label">API 가격 (1M 토큰)</div>
+    <div class="value">$2 / $10</div>
+    <div class="delta">이후 $4 / $20</div>
+  </div>
+  <div class="stat">
+    <div class="label">공개 범위</div>
+    <div class="value">제한</div>
+    <div class="delta">보안 파트너 우선</div>
+  </div>
+</div>
+
+<blockquote>
+Google DeepMind가 2026년 10월 28일 Gemini 4 Carbon을 발표했다. 종합 지능 지수에서는 Claude Opus 5.5와 GPT-6 Astra를 근소하게 앞서 1위에 올랐지만, 앱 개발자가 실제로 체감하는 에이전트 코딩에서는 Opus 5.5가 여전히 약간 앞선다. 무엇보다 현재는 일반 개발자가 API로 쓸 수 없다.
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">Gemini 4 Carbon이란</a></li>
+    <li><a href="#s2">출시 현황과 가격</a></li>
+    <li><a href="#s3">주요 벤치마크 비교</a></li>
+    <li><a href="#s4">앱 개발자 관점의 장점</a></li>
+    <li><a href="#s5">앱 개발자 관점의 단점</a></li>
+    <li><a href="#s6">정리</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">Gemini 4 Carbon이란</h2>
+<p>Carbon은 Gemini 4 계열의 두 번째 공개 모델이다. 10월 초 Google 내부 코딩 플랫폼(Jetski)에서 테스트 중이라는 보도로 처음 알려졌고, 당시 한 Google 직원이 코딩 체감이 Claude Opus 5.5와 비슷하다고 평가해 주목받았다. 9월 30일 발표된 Gemini 4 Argon 이후 약 2주 만에 나온 후속작이다.</p>
+<p>Google은 Carbon을 며칠씩 이어지는 장기 자율 개발 작업과 사이버보안(취약점 탐지, 검증, 패치) 용도에 맞춰 설계했다고 설명한다. 내부에서는 대형 코드베이스의 원인 분석과 미묘한 버그 수정을 여러 날 연속으로 수행했다고 한다.</p>
+
+<h2 id="s2">출시 현황과 가격</h2>
+<ul>
+  <li><strong>접근</strong>: 초기에는 Google의 Fairwind 프로그램에 선정된 보안 전문가에게만 제공된다. 일반 개발자 대상 공개 일정은 발표되지 않았다.</li>
+  <li><strong>API 스펙</strong>: 모델 ID, 컨텍스트 길이, 최대 출력 등 세부 사양은 아직 공개되지 않았다. 참고로 Argon은 입출력 합산 100만 토큰 이상의 컨텍스트를 지원한다.</li>
+  <li><strong>가격</strong>: 도입가 입력 $2, 출력 $10(100만 토큰 기준), 캐시 입력 95% 할인. 이후 $4 / $20으로 인상 예정이며 도입가 종료 시점은 미정이다.</li>
+  <li><strong>지금 쓸 수 있는 모델</strong>: Gemini 4 Argon(10월 13일 일반 공개, AI Studio와 Android Studio 지원).</li>
+</ul>
+
+<h2 id="s3">주요 벤치마크 비교</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>항목</th><th>Gemini 4 Carbon</th><th>Claude Opus 5.5</th><th>GPT-6 Astra</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>AA Intelligence Index v5</td><td class="num">59</td><td class="num">58</td><td class="num">57</td></tr>
+    <tr><td>AA Coding Agent Index</td><td class="num">59</td><td class="num">62</td><td class="num">-</td></tr>
+    <tr><td>FrontierSWE 2</td><td class="num">61.2%</td><td class="num">62.3%</td><td class="num">65.5%</td></tr>
+    <tr><td>OSWorld 오프라인 서브셋 (컴퓨터 사용)</td><td class="num">81.5%</td><td class="num">87.2%</td><td class="num">-</td></tr>
+    <tr><td>GraphWalks 256K~1M (긴 컨텍스트)</td><td class="num">96.2%</td><td class="num">66.8%</td><td class="num">71.8%</td></tr>
+    <tr><td>Vals Index v2.2</td><td class="num">70.4%</td><td class="num">70.2%</td><td class="num">-</td></tr>
+    <tr><td>AA 지수 과제당 비용</td><td class="num">$7.76</td><td class="num">$10.04</td><td class="num">$6.25</td></tr>
+    <tr><td>AA-Omniscience 환각률</td><td class="num">11%</td><td class="num">50%</td><td class="num">50%</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="callout warn">
+상당수 수치는 Google 발표 자료 기준이며 측정 환경이 서로 다르다. 상위 모델 간 차이가 1~3점 수준이라 특정 워크로드에서의 우위를 단정하기 어렵다. 보안 벤치마크는 가드레일 없이 측정되었다고 Google이 밝혔다.
+</div>
+
+<h2 id="s4">앱 개발자 관점의 장점</h2>
+<ul>
+  <li><strong>대형 코드베이스 분석</strong>: 256K~1M 토큰 구간 긴 컨텍스트 추론에서 경쟁 모델 대비 20%p 이상 앞선다. 레거시 프로젝트 전체를 넣고 구조를 파악하는 작업에 유리하다.</li>
+  <li><strong>보안 코드 작성</strong>: SEC-bench Pro 88.2%, CWE-bench 71.0%, ExploitGym 54.8%로 GPT-6 Astra와 Argon을 앞선다. Google 내부 기준으로 안전한 코드 생성 성공률이 Argon의 2배 이상이다.</li>
+  <li><strong>비용 효율</strong>: AA 지수 과제당 비용이 Opus 5.5보다 약 23% 저렴하다. Arena의 Agent Arena에서도 중앙값 과제 비용이 1위 Opus 5.5보다 72% 낮았다.</li>
+  <li><strong>웹 프론트엔드</strong>: WebDev Arena에서 4위(1,769)로 Argon 대비 크게 개선되었다.</li>
+  <li><strong>프롬프트 인젝션 방어</strong>: Gray Swan 간접 프롬프트 인젝션 테스트에서 공격 성공률 0.0%를 기록했다. 에이전트가 외부 문서나 웹을 읽는 구조에서 의미가 있다.</li>
+</ul>
+
+<h2 id="s5">앱 개발자 관점의 단점</h2>
+<ul>
+  <li><strong>지금 쓸 수 없다</strong>: 공개 API가 없고 일정도 미정이다. 당장 비교 테스트를 하려면 Argon으로 대신해야 한다.</li>
+  <li><strong>에이전트 코딩은 Opus 5.5 우위</strong>: 코딩 도구 안에서 동작을 측정하는 Coding Agent Index에서 Claude Code + Opus 5.5(62)에 3점 뒤진다.</li>
+  <li><strong>실제 SW 엔지니어링은 Astra와 Opus에 열세</strong>: FrontierSWE 2에서 세 모델 중 최하위다.</li>
+  <li><strong>UI 자동화(컴퓨터 사용)</strong>: OSWorld 오프라인 서브셋에서 Opus 5.5가 약 6%p 앞선다. 앱 UI 자동 테스트 같은 용도라면 고려할 부분이다.</li>
+  <li><strong>느린 응답</strong>: Argon 대비 추론 토큰이 2.3배, 출력 토큰이 64% 많다. 일부 과제는 처리 시간이 2배 이상 걸렸다. 빠른 반복 작업에는 불리하다.</li>
+  <li><strong>환각률 상승</strong>: Argon 4%에서 11%로 올랐다. 다만 Opus 5.5와 Astra(각 50%)보다는 여전히 크게 낮다.</li>
+</ul>
+
+<h2 id="s6">정리</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>용도</th><th>추천 모델</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>일상 코딩, 에이전트 기반 개발 (Claude Code 등)</td><td>Claude Opus 5.5</td></tr>
+    <tr><td>정밀한 SW 엔지니어링 작업</td><td>GPT-6 Astra (근소 우위)</td></tr>
+    <tr><td>UI 자동화, 컴퓨터 사용 에이전트</td><td>Claude Opus 5.5</td></tr>
+    <tr><td>대형 코드베이스 분석, 보안 패치, 비용 민감한 대량 처리</td><td>Gemini 4 Carbon (공개 후) / 현재는 Argon</td></tr>
+  </tbody>
+</table>
+</div>
+<p>결론적으로 Carbon은 종합 지능과 긴 컨텍스트, 보안에서 강점이 뚜렷하지만, 앱 개발자의 주력 코딩 에이전트 자리를 당장 대체할 수준은 아니다. 공개되면 자신의 실제 코드로 Opus 5.5, Astra와 나란히 돌려 보는 것이 가장 확실한 판단 방법이다.</p>
+
+<p>출처: <a href="https://venturebeat.com/technology/google-unveils-gemini-4-carbon-retaking-the-worlds-no-1-spot-on-updated-harder-benchmarks-but-access-is-limited">VentureBeat</a> · <a href="https://the-decoder.com/google-deepmind-releases-gemini-4-carbon-just-two-weeks-after-argon-with-gains-across-the-board/">The Decoder</a> · <a href="https://artificialanalysis.ai/articles/gemini-4-carbon-new-number-1">Artificial Analysis</a> · <a href="https://www.marktechpost.com/2026/10/28/google-deepmind-gemini-4-carbon-frontier-model/">MarkTechPost</a></p>
+<p>작성 시점: 2026-10-29 (KST)</p>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>

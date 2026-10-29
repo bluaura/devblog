@@ -18,6 +18,19 @@
   },
   "posts": [
     {
+      "slug": "2026-10-29-gemini-4-carbon-vs-opus-gpt",
+      "title": "Gemini 4 Carbon 분석: 앱 개발자 관점에서 Opus 5.5, GPT-6 Astra와 비교",
+      "date": "2026-10-29",
+      "tags": [
+        "AI",
+        "LLM",
+        "Gemini",
+        "Claude",
+        "GPT"
+      ],
+      "summary": "AA 지수 59로 1위지만 코딩 에이전트는 Opus 5.5(62)에 3점 열세. 긴 컨텍스트·보안·비용은 강점, 현재 일반 API 미공개"
+    },
+    {
       "slug": "2026-10-29-harness-engineering-01-task-contract",
       "title": "하네스 엔지니어링 01 — 에이전트에게 맡길 일을 '작업 계약'으로 정하기",
       "date": "2026-10-29",

@@ -12,6 +12,13 @@
       <pubDate>Thu, 29 Oct 2026 00:00:00 +0900</pubDate>
     </item>
     <item>
+      <title>Gemini 4 Carbon 분석: 앱 개발자 관점에서 Opus 5.5, GPT-6 Astra와 비교</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-10-29-gemini-4-carbon-vs-opus-gpt.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-29-gemini-4-carbon-vs-opus-gpt.html</guid>
+      <description>AA 지수 59로 1위지만 코딩 에이전트는 Opus 5.5(62)에 3점 열세. 긴 컨텍스트·보안·비용은 강점, 현재 일반 API 미공개</description>
+      <pubDate>Thu, 29 Oct 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>Ghidra 정리 — NSA 무료 리버스 엔지니어링 도구의 기능, 12.x 변경점, 언제 쓰면 좋은가</title>
       <link>https://bluaura.github.io/devblog/posts/2026-10-16-ghidra-guide.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-16-ghidra-guide.html</guid>
@@ -205,13 +212,6 @@
       <link>https://bluaura.github.io/devblog/posts/2026-09-04-gpt-6-astra-review.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-gpt-6-astra-review.html</guid>
       <description>OpenAI GPT-6 Astra 출시 다음 날 정리. OSWorld 작업 시간 47% 단축·환각률 12.2%→4.2%·가격 2.5배 인상, 제3자 지수에서는 Claude Fable 5.1(66) 대비 61점, 공식 영상 데모 7건과 실사용 후기·주의할 벤치마크 함정 포함</description>
-      <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>Claude 모델별 프롬프트 상세도와 구현 하네스 요청법</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-09-04-claude-prompt-harness.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-claude-prompt-harness.html</guid>
-      <description>Opus 4.5+/Fable 5.1은 지시를 줄이고 Sonnet은 절차를 늘리는 이유, 그리고 PRD 외에 초기화·구현·리뷰 3세션 하네스가 필요한 근거를 Anthropic 공식 문서 기준으로 정리</description>
       <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>
