@@ -18,6 +18,17 @@
   },
   "posts": [
     {
+      "slug": "2026-11-03-ai-sw-perspectives",
+      "title": "더 빨리 만드는 시대, 무엇으로 신뢰를 증명할까? AI·SW 개발자 생각 읽기 (2026.11.03)",
+      "date": "2026-11-03",
+      "tags": [
+        "AI",
+        "개발뉴스",
+        "하네스엔지니어링"
+      ],
+      "summary": "Karpathy의 2시간 HackerTube, Jepsen이 제시한 ParticleDB 96개 문제, Schmid의 Code Mode 등 10.28~11.01 원문 5편과 보충 1편을 저자 주장·검증 한계·실무 적용으로 나눠 정리"
+    },
+    {
       "slug": "2026-10-29-gemini-4-carbon-vs-opus-gpt",
       "title": "Gemini 4 Carbon 분석: 앱 개발자 관점에서 Opus 5.5, GPT-6 Astra와 비교",
       "date": "2026-10-29",

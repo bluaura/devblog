@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>더 빨리 만드는 시대, 무엇으로 신뢰를 증명할까? AI·SW 개발자 생각 읽기 (2026.11.03)</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-11-03-ai-sw-perspectives.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-03-ai-sw-perspectives.html</guid>
+      <description>Karpathy의 2시간 HackerTube, Jepsen이 제시한 ParticleDB 96개 문제, Schmid의 Code Mode 등 10.28~11.01 원문 5편과 보충 1편을 저자 주장·검증 한계·실무 적용으로 나눠 정리</description>
+      <pubDate>Tue, 03 Nov 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>하네스 엔지니어링 01 — 에이전트에게 맡길 일을 &#x27;작업 계약&#x27;으로 정하기</title>
       <link>https://bluaura.github.io/devblog/posts/2026-10-29-harness-engineering-01-task-contract.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-10-29-harness-engineering-01-task-contract.html</guid>
@@ -205,13 +212,6 @@
       <link>https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html</guid>
       <description>Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지와 Hermes 용어 26개 참조표</description>
-      <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>GPT-6 Astra 조사: Sol 대비 개선점, 벤치마크, Computer Use, 사용 후기</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-09-04-gpt-6-astra-review.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-gpt-6-astra-review.html</guid>
-      <description>OpenAI GPT-6 Astra 출시 다음 날 정리. OSWorld 작업 시간 47% 단축·환각률 12.2%→4.2%·가격 2.5배 인상, 제3자 지수에서는 Claude Fable 5.1(66) 대비 61점, 공식 영상 데모 7건과 실사용 후기·주의할 벤치마크 함정 포함</description>
       <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>
