@@ -15,7 +15,6 @@
 ## 발행
 
 ```bash
-export GITHUB_TOKEN=github_pat_...
 python3 publish.py \
   --title "제목" \
   --tags "Android,Kotlin,튜토리얼" \
@@ -25,6 +24,7 @@ python3 publish.py \
 ```
 
 `--body` 에는 본문 조각만 넣는다 (`<html>`/`<body>`/인라인 `style=` 금지).
+push 는 실행 환경의 GitHub 연결로 인증한다. 실패하면 우회하지 않고 중단하며, 커밋은 로컬에 남는다.
 
 ## 코드블록 작성
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """개발 블로그 글 1편을 발행한다 (템플릿 적용 → 목록 갱신 → commit → push).
 
+push 인증은 실행 환경의 GitHub 연결을 그대로 사용한다. 토큰을 넘기지 않는다.
+
 사용법:
-    export GITHUB_TOKEN=github_pat_...
     python3 publish.py \
         --title "Kotlin Flow 디바운스 처리" \
         --tags "Android,Kotlin,튜토리얼" \
@@ -16,14 +17,13 @@
 옵션:
     --date YYYY-MM-DD   기본값: 오늘(KST)
     --slug my-slug      기본값: 날짜 + 제목 슬러그
-    --no-push           커밋만 하고 push 하지 않음
+    --no-push           로컬 파일만 생성하고 commit·push 하지 않음
 """
 
 import argparse
 import hashlib
 import html
 import json
-import os
 import pathlib
 import re
 import subprocess
@@ -32,14 +32,12 @@ from datetime import datetime, timezone, timedelta
 
 ROOT = pathlib.Path(__file__).parent
 KST = timezone(timedelta(hours=9))
-REPO = "bluaura/devblog"
 SITE = "https://bluaura.github.io/devblog"
 
 
 def sh(*cmd, check=True):
     r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     out = (r.stdout + r.stderr).strip()
-    out = re.sub(r"github_pat_[A-Za-z0-9_]+", "[TOKEN]", out)
     if check and r.returncode != 0:
         print(f"$ {' '.join(cmd)}\n{out}", file=sys.stderr)
         sys.exit(f"명령 실패 (exit {r.returncode})")
@@ -55,58 +53,20 @@ def slugify(title: str) -> str:
     return s[:60]
 
 
-def setup_auth() -> bool:
-    tok = (os.environ.get("GITHUB_TOKEN") or "").strip().replace("\\", "")
-    if not tok:
-        return False
-    if not re.fullmatch(r"(github_pat_|ghp_)[A-Za-z0-9_]+", tok):
-        sys.exit("GITHUB_TOKEN 형식이 올바르지 않습니다. 값이 손상되었는지 확인하세요.")
-    cred = pathlib.Path.home() / ".git-credentials"
-    cred.write_text(f"https://bluaura:{tok}@github.com\n", encoding="utf-8")
-    cred.chmod(0o600)
-    sh("git", "config", "--global", "credential.helper", "store")
-    sh("git", "config", "--global", "user.name", "bluaura")
-    sh("git", "config", "--global", "user.email", "bluaura@gmail.com")
-    return True
-
-
-def robust_push():
-    """origin push 실패 시 github.com 에 프록시를 우회해 직접 push 한다."""
-    tok = (os.environ.get("GITHUB_TOKEN") or "").strip().replace("\\", "")
-
-    subprocess.run(
-        ["git", "-c", "user.name=bluaura", "-c", "user.email=bluaura@gmail.com",
-         "pull", "--rebase", "-q", "origin", "main"],
-        cwd=ROOT, capture_output=True, text=True,
-    )
+def push():
+    """origin/main 을 rebase 한 뒤 push 한다. 실패하면 우회하지 않고 중단한다."""
+    r = subprocess.run(["git", "pull", "--rebase", "-q", "origin", "main"],
+                       cwd=ROOT, capture_output=True, text=True)
+    if r.returncode != 0:
+        subprocess.run(["git", "rebase", "--abort"], cwd=ROOT, capture_output=True)
+        print((r.stdout + r.stderr).strip(), file=sys.stderr)
+        sys.exit("rebase 실패 — 커밋은 로컬에 남아 있습니다. 원격 변경을 확인한 뒤 다시 push 하세요.")
 
     r = subprocess.run(["git", "push", "-q", "origin", "main"],
                        cwd=ROOT, capture_output=True, text=True)
-    if r.returncode == 0:
-        return
-    msg = re.sub(r"github_pat_[A-Za-z0-9_]+", "[TOKEN]", (r.stdout + r.stderr)).strip()
-    print(f"origin push 실패 → github.com 직접 push 로 폴백: {msg[:200]}")
-
-    if not tok:
-        sys.exit("GITHUB_TOKEN 이 없어 폴백 push 불가.")
-    url = f"https://bluaura:{tok}@github.com/{REPO}.git"
-
-    noproxy = ["-c", "http.proxy=", "-c", "https.proxy="]
-    f = subprocess.run(["git", *noproxy, "fetch", "-q", url, "main"],
-                       cwd=ROOT, capture_output=True, text=True)
-    if f.returncode == 0:
-        subprocess.run(
-            ["git", "-c", "user.name=bluaura", "-c", "user.email=bluaura@gmail.com",
-             "rebase", "-q", "FETCH_HEAD"],
-            cwd=ROOT, capture_output=True, text=True,
-        )
-
-    r2 = subprocess.run(["git", *noproxy, "push", "-q", url, "HEAD:main"],
-                        cwd=ROOT, capture_output=True, text=True)
-    if r2.returncode != 0:
-        out = re.sub(r"github_pat_[A-Za-z0-9_]+", "[TOKEN]", (r2.stdout + r2.stderr)).strip()
-        print(out, file=sys.stderr)
-        sys.exit(f"push 실패 (exit {r2.returncode})")
+    if r.returncode != 0:
+        print((r.stdout + r.stderr).strip(), file=sys.stderr)
+        sys.exit("push 실패 — 커밋은 로컬에 남아 있습니다. 저장소의 GitHub 권한 연결을 확인하세요.")
 
 
 def main():
@@ -162,13 +122,12 @@ def main():
         print(f"✓ 로컬 생성 완료: posts/{slug}.html (push 생략)")
         return
 
-    setup_auth()
     sh("git", "add", "-A")
     if not sh("git", "status", "--porcelain"):
         print("변경사항 없음 — commit 생략")
         return
     sh("git", "commit", "-q", "-m", f"post: {a.title}")
-    robust_push()
+    push()
     print(f"✓ 발행 완료 → {SITE}/posts/{slug}.html")
     print("  (GitHub Pages 반영까지 30초~1분)")
 
