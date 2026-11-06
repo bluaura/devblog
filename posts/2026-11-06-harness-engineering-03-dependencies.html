@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>하네스 엔지니어링 03 — 다음 작업은 무엇을 기다려야 할까: 의존성과 시작 조건 · 블루오라 개발노트</title>
+<meta name="description" content="A→B를 &#x27;B가 시작하려면 A의 어떤 결과가 필요한가&#x27;로 정의하는 법. C# 전송 상태 문구 기능을 A~D 작업 4개와 의존 관계 4개로 연결하고, 시작 조건표, 가능·불가 순서 판정, 25분 실습과 복사용 검토 요청문 포함">
+<meta property="og:type" content="article">
+<meta property="og:title" content="하네스 엔지니어링 03 — 다음 작업은 무엇을 기다려야 할까: 의존성과 시작 조건">
+<meta property="og:description" content="A→B를 &#x27;B가 시작하려면 A의 어떤 결과가 필요한가&#x27;로 정의하는 법. C# 전송 상태 문구 기능을 A~D 작업 4개와 의존 관계 4개로 연결하고, 시작 조건표, 가능·불가 순서 판정, 25분 실습과 복사용 검토 요청문 포함">
+<meta property="og:url" content="https://bluaura.github.io/devblog/posts/2026-11-06-harness-engineering-03-dependencies.html">
+<meta property="article:published_time" content="2026-11-06">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://bluaura.github.io/devblog/posts/2026-11-06-harness-engineering-03-dependencies.html">
+<link rel="alternate" type="application/rss+xml" title="블루오라 개발노트" href="/devblog/rss.xml">
+<link rel="stylesheet" href="/devblog/assets/style.css">
+<script>
+(function(){var t=localStorage.getItem('theme');
+if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
+</head>
+<body>
+
+<header class="site-header"><div class="wrap">
+  <a class="brand" href="/devblog/"><span class="brand-mark">&lt;/&gt;</span>블루오라 개발노트</a>
+  <nav class="nav">
+    <a href="/devblog/">홈</a>
+    <a href="/">투자노트</a>
+    <a href="/devblog/rss.xml">RSS</a>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">◐</button>
+  </nav>
+</div></header>
+
+<main class="wrap article">
+  <div class="article-head">
+    <a class="back" href="/devblog/">← 목록으로</a>
+    <h1>하네스 엔지니어링 03 — 다음 작업은 무엇을 기다려야 할까: 의존성과 시작 조건</h1>
+    <p class="sub"><span class="tag">튜토리얼</span><span class="tag">AI</span><span class="tag">하네스엔지니어링</span><span class="tag">CSharp</span> &nbsp;2026-11-06</p>
+  </div>
+
+  <article class="article-body">
+<div class="stats">
+  <div class="stat"><div class="label">핵심 개념</div><div class="value">의존성</div><div class="delta">선행 결과와 시작 조건</div></div>
+  <div class="stat"><div class="label">예시 작업</div><div class="value">4개</div><div class="delta">A 명세 · B 구현 · C 검사 · D 확인</div></div>
+  <div class="stat"><div class="label">의존 관계</div><div class="value">4개</div><div class="delta">A→B, A→C, B→D, C→D</div></div>
+  <div class="stat"><div class="label">학습 시간</div><div class="value">37분</div><div class="delta">개념·그림 12분 + 실습 25분</div></div>
+</div>
+
+<blockquote>
+A → B는 "B가 시작하려면 A의 어떤 결과가 필요하다"는 뜻이다.
+작업마다 필요한 선행 결과와 시작 조건을 적고, 실행 가능한 순서를 설명할 수 있게 만든다.
+이 작업은 앞 작업의 어떤 결과가 있어야, 어떤 조건에서 시작할 수 있는가.
+</blockquote>
+
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#s1">필요한 결과가 준비되어야 시작할 수 있다</a></li>
+    <li><a href="#s2">전송 상태 문구 기능을 연결해 보기</a></li>
+    <li><a href="#s3">"앞 작업" 대신 "필요한 결과"를 적는다</a></li>
+    <li><a href="#s4">선행 결과가 하나 빠지면 어떻게 될까</a></li>
+    <li><a href="#s5">25분 실습</a></li>
+    <li><a href="#s6">바로 쓰는 검토 요청문</a></li>
+    <li><a href="#s7">결과 확인 체크리스트</a></li>
+    <li><a href="#s8">흔한 실수와 다음 회</a></li>
+    <li><a href="#s9">근거</a></li>
+  </ol>
+</div>
+
+<h2 id="s1">필요한 결과가 준비되어야 시작할 수 있다</h2>
+<p><a href="/devblog/posts/2026-11-06-harness-engineering-02-task-decomposition.html">2회차</a>에서는 전송 상태 문구 기능을 정상 입력과 오류 입력에 대한 작은 작업으로 나눴다. 이번에는 그 작업을 진행할 때 <strong>어떤 결과를 먼저 받아야 하는지</strong> 정한다. 이전 실습 완료 여부와 관계없이, 아래 교육용 명세로 시작할 수 있다.</p>
+
+<h3>요리로 생각해 보면</h3>
+<p>밥을 담을 그릇을 꺼내는 일은 밥이 다 되기 전에도 할 수 있다. 밥을 그릇에 담는 일은 지어진 밥과 준비된 그릇이 모두 있어야 한다. 단순히 목록에서 앞에 적혔다는 이유와, 실제 결과가 필요해서 기다리는 이유를 구분하는 것이 의존성 설계의 출발점이다.</p>
+
+<h3>하네스에서 무엇이 달라지나</h3>
+<p>프롬프트는 이번 작업의 목표와 조건을 전달한다. 모델은 그 조건을 해석해 코드를 만들거나 도구를 고른다. 하네스는 정의된 조건에 따라 작업을 선택하고 선행 결과를 전달하는 역할을 맡을 수 있다. 문서에 화살표를 그리는 단계와, 이를 코드로 강제하는 단계는 구분해서 생각한다.</p>
+<p>이번 회차에서는 자동 실행기를 만드는 대신, 하네스가 판단할 수 있을 만큼 <strong>"무엇이 있어야 시작할 수 있는가"</strong>를 구체화한다. 실제 도구의 설정과 연결하는 것은 뒤 회차에서 확장한다.</p>
+
+<div class="callout">
+<strong>실무에서 보이는 같은 원리</strong> — GitHub Actions는 <code>needs</code>로 선행 작업을 지정하며, 기본적으로 그 작업들이 성공해야 후속 작업을 실행한다. <a href="#s9">[1]</a> 코딩 에이전트에도 "앞 작업의 출력이 다음 작업의 입력이 된다"는 구성을 적용할 수 있다. <a href="#s9">[2]</a> 이번 표는 그 원리를 설명하는 교육용 설계다.
+</div>
+
+<h3>의존 관계에 반드시 붙일 두 가지</h3>
+<ul>
+  <li><strong>필요한 산출물</strong> — 예를 들어 함수 이름과 반환 형식이 적힌 계약, 구현 파일, 검사 코드다.</li>
+  <li><strong>인수 조건</strong> — 그 산출물을 다음 작업에 넘겨도 되는 기준이다. 파일이 존재하는지만 볼지, 명세 항목이 채워졌는지까지 볼지를 정한다.</li>
+</ul>
+<p>"A 완료" 한 줄보다 "A의 함수 명세가 있고 필수 항목이 채워져 있다"가 후속 작업의 시작 근거로 더 분명하다. 작업별 인수 조건은 전체 기능을 최종 검증했다는 뜻과 같지 않다.</p>
+
+<h2 id="s2">전송 상태 문구 기능을 연결해 보기</h2>
+<p>2회차 기능을 같은 이름으로 유지하되, 이번에는 <strong>산출물을 주고받는 관점</strong>에서 A~D로 다시 묶는다. 이전 T1·T2의 정상·오류 동작은 B와 C의 범위 안에 모두 포함된다.</p>
+
+<h3>두 갈래의 준비 결과가 모여야 전체 검사를 실행한다</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>작업</th><th>내용</th><th>받는 것</th><th>내놓는 것</th><th>확인할 점</th></tr></thead>
+  <tbody>
+    <tr><td>A · 명세 고정</td><td>함수 계약과 예상값 표</td><td>교육용 상위 요구사항</td><td>입력·출력·오류 정책</td><td>대상 기능과 변경 범위를 읽을 수 있음</td></tr>
+    <tr><td>B · 구현 준비</td><td>상태 문구 함수 작성</td><td>A의 계약</td><td>구현 소스</td><td>검사에 연결할 함수가 존재하고, 빠진 분기가 없는지 검토</td></tr>
+    <tr><td>C · 검사 준비</td><td>예상값 비교 코드 작성</td><td>A의 계약</td><td>검사 소스</td><td>정상·완료·오류 사례와 실패 판정이 있는지 검토</td></tr>
+    <tr><td>D · 전체 확인</td><td>함수와 검사 코드를 연결해 실행</td><td>B의 함수 + C의 검사 코드 (둘 다 필요)</td><td>실행 명령·실제 출력·사례별 결과</td><td>실행 도구와 환경이 준비됨</td></tr>
+  </tbody>
+</table>
+</div>
+<p>표의 관계는 실행에 필요한 산출물의 전달 관계다. 이 글이 실제 에이전트나 CI 작업을 실행하지는 않는다.</p>
+
+<h3>화살표를 하나씩 읽기</h3>
+<ol class="steps">
+  <li><strong>A → B</strong> — 구현할 함수의 입력·출력 계약이 필요하다. "오류를 예외로 던질까, 문구로 반환할까?"를 구현자가 추측하게 두지 않는다.</li>
+  <li><strong>A → C</strong> — 예상 출력과 함수 모양이 정해지면, 구현이 완성되기 전에도 검사 소스를 설계할 수 있다. 이 단계에서는 실제 통과를 주장하지 않는다.</li>
+  <li><strong>B·C → D</strong> — 실행할 함수와 검사 코드가 모두 필요하다. 한쪽만 준비되면 전체 검사를 시작할 재료가 부족하다.</li>
+</ol>
+<p><strong>여기에는 B → C가 없다.</strong> 이번 C의 범위는 계약을 기준으로 검사 소스를 작성·검토하는 데까지이기 때문이다. C에 "실제 실행까지"를 포함한다면 B의 구현도 필요해진다. 의존성은 작업의 이름만으로 정해지지 않고, 정한 범위에 따라 달라진다.</p>
+<p>B와 C 사이에 결과 의존성이 없다고 해서 같은 저장소에서 언제나 병렬 실행해도 된다는 뜻은 아니다. 같은 파일을 수정하는 등 충돌 조건도 살펴야 한다. 이번에는 한 작업씩 진행해도 충분하다.</p>
+
+<h2 id="s3">"앞 작업" 대신 "필요한 결과"를 적는다</h2>
+<h3>이번에도 같은 교육용 기능을 사용한다</h3>
+<p><code>string BuildTransferSummary(long sent, long total)</code></p>
+<ul>
+  <li>정상 범위: <code>total &gt; 0</code>, <code>0 ≤ sent ≤ total</code></li>
+  <li>진행 중: <code>진행 중 N%</code> — 백분율 소수점 버림</li>
+  <li>완료: <code>전송 완료 100%</code></li>
+  <li>범위 밖 입력: <code>전송 정보 오류</code></li>
+</ul>
+<p>실제 프로젝트를 진단한 명세가 아니다. 1회차의 내부 계산 함수와 2회차부터의 사용자용 요약 함수는 오류 표현의 계약이 다르다. 이번에는 2회차의 요약 함수 계약을 유지한다.</p>
+
+<h3>교육용 의존성 표</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>작업</th><th>필요한 선행 결과</th><th>시작 전에 확인할 조건</th><th>남길 산출물</th></tr></thead>
+  <tbody>
+    <tr><td>A 명세</td><td>교육용 상위 요구사항</td><td>대상 기능과 변경 범위를 읽을 수 있음</td><td>함수 계약·예상값 표</td></tr>
+    <tr><td>B 구현</td><td>A의 계약</td><td>함수 이름·형식·정상 및 오류 정책·예상값이 채워짐</td><td>구현 파일과 변경 내역. 실행 전이면 미검증 표시</td></tr>
+    <tr><td>C 검사 소스</td><td>A의 계약</td><td>B와 동일한 계약을 기준으로 사용함</td><td>검사 코드. 실제 값이 예상값과 다르면 실패하게 작성</td></tr>
+    <tr><td>D 전체 확인</td><td>B 구현과 C 검사 소스</td><td>같은 계약을 따르는 두 소스가 있고 검토됨. 실행 환경도 준비됨</td><td>최종 코드의 실제 실행 결과. 환경이 없으면 미실행 이유</td></tr>
+  </tbody>
+</table>
+</div>
+<p>실행·완료 기록이 아니라 설계 표다.</p>
+
+<h3>작업 순서로 바꿔 보기</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>순서</th><th>판정</th><th>이유</th></tr></thead>
+  <tbody>
+    <tr><td>A → B → C → D</td><td>가능</td><td>B와 C가 서로의 산출물을 요구하지 않는다.</td></tr>
+    <tr><td>A → C → B → D</td><td>가능</td><td>B와 C가 서로의 산출물을 요구하지 않는다.</td></tr>
+    <tr><td>A → B → D → C</td><td>불가</td><td>D를 시작할 때 C의 검사 소스가 아직 없다.</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="callout">
+<strong>모든 작업을 한 줄로 연결할 필요는 없다</strong> — 각 화살표에 "무엇을 받아야 하는가?"라는 이유가 있어야 한다. 단순히 먼저 해 보고 싶은 순서는 실행 계획에 적고, 필수 산출물 의존성과 구분해 둔다.
+</div>
+
+<h3>최소한의 예상값으로 A를 채우기</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>입력 (sent, total)</th><th>예상 출력</th><th>확인 범위</th></tr></thead>
+  <tbody>
+    <tr><td><code>(1, 3)</code></td><td>진행 중 33%</td><td>소수점 버림</td></tr>
+    <tr><td><code>(100, 100)</code></td><td>전송 완료 100%</td><td>완료 분기</td></tr>
+    <tr><td><code>(0, 0)</code></td><td>전송 정보 오류</td><td>전체 크기 오류</td></tr>
+    <tr><td><code>(101, 100)</code></td><td>전송 정보 오류</td><td>전송량 초과</td></tr>
+  </tbody>
+</table>
+</div>
+<p>이번 의존성 연습을 위한 최소 사례다. 실제 구현을 검증할 때는 2회차의 음수·큰 <code>long</code> 입력 등 전체 사례도 유지해야 한다. 표에 적었다는 사실은 실제 실행의 증거가 아니다.</p>
+
+<h2 id="s4">선행 결과가 하나 빠지면 어떻게 될까</h2>
+<p>준비된 산출물에 따라 D의 시작 가능 여부가 달라진다. 실행 환경은 준비됐다고 가정한 조건 판단이며, 실제 저장소·에이전트·테스트 상태를 읽은 결과가 아니다.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>상황</th><th>D 판정</th><th>다음에 할 일</th><th>이유</th></tr></thead>
+  <tbody>
+    <tr><td>명세 A도 아직 준비되지 않음</td><td>시작 조건 미충족</td><td>B와 C 모두 A의 계약을 기다린다.</td><td>D는 B의 구현과 C의 검사 코드가 필요하다. 먼저 A의 명세를 준비해야 한다.</td></tr>
+    <tr><td>A만 준비됨</td><td>시작 조건 미충족</td><td>B와 C의 소스 작성은 시작할 수 있다.</td><td>D에 필요한 두 산출물이 아직 없다.</td></tr>
+    <tr><td>A·B 준비, C 없음</td><td>시작 조건 미충족</td><td>C의 검사 소스 준비가 필요하다.</td><td>B만으로는 전체 검사를 실행할 수 없다. C가 인수 조건을 충족해야 한다.</td></tr>
+    <tr><td>A·B 준비, C 파일은 있지만 비교 검사가 빠짐</td><td>시작 조건 미충족</td><td>C의 검사 소스 준비가 필요하다.</td><td>파일이 있어도 인수 조건을 충족하지 않으므로 C는 준비된 것이 아니다.</td></tr>
+    <tr><td>A·B·C가 인수 조건을 만족함</td><td>시작 가능</td><td>B의 구현과 C의 검사 코드가 모두 준비됐다.</td><td>실행 환경이 준비됐다는 가정에서 D를 시작할 수 있다. 실제 실행과 통과가 이미 이루어졌다는 뜻은 아니다.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>중요한 것은 '하나라도'가 아니라 '모두'다</h3>
+<p>D의 시작 조건은 <strong>B의 구현 준비 그리고 C의 검사 준비</strong>다. B가 준비됐다는 사실로 C의 검사 코드까지 생기지는 않는다. C 파일이 있어도 비교 검사가 없다면 이번에 정한 인수 조건을 만족하지 않는다.</p>
+<p>반대로 C를 준비하는 작업은 A의 계약만으로 시작할 수 있으므로, B가 아직 없다는 이유만으로 계획에서 멈춰 둘 필요는 없다. 실제 실행 여부를 판단하는 D와 소스 작성 범위인 C를 구분했기 때문에 가능한 판단이다.</p>
+
+<h3>계획을 데이터로 적으면</h3>
+<p>이 글에서 만든 설명용 형식이다. 특정 도구가 자동으로 읽는 설정 파일은 아니다. <code>requires</code>의 각 항목은 모두 충족되어야 한다고 정의한다. 산출물의 세부 인수 조건은 앞의 표에 둔다.</p>
+<div class="code">
+  <div class="code-head"><span class="fname">plan.json</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-json">{
+  "A": { "requires": [], "output": "함수 계약과 예상값 표" },
+  "B": { "requires": ["A"], "output": "검토된 구현 소스" },
+  "C": { "requires": ["A"], "output": "검토된 검사 소스" },
+  "D": { "requires": ["B", "C"], "output": "실제 실행 결과" }
+}</code></pre>
+</div>
+<p>D에는 실행 도구·환경이라는 추가 시작 조건도 있다. 이 예시는 의존 관계의 모양만 보여 준다.</p>
+
+<h2 id="s5">25분 실습</h2>
+<p>작업 네 개에 시작 조건을 붙인다.</p>
+<p><strong>준비물:</strong> 작업 메모와 Claude 또는 Codex. 저장소가 없어도 위 A~D 예시를 사용할 수 있다. 구현 순서를 설계하고 근거를 확인하는 연습이라 새 실행 환경을 설치하지 않아도 된다.</p>
+<ol class="steps">
+  <li><strong>0~5분 · 작업과 결과를 적는다.</strong> A~D를 메모에 옮기고 각 작업이 내놓는 산출물을 한 줄씩 적는다. 기존 저장소에 적용한다면 함수·명세·검사 파일 등 실제 확인한 이름을 사용한다.</li>
+  <li><strong>5~10분 · 화살표의 이유를 적는다.</strong> "B는 A의 함수 계약이 필요하다"처럼 문장으로 쓴다. 순서표에 먼저 적혔다는 이유만으로 선을 추가하지 않는다.</li>
+  <li><strong>10~15분 · 시작 조건을 표로 만든다.</strong> 필요한 결과가 존재하는지, 인수 조건을 만족하는지, 실행 도구가 필요한지를 적는다. 작업 범위가 달라졌다면 관계도 함께 고친다.</li>
+  <li><strong>15~20분 · 반례를 확인한다.</strong> 위 판정표에서 A·B만 준비한 경우와 C의 비교 검사가 빠진 경우를 골라, 왜 D를 시작할 수 없는지 각각 한 문장으로 기록한다. 가능한 순서 두 개와 시작 조건을 어기는 순서 하나를 적는다.</li>
+  <li><strong>20~25분 · 에이전트의 검토와 대조한다.</strong> 아래 요청문을 보내고, 누락되거나 불필요한 선이 있다는 지적을 자신의 표와 대조한다. 수정한 내용과 이유를 기록하고 실행하지 않은 코드는 미실행으로 남긴다.</li>
+</ol>
+<div class="callout">
+<strong>기대 산출물</strong> — 시작 조건표 1개 + 이유가 붙은 관계도 1개 + 가능한 순서 2개·잘못된 순서 1개 + 반례 판단 근거 2줄.
+</div>
+<p>메모만 작성한 경우 결과는 의존성 설계와 조건 검토다. 함수 구현이나 테스트 실행까지 완료한 것으로 표시하지 않는다.</p>
+
+<h2 id="s6">바로 쓰는 검토 요청문</h2>
+<div class="code">
+  <div class="code-head"><span class="fname">dependency-review-prompt.txt</span><button class="copy-btn">복사</button></div>
+  <pre><code class="language-plaintext">전송 상태 문구 기능의 작업 의존성을 검토해 줘.
+이번에는 계획과 시작 조건을 검토하고, 구현·테스트 실행은 하지 마.
+
+기능 계약
+string BuildTransferSummary(long sent, long total)
+total &gt; 0, 0 &lt;= sent &lt;= total이면 정상 입력.
+진행 중은 "진행 중 N%" (백분율 소수점 버림).
+sent == total이면 "전송 완료 100%".
+정상 범위 밖 입력은 "전송 정보 오류".
+예: (1,3)→"진행 중 33%", (100,100)→"전송 완료 100%",
+(0,0), (101,100)→"전송 정보 오류".
+
+작업 범위
+A: 함수 계약과 예상값 표를 고정.
+B: A를 기준으로 구현 소스를 작성·검토. 실행 결과는 아직 요구하지 않음.
+C: A를 기준으로 검사 소스를 작성·검토. 실제 실행은 D에서 함.
+D: B와 C를 연결해 전체 검사를 실제 실행하고 결과 기록.
+
+내 관계 초안
+A→B, A→C, B→D, C→D.
+각 화살표는 후속 작업이 요구하는 산출물을 뜻함.
+
+검토 결과
+1. 각 작업의 선행 결과·시작 조건·산출물을 표로 작성.
+2. 누락되거나 불필요한 의존 관계가 있으면 구체적 이유 설명.
+3. 가능한 실행 순서 두 개와 잘못된 순서 하나, 그 이유 제시.
+4. A·B만 준비됐을 때 D를 시작할 수 없는 이유 설명.
+5. C 파일이 있어도 비교 검사가 없을 때 조건 충족 여부 설명.
+
+실제 저장소를 읽지 않았다면 파일명·구현 상태를 추정하지 마.
+같은 파일 수정 등 충돌 가능성은 의존 관계와 별도로 표시해 줘.</code></pre>
+</div>
+
+<h2 id="s7">결과 확인 체크리스트</h2>
+<ul>
+  <li>모든 화살표에 전달할 산출물과 필요한 이유가 있다. "목록의 앞 항목이라서"만으로 연결한 선은 제거하거나 이유를 보완했다.</li>
+  <li>C가 검사 소스 작성까지만인지 실제 실행까지인지 명시했다. 범위에 맞춰 B→C의 필요성을 판단했다.</li>
+  <li>D가 B와 C 모두를 요구한다고 적었다. B만 준비된 상황에서 D를 시작할 수 없다는 판단 근거를 남겼다.</li>
+  <li>파일 존재와 인수 조건 충족을 구분했다. 비교 검사가 빠진 C는 준비 완료로 인정하지 않았다.</li>
+  <li>가능한 순서 두 개와 잘못된 순서 하나를 각 작업의 시작 조건에 대조했다. 같은 결과를 기다리는 순환 관계가 생겼다면 범위를 다시 살폈다.</li>
+  <li>계획 검토의 근거와 코드 실행의 증거를 구분했다. 실제 실행을 했다면 최종 코드·명령·출력을 남기고, 하지 않았다면 미실행으로 기록했다.</li>
+</ul>
+
+<h2 id="s8">흔한 실수와 다음 회</h2>
+<h3>'검사 코드 작성'과 '검사 실행'을 한 가지로 생각하기</h3>
+<p>검사 작성에는 계약만 필요할 수 있지만, 실제 실행에는 구현도 필요하다. 두 범위를 섞으면 실행 재료가 없는데 시작하거나, 작성 가능한 검사를 불필요하게 기다리게 된다. 작업 카드에 <strong>어디까지 마쳐야 그 산출물을 넘길 수 있는지</strong> 적어 둔다.</p>
+<h3>다음 회 · 컨텍스트 선택</h3>
+<p>시작 가능한 작업을 골랐다면, 에이전트에게 어떤 코드·문서·선행 결과를 전달해야 할까. 필요한 문맥을 고르는 방법으로 이어간다.</p>
+
+<h2 id="s9">근거</h2>
+<p>A~D의 분해·인수 조건·표·조건 판정은 이 글의 교육용 설계다. 실제 코드나 실행 결과를 재현한 것이 아니다.</p>
+<ol>
+  <li><a href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs">GitHub Docs · Using jobs in a workflow</a> — 선행 작업을 지정하는 <code>needs</code>와 기본 실패·건너뛰기 전파 규칙을 확인했다. 실제 GitHub Actions에는 조건식에 따른 예외가 있으므로 이 교육용 조건표와 모든 동작이 동일하다고 보지는 않는다. 확인일 2026.11.06.</li>
+  <li><a href="https://www.anthropic.com/research/building-effective-agents">Anthropic · Building effective agents</a> (2024.12.19) — 앞 단계의 출력이 다음 단계로 전달되는 구성과 중간 검사라는 원리를 참고했다. 과거 글의 도구 목록을 현재 설치 지침으로 사용하지 않았다. 확인일 2026.11.06.</li>
+</ol>
+
+<h2>정리</h2>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>항목</th><th>핵심</th></tr></thead>
+  <tbody>
+    <tr><td>화살표의 의미</td><td>A → B는 B가 시작하려면 A의 어떤 결과가 필요하다는 뜻</td></tr>
+    <tr><td>화살표에 붙일 것</td><td>필요한 산출물과 인수 조건</td></tr>
+    <tr><td>범위가 관계를 정한다</td><td>C가 작성까지면 B → C 불필요, 실행까지면 필요</td></tr>
+    <tr><td>시작 판정</td><td>D는 B와 C 모두 필요. 파일 존재와 인수 조건 충족은 다르다</td></tr>
+    <tr><td>한 문장</td><td>이 작업은 앞 작업의 어떤 결과가 있어야, 어떤 조건에서 시작할 수 있는가</td></tr>
+  </tbody>
+</table>
+</div>
+
+  </article>
+</main>
+
+<footer class="site-footer"><div class="wrap">
+  <span>© 2026 bluaura</span>
+  <span>코드와 설명은 개인 학습 기록이며, 실제 적용 전 공식 문서를 확인하세요.</span>
+</div></footer>
+
+<script src="/devblog/assets/hljs.min.js"></script>
+<script>
+// 테마 토글
+var btn=document.getElementById('themeBtn');
+btn&&btn.addEventListener('click',function(){
+  var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';
+  r.setAttribute('data-theme',n);localStorage.setItem('theme',n);
+});
+
+// 문법 하이라이팅
+if(window.hljs){hljs.highlightAll();}
+
+// 코드 복사 버튼
+document.querySelectorAll('.code').forEach(function(box){
+  var pre=box.querySelector('pre'), btn=box.querySelector('.copy-btn');
+  if(!pre||!btn)return;
+  btn.addEventListener('click',function(){
+    var t=pre.innerText;
+    var done=function(){btn.textContent='복사됨';btn.classList.add('done');
+      setTimeout(function(){btn.textContent='복사';btn.classList.remove('done');},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done);
+    }else{
+      var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');document.body.removeChild(ta);done();
+    }
+  });
+});
+
+// h2 앵커 자동 부여 (목차 링크용)
+document.querySelectorAll('.article-body h2').forEach(function(h,i){
+  if(!h.id)h.id='s'+(i+1);
+});
+</script>
+</body>
+</html>
