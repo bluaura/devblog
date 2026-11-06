@@ -19,6 +19,13 @@
       <pubDate>Fri, 06 Nov 2026 00:00:00 +0900</pubDate>
     </item>
     <item>
+      <title>에이전트는 더 멀리, 검증은 더 엄격하게 — GitHub Pulse 주간 브리핑 (2026.11.06)</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-11-06-github-weekly.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-06-github-weekly.html</guid>
+      <description>T3 Code 7일 +16,235 스타 등 주간 저장소 10개, 구조 심층 3개, Codex 파괴적 작업 제보·Claude Code 이메일 노출 주장·Trivy 도메인 장애 등 토론 5건을 사실과 주장으로 구분</description>
+      <pubDate>Fri, 06 Nov 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>더 빨리 만드는 시대, 무엇으로 신뢰를 증명할까? AI·SW 개발자 생각 읽기 (2026.11.03)</title>
       <link>https://bluaura.github.io/devblog/posts/2026-11-03-ai-sw-perspectives.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-03-ai-sw-perspectives.html</guid>
@@ -206,12 +213,5 @@
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-10-meta-muse-agent-comparison.html</guid>
       <description>9/8 공개된 메타 개인 AI 에이전트 Muse의 구조(전용 VM+Sentinel)·가격(/bin/bash/20/100)·미국 전용 제약을 정리하고, Grok Bot·OpenClaw·Gemini Spark·Claude Cowork·ChatGPT와 6종 비교</description>
       <pubDate>Thu, 10 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>한국어 북스캔 PDF OCR 앱 만들기 전 기술 조사 — Apple Vision·로컬 VLM·클라우드 5개 대안 비교</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-09-04-korean-bookscan-ocr-research.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-korean-bookscan-ocr-research.html</guid>
-      <description>M5 Pro에서 2만~10만 페이지 한국어 북스캔을 텍스트 검색 가능하게 만들기 위해 Apple Vision, GLM-OCR 등 로컬 VLM, Google/Upstage/CLOVA API, Gemini·Claude LLM OCR을 정확도·속도·비용으로 비교. 결론은 Vision 1차 + GLM-OCR 2차 전량 로컬 구성. 새 PDF 생성 vs 기존 PDF 텍스트 추가 비교 포함</description>
-      <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>

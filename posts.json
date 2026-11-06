@@ -18,6 +18,18 @@
   },
   "posts": [
     {
+      "slug": "2026-11-06-github-weekly",
+      "title": "에이전트는 더 멀리, 검증은 더 엄격하게 — GitHub Pulse 주간 브리핑 (2026.11.06)",
+      "date": "2026-11-06",
+      "tags": [
+        "개발뉴스",
+        "AI",
+        "GitHub",
+        "하네스엔지니어링"
+      ],
+      "summary": "T3 Code 7일 +16,235 스타 등 주간 저장소 10개, 구조 심층 3개, Codex 파괴적 작업 제보·Claude Code 이메일 노출 주장·Trivy 도메인 장애 등 토론 5건을 사실과 주장으로 구분"
+    },
+    {
       "slug": "2026-11-06-harness-engineering-03-dependencies",
       "title": "하네스 엔지니어링 03 — 다음 작업은 무엇을 기다려야 할까: 의존성과 시작 조건",
       "date": "2026-11-06",
