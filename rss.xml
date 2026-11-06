@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>하네스 엔지니어링 02 — 큰 요청을 검증 가능한 작업으로 나누기</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-11-06-harness-engineering-02-task-decomposition.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-06-harness-engineering-02-task-decomposition.html</guid>
+      <description>앱 기능 하나를 목적·결과·증거 단위로 나누는 법. C# 전송 상태 문구 함수를 T1·T2 작업 카드 2장과 고정 예상값 10개로 분해하고, 적정 크기 판단 질문 3가지, 25분 실습과 복사용 요청문 포함</description>
+      <pubDate>Fri, 06 Nov 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>더 빨리 만드는 시대, 무엇으로 신뢰를 증명할까? AI·SW 개발자 생각 읽기 (2026.11.03)</title>
       <link>https://bluaura.github.io/devblog/posts/2026-11-03-ai-sw-perspectives.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-03-ai-sw-perspectives.html</guid>
@@ -205,13 +212,6 @@
       <link>https://bluaura.github.io/devblog/posts/2026-09-04-ios27-apple-intelligence-developer-guide.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-ios27-apple-intelligence-developer-guide.html</guid>
       <description>WWDC26 기준 Foundation Models(LanguageModel 프로토콜·이미지 입력·PCC 32K)와 App Schema 13개 도메인 정리, Apple 공식 유저 시나리오 30여 개, Hermes·Claude·Android AppFunctions·Windows MCP와 비교해 iOS에서 기기 제어 에이전트가 불가능한 구조적 이유, PC↔모바일 연동 앱 아이디어 10개</description>
-      <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>Hermes Agent 조사: 기능·후기·경쟁 비교, 그리고 개발자가 확장할 수 있는 지점</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-04-hermes-agent-deep-dive.html</guid>
-      <description>Nous Research의 MIT 오픈소스 에이전트(240k 스타, v0.21)를 기능·리뷰·OpenClaw/OpenHands/AutoGPT 비교·플러그인 아키텍처까지 정리하고, PC-모바일 연동 앱을 툴셋으로 붙이는 아이디어 7가지와 Hermes 용어 26개 참조표</description>
       <pubDate>Fri, 04 Sep 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>
