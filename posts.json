@@ -18,6 +18,20 @@
   },
   "posts": [
     {
+      "slug": "2026-11-10-phone-harness-architecture",
+      "title": "Phone Harness 분석 — AI 에이전트가 폰을 조작하는 구조, iPhone 미러링 구현 방식과 Windows 지원 범위",
+      "date": "2026-11-10",
+      "tags": [
+        "AI",
+        "iOS",
+        "Android",
+        "Windows",
+        "에이전트",
+        "PhoneHarness"
+      ],
+      "summary": "Phone Harness v0.3.3 소스 분석: 미러링은 Apple iPhone 미러링 창을 캡처·Vision OCR·SkyLight 이벤트 주입으로 조작하는 방식이라 로컬 iPhone은 macOS 15+ 전용, Windows는 Android(adb)와 클라우드 iPhone(월 $80)만 가능"
+    },
+    {
       "slug": "2026-11-06-github-weekly",
       "title": "에이전트는 더 멀리, 검증은 더 엄격하게 — GitHub Pulse 주간 브리핑 (2026.11.06)",
       "date": "2026-11-06",
