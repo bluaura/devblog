@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>에이전트가 더 똑똑해질수록, 검증과 운영은 더 중요해진다 — GitHub Pulse 주간 브리핑 (2026.11.13)</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-11-13-github-weekly.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-13-github-weekly.html</guid>
+      <description>Cloudflare security-audit-skill 7일 +10,700 스타 등 주간 저장소 10개, 구조 심층 3개, Jazzband 43개 저장소 악성 Actions·WebView2 157 파일 선택 회귀·Ubuntu 러너 DNS 장애 등 토론 5건과 PR 3건을 사실과 주장으로 구분</description>
+      <pubDate>Fri, 13 Nov 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>Phone Harness 분석 — AI 에이전트가 폰을 조작하는 구조, iPhone 미러링 구현 방식과 Windows 지원 범위</title>
       <link>https://bluaura.github.io/devblog/posts/2026-11-10-phone-harness-architecture.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-10-phone-harness-architecture.html</guid>
@@ -206,12 +213,5 @@
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-28-ai-readable-knowledge-vault.html</guid>
       <description>책·메모·웹 자료를 AI로 재가공하기 위한 4단계(텍스트화·구조화·정제·검색), Google Drive+Obsidian 폴더 구조, 클라우드 vs 로컬 LLM 비교, 복사해 쓰는 md 템플릿 5종과 AI 작업 가이드</description>
       <pubDate>Mon, 28 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>애플 온디바이스 AI 개발 스택 정리 — Core AI · Foundation Models · Intelligent Personal Hub (iOS 27)</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-09-12-apple-ondevice-ai-dev-stack.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-12-apple-ondevice-ai-dev-stack.html</guid>
-      <description>Core AI(Core ML 후속, OS 27+) Swift API·PyTorch 변환 파이프라인·모델 카탈로그, Foundation Models(3B 온디바이스·4K/8K 컨텍스트·PCC 200만 DL 무료·Claude/Gemini 동일 API)의 기능과 개발자 평가, Siri AI 허브에 앱을 노출하는 App Schemas 12개 도메인과 5가지 역할을 WWDC26·9/9 키노트 기준으로 정리.</description>
-      <pubDate>Sat, 12 Sep 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>

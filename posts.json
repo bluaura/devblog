@@ -18,6 +18,19 @@
   },
   "posts": [
     {
+      "slug": "2026-11-13-github-weekly",
+      "title": "에이전트가 더 똑똑해질수록, 검증과 운영은 더 중요해진다 — GitHub Pulse 주간 브리핑 (2026.11.13)",
+      "date": "2026-11-13",
+      "tags": [
+        "개발뉴스",
+        "AI",
+        "Windows",
+        "GitHub",
+        "보안"
+      ],
+      "summary": "Cloudflare security-audit-skill 7일 +10,700 스타 등 주간 저장소 10개, 구조 심층 3개, Jazzband 43개 저장소 악성 Actions·WebView2 157 파일 선택 회귀·Ubuntu 러너 DNS 장애 등 토론 5건과 PR 3건을 사실과 주장으로 구분"
+    },
+    {
       "slug": "2026-11-10-phone-harness-architecture",
       "title": "Phone Harness 분석 — AI 에이전트가 폰을 조작하는 구조, iPhone 미러링 구현 방식과 Windows 지원 범위",
       "date": "2026-11-10",
