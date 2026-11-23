@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>Anthropic은 Claude Code의 코드 리뷰를 어떻게 운영하나 — 일곱 단계 검증과 위험도별 사람 승인</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-11-23-claude-code-review-anthropic.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-23-claude-code-review-anthropic.html</guid>
+      <description>Claude가 코드의 약 90%를 쓰는 Claude Code 팀의 리뷰 운영: PR 전 실행 검증부터 배포 후 복구까지 7단계, 위험도별 사람 승인 0·1·2명, 실질 리뷰 코멘트 PR 16%→54%, 50회 넘게 돈 리뷰 루프를 평균 2.08→1.32회로 줄인 방법</description>
+      <pubDate>Mon, 23 Nov 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>에이전트가 더 똑똑해질수록, 검증과 운영은 더 중요해진다 — GitHub Pulse 주간 브리핑 (2026.11.13)</title>
       <link>https://bluaura.github.io/devblog/posts/2026-11-13-github-weekly.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-13-github-weekly.html</guid>
@@ -206,12 +213,5 @@
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html</guid>
       <description>0/1 격자 미로를 BFS로 풀어 최소 이동 8회를 구하는 코드 해설, 거리 +2 오프셋 원리, 1×1 격자·map 변수명 등 함정 4가지와 개선 코드</description>
       <pubDate>Tue, 29 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>AI가 읽기 좋은 개인 지식 저장소 만들기: md 템플릿 5종과 클라우드·로컬 LLM 분담</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-09-28-ai-readable-knowledge-vault.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-28-ai-readable-knowledge-vault.html</guid>
-      <description>책·메모·웹 자료를 AI로 재가공하기 위한 4단계(텍스트화·구조화·정제·검색), Google Drive+Obsidian 폴더 구조, 클라우드 vs 로컬 LLM 비교, 복사해 쓰는 md 템플릿 5종과 AI 작업 가이드</description>
-      <pubDate>Mon, 28 Sep 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>
