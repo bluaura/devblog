@@ -68,7 +68,7 @@ Anthropic의 Claude Code 팀은 <strong>코드 작성 단계에서 실행 증거
 </blockquote>
 
 <div class="callout">
-<strong>출처</strong> — 이 글은 Anthropic이 2026년 10월 15일 공개한 <a href="https://claude.dev/blog/solving-code-review-at-anthropic/">How the Claude Code team does code review</a> (Addy Osmani, Morgan Westlee Lunt, Qing Wang)를 읽고 정리한 것입니다. 수치와 운영 방식은 원문과 관련 공식 문서에 근거하며, 8장의 적용 예시는 필자가 연결성 앱에 대입해 본 가정입니다. 전체 출처 목록은 글 끝에 있습니다.
+<strong>출처</strong> — 이 글은 Anthropic이 2026년 10월 15일 공개한 <a href="https://claude.dev/blog/solving-code-review-at-anthropic/">How the Claude Code team does code review</a> (Addy Osmani, Morgan Westlee Lunt, Qing Wang)를 읽고 정리한 것입니다. 수치와 운영 방식은 원문과 관련 공식 문서에 근거하며, 본문 중 연결성 앱 예시는 필자가 대입해 본 가정입니다. 전체 출처 목록은 글 끝에 있습니다.
 </div>
 
 <p>하네스 엔지니어링 관점에서는 <strong>에이전트에게 어떤 근거를 주는지, 어느 단계에서 누가 통과를 결정하는지, 실패하면 어디로 돌아가는지, 반복을 언제 멈추는지</strong>까지 설계한 사례입니다.</p>
@@ -83,9 +83,8 @@ Anthropic의 Claude Code 팀은 <strong>코드 작성 단계에서 실행 증거
     <li><a href="#s5">CLAUDE.md, REVIEW.md와 실행 검사의 역할</a></li>
     <li><a href="#s6">공개 Code Review와 Anthropic 내부 머지 정책</a></li>
     <li><a href="#s7">사람의 판단과 팀의 지식 공유</a></li>
-    <li><a href="#s8">Link 파일 전송 PR에 적용한 예시</a></li>
-    <li><a href="#s9">정리</a></li>
-    <li><a href="#s10">출처</a></li>
+    <li><a href="#s8">정리</a></li>
+    <li><a href="#s9">출처</a></li>
   </ol>
 </div>
 
@@ -263,29 +262,7 @@ Anthropic의 Claude Code 팀은 <strong>코드 작성 단계에서 실행 증거
 
 <p>코드 리뷰의 또 다른 역할은 <strong>코드베이스 지식의 공유</strong>입니다. 팀은 정형화된 프로세스 없이, 작업 직전에 Claude에게 특정 모듈의 현재 동작을 설명하게 하거나 작은 시각 자료를 만들어 활용합니다. 예컨대 새 팀원이 기기 페어링을 맡는다면, 등록 요청부터 연결 성공·실패까지 상태가 어떻게 바뀌는지 현재 코드에 근거해 설명하는 자료가 업무에 직접 도움이 됩니다. <a href="https://claude.dev/blog/solving-code-review-at-anthropic/#sharing-context-across-the-team">원문</a></p>
 
-<h2 id="s8">8. Link 파일 전송 PR에 적용한 예시</h2>
-
-<p><strong>전송 중 Wi‑Fi가 잠깐 끊겼을 때 자동으로 재개하는 변경</strong>을 올린다고 가정합니다. 아래는 Anthropic에서 공개한 운영 구조를 Windows·Android·iOS·webOS 연결성 앱에 대입한 예시입니다.</p>
-
-<div class="table-wrap">
-<table>
-  <thead>
-    <tr><th>단계</th><th>이 PR에서 확인할 내용</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><strong>작성 에이전트의 검증</strong></td><td>Windows→Android 전송 도중 연결을 끊었다 복구합니다. 수신 파일 해시가 원본과 일치하고 완료가 한 번만 표시되는지 확인합니다.</td></tr>
-    <tr><td><strong>새 컨텍스트 리뷰</strong></td><td>발신·수신 상태 전이와 재시도 경로를 읽습니다. 마지막 청크를 처리한 직후 끊기거나 사용자 취소와 재연결이 겹치는 경우를 확인합니다.</td></tr>
-    <tr><td><strong>담당자 검증</strong></td><td>공유 프로토콜이 바뀌면 구버전 상대 기기 호환을 확인합니다. 기기 간 세션 식별 방식이 달라졌다면 해당 코드 소유자가 검토합니다.</td></tr>
-    <tr><td><strong>수정과 재리뷰</strong></td><td>완료 이벤트가 중복될 경로가 발견되면 관련 분기를 함께 수정하고, 다음 리뷰에서 수정 diff와 기존 지적의 해소 여부를 봅니다.</td></tr>
-    <tr><td><strong>배포와 관측</strong></td><td>기능 플래그로 내부 기기부터 활성화하고, 전송 성공률·재시도 횟수·완료 이벤트 중복을 버전별로 확인합니다.</td></tr>
-    <tr><td><strong>회귀 발견 후</strong></td><td>실행 테스트에 당시 기기 조합과 실패 시나리오를 추가합니다. 기존 diff에서 리뷰어가 알아볼 수 있는 결함이었다면 리뷰 평가 사례에도 추가합니다.</td></tr>
-  </tbody>
-</table>
-</div>
-
-<p><strong>실행 테스트</strong>는 동작이 다시 깨졌는지 확인합니다. <strong>리뷰 평가</strong>는 리뷰어가 당시의 변경과 맥락으로 문제를 발견할 수 있는지 확인합니다. 그 결과는 다음 변경에서 어떤 검증을 먼저 해야 할지에 반영할 수 있습니다. <a href="https://claude.dev/blog/solving-code-review-at-anthropic/#how-we-make-the-reviewer-better">원문</a> · <a href="https://claude.dev/blog/how-the-claude-code-team-thinks-about-verification/">검증에 관한 후속 글</a></p>
-
-<h2 id="s9">정리</h2>
+<h2 id="s8">정리</h2>
 
 <p><code>CLAUDE.md</code>와 <code>harness-guide.md</code>를 운용할 때 비교할 부분은 <strong>각 규칙이 어디에서 실행되는지, 어떤 증거가 남는지, 실패하면 누가 다음 결정을 하는지</strong>입니다. 예를 들어 전송 취소를 검증한다는 지침은 실행할 기기와 테스트, 남길 로그·상태, 자동 수정 루프 종료와 담당자 인계 조건까지 구체화하면 운영에 쓸 수 있습니다.</p>
 
@@ -303,7 +280,7 @@ Anthropic의 Claude Code 팀은 <strong>코드 작성 단계에서 실행 증거
 </table>
 </div>
 
-<h2 id="s10">출처</h2>
+<h2 id="s9">출처</h2>
 
 <ul>
   <li><a href="https://claude.dev/blog/solving-code-review-at-anthropic/">How the Claude Code team does code review</a> — Anthropic, 2026년 10월 15일. Addy Osmani, Morgan Westlee Lunt, Qing Wang. 이 글의 주 원문</li>
