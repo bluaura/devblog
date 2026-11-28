@@ -5,6 +5,13 @@
   <description>앱 개발·AI 도구·알고리즘을 코드로 남기는 기록</description>
   <language>ko</language>
     <item>
+      <title>구글 A2UI 1.0 정리: AI가 텍스트 대신 네이티브 UI로 응답하는 프로토콜</title>
+      <link>https://bluaura.github.io/devblog/posts/2026-11-28-a2ui-protocol-overview.html</link>
+      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-28-a2ui-protocol-overview.html</guid>
+      <description>A2UI 1.0의 카탈로그 구조, 양방향 함수 호출·Express 포맷, Compose 렌더러 적용법, 그리고 Compose 0.9.1·Windows 렌더러 부재·&#x27;61% 절감&#x27; 수치 검증 등 도입 전 주의점</description>
+      <pubDate>Sat, 28 Nov 2026 00:00:00 +0900</pubDate>
+    </item>
+    <item>
       <title>Anthropic은 Claude Code의 코드 리뷰를 어떻게 운영하나 — 일곱 단계 검증과 위험도별 사람 승인</title>
       <link>https://bluaura.github.io/devblog/posts/2026-11-23-claude-code-review-anthropic.html</link>
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-11-23-claude-code-review-anthropic.html</guid>
@@ -206,12 +213,5 @@
       <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-30-jev-decision-model.html</guid>
       <description>70~500ms, 입력 1M 토큰당 $0.042로 Choice/Score/Noul만 반환하는 Jev의 LLM 대비 차이, 장단점, awesome-jev 유즈케이스, PC-모바일 연동 앱 적용 6가지</description>
       <pubDate>Wed, 30 Sep 2026 00:00:00 +0900</pubDate>
-    </item>
-    <item>
-      <title>BFS로 격자 최단 경로 구하기 — 코드 해설과 함정 4가지</title>
-      <link>https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html</link>
-      <guid isPermaLink="true">https://bluaura.github.io/devblog/posts/2026-09-29-algo-bfs-shortest-path.html</guid>
-      <description>0/1 격자 미로를 BFS로 풀어 최소 이동 8회를 구하는 코드 해설, 거리 +2 오프셋 원리, 1×1 격자·map 변수명 등 함정 4가지와 개선 코드</description>
-      <pubDate>Tue, 29 Sep 2026 00:00:00 +0900</pubDate>
     </item>
 </channel></rss>

@@ -18,6 +18,19 @@
   },
   "posts": [
     {
+      "slug": "2026-11-28-a2ui-protocol-overview",
+      "title": "구글 A2UI 1.0 정리: AI가 텍스트 대신 네이티브 UI로 응답하는 프로토콜",
+      "date": "2026-11-28",
+      "tags": [
+        "AI",
+        "튜토리얼",
+        "Android",
+        "iOS",
+        "A2UI"
+      ],
+      "summary": "A2UI 1.0의 카탈로그 구조, 양방향 함수 호출·Express 포맷, Compose 렌더러 적용법, 그리고 Compose 0.9.1·Windows 렌더러 부재·'61% 절감' 수치 검증 등 도입 전 주의점"
+    },
+    {
       "slug": "2026-11-23-claude-code-review-anthropic",
       "title": "Anthropic은 Claude Code의 코드 리뷰를 어떻게 운영하나 — 일곱 단계 검증과 위험도별 사람 승인",
       "date": "2026-11-23",
